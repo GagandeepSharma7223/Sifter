@@ -1,0 +1,60 @@
+﻿@using ResearchApp.Data
+<div class="grid-container ml-2">
+    @(Html.Kendo().Grid<ResearchApp.ViewModel.AuthorViewModel>()
+                  .Name("grid")
+                  .Columns(columns =>
+                  {
+                      columns.Bound(b => b.AuthorID).Width(80);
+                      columns.Bound(b => b.FullName).Editable("checkIfGridEditable").Width(130);
+                      columns.Bound(b => b.FirstName).Editable("checkIfGridEditable").Width(100);
+                      columns.Bound(b => b.LastName).Editable("checkIfGridEditable").Width(100);
+                      columns.Bound(b => b.IsOrganization).ClientTemplate("#=(IsOrganization.Option == null) ? '' : IsOrganization.Option#").Editable("checkIfGridEditable").Width(100);
+                      columns.Bound(b => b.Gender).ClientTemplate("#=(Gender.Option == null) ? '' : Gender.Option#").Editable("checkIfGridEditable").Width(100);
+                      columns.Bound(b => b.BirthYear).ClientTemplate("#=(BirthYear == null) ? '' : BirthYear#").Editable("checkIfGridEditable").Width(100);
+                      columns.Bound(b => b.BirthCountry).ClientTemplate("#=(BirthCountry.Option == null) ? '' : BirthCountry.Option#").Editable("checkIfGridEditable").Width(100);
+                      columns.Bound(b => b.PenName).Editable("checkIfGridEditable").Width(100);
+                      columns.Bound(b => b.AlsoKnownAs).Editable("checkIfGridEditable").Width(100);
+                      columns.Bound(b => b.Title).Editable("checkIfGridEditable").Width(100);
+                      columns.Bound(b => b.DeathYear).ClientTemplate("#=(DeathYear == null) ? '' : DeathYear#").Editable("checkIfGridEditable").Width(100);
+                      columns.Bound(b => b.FirstActivityYear).ClientTemplate("#=(FirstActivityYear == null) ? '' : FirstActivityYear#").Editable("checkIfGridEditable").Width(100);
+                      columns.Bound(b => b.Occupation).Editable("checkIfGridEditable").Width(150);
+                      columns.Bound(b => b.Sources).Editable("checkIfGridEditable").Width(150);
+                      columns.Bound(b => b.Comments).Editable("checkIfGridEditable");
+                      columns.Command(command => command.Destroy()).Width(100);
+                  })
+                  .ToolBar(toolbar =>
+                  {
+                      toolbar.Create().HtmlAttributes(new { @class = "d-none" });
+                      toolbar.Save().HtmlAttributes(new { @class = "d-none" });
+                  })
+                  .Editable(editable => editable.Mode(GridEditMode.InCell))
+                  .Pageable(page => page.ButtonCount(7).Responsive(true))
+                  .Navigatable()
+                  .Sortable()
+                  .Filterable()
+                  .Reorderable(x => x.Columns(true))
+                  .Scrollable()
+                  .ColumnMenu(col => col.Filterable(true).Enabled(true))
+                  .Resizable(resize => resize.Columns(true))
+                  .Events(e => e.DataBound("onDataBound").ColumnMenuInit("columnMenuInit"))
+                  .DataSource(dataSource => dataSource
+                      .Ajax()
+                      .Batch(true)
+                      .PageSize(1000)
+                      .Events(events => events.Error("error_handler"))
+                      .Sort(sort => sort.Add(s=> s.FullName))
+                      .Model(model =>
+                      {
+                          model.Id(p => p.AuthorID);
+                          model.Field(p => p.AuthorID).Editable(false);
+                          model.Field(field => field.BirthCountry).DefaultValue(new ResearchApp.ViewModel.DropdownOptions());
+                          model.Field(field => field.Gender).DefaultValue(new ResearchApp.ViewModel.TextDropdownOptions());
+                          model.Field(field => field.IsOrganization).DefaultValue(new ResearchApp.ViewModel.TextDropdownOptions());
+                      })
+                      .Create("Authors_Create", "Grid")
+                      .Read("List", "Grid", new { type = GridTypes.Author })
+                      .Update("Authors_Update", "Grid")
+                      .Destroy("Authors_Destroy", "Grid")
+                  )
+    )
+</div>

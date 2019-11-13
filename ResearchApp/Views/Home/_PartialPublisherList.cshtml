@@ -1,0 +1,45 @@
+﻿@using ResearchApp.Data
+<div class="grid-container ml-2">
+    @(Html.Kendo().Grid<ResearchApp.ViewModel.PublisherViewModel>()
+                  .Name("grid")
+                  .Columns(columns =>
+                  {
+                      columns.Bound(b => b.PublisherID).Width(100);
+                      columns.Bound(b => b.Name).Editable("checkIfGridEditable");
+                      columns.Command(command => command.Destroy()).Width(100);
+                  })
+                  .ToolBar(toolbar =>
+                  {
+                      toolbar.Create().HtmlAttributes(new { @class = "d-none" });
+                      toolbar.Save().HtmlAttributes(new { @class = "d-none" });
+                  })
+                  .Editable(editable => editable.Mode(GridEditMode.InCell))
+                  .Pageable(page => page.ButtonCount(7).Responsive(true))
+                  .Navigatable()
+                  .Sortable()
+                  .Filterable()
+                  .Scrollable()
+                  .Reorderable(x => x.Columns(true))
+                  .ColumnMenu(col => col.Filterable(true).Enabled(true))
+                  .Resizable(resize => resize.Columns(true))
+                  .Events(e => e.DataBound("onDataBound").ColumnMenuInit("columnMenuInit"))
+                  .DataSource(dataSource => dataSource
+                      .Ajax()
+                      .Batch(true)
+                      .PageSize(1000)
+                      .Events(events => events.Error("error_handler"))
+                      .Sort(sort => sort.Add(s=> s.Name))
+                      .Model(model =>
+                      {
+
+                          model.Id(p => p.PublisherID);
+                          model.Field(p => p.PublisherID).Editable(false);
+                      })
+                      .Create("Publishers_Create", "Grid")
+                      .Read("List", "Grid", new { type = GridTypes.Publisher })
+                      .Update("Publishers_Update", "Grid")
+                      .Destroy("Publishers_Destroy", "Grid")
+                  )
+    )
+
+</div>

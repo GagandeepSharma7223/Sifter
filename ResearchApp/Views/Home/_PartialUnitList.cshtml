@@ -1,0 +1,54 @@
+﻿@using ResearchApp.Data
+<div class="grid-container ml-2">
+    @(Html.Kendo().Grid<ResearchApp.ViewModel.UnitViewModel>()
+                  .Name("grid")
+                  .Columns(columns =>
+                  {
+                      columns.Bound(b => b.UnitID).Width(100);
+                      columns.Bound(b => b.Work).ClientTemplate("#=(Work.Option == null) ? '' : Work.Option#").Editable("checkIfGridEditable");
+                      columns.Bound(b => b.StartPage).Editable("checkIfGridEditable");
+                      columns.Bound(b => b.Category).ClientTemplate("#=(Category.Option == null) ? '' : Category.Option#").Editable("checkIfGridEditable");
+                      columns.Bound(b => b.Title).Editable("checkIfGridEditable");
+                      columns.Bound(b => b.Text).Editable("checkIfGridEditable");
+                      columns.Bound(b => b.LiteralTitle).Editable("checkIfGridEditable");
+                      columns.Bound(b => b.TitleEnglish).Editable("checkIfGridEditable");
+                      columns.Bound(b => b.Attribution).Editable("checkIfGridEditable");
+                      columns.Command(command => command.Destroy()).Width(100);
+                  })
+                  .ToolBar(toolbar =>
+                  {
+                      toolbar.Create().HtmlAttributes(new { @class = "d-none" });
+                      toolbar.Save().HtmlAttributes(new { @class = "d-none" });
+                  })
+                  .Editable(editable => editable.Mode(GridEditMode.InCell))
+                  .Pageable(page => page.ButtonCount(7).Responsive(true))
+                  .Navigatable()
+                  .Sortable()
+                  .Filterable()
+                  .Scrollable()
+                  .Reorderable(x => x.Columns(true))
+                  .ColumnMenu(col => col.Filterable(true).Enabled(true))
+                  .Resizable(resize => resize.Columns(true))
+                  .Events(e => e.DataBound("onDataBound").ColumnMenuInit("columnMenuInit"))
+                  .DataSource(dataSource => dataSource
+                      .Ajax()
+                      .Batch(true)
+                      .PageSize(1000)
+                      .Events(events => events.Error("error_handler"))
+                      .Sort(sort => sort.Add(s=> s.Title))
+                      .Model(model =>
+                      {
+
+                          model.Id(p => p.UnitID);
+                          model.Field(p => p.UnitID).Editable(false);
+                          model.Field(field => field.Work).DefaultValue(new ResearchApp.ViewModel.DropdownOptions());
+                          model.Field(field => field.Category).DefaultValue(new ResearchApp.ViewModel.DropdownOptions());
+                      })
+                      .Create("Unit_Create", "Grid")
+                      .Read("List", "Grid", new { type = GridTypes.Unit })
+                      .Update("Unit_Update", "Grid")
+                      .Destroy("Unit_Destroy", "Grid")
+                  )
+    )
+
+</div>

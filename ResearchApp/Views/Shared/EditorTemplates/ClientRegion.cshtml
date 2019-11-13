@@ -1,0 +1,28 @@
+﻿@model ResearchApp.ViewModel.DropdownOptions
+
+@(Html.Kendo().DropDownListFor(m => m)
+                          .DataValueField("Id")
+                          .DataTextField("Option")
+                          .Filter(FilterType.Contains)
+                          .MinLength(3)
+                          .Height(200)
+                          .DataSource(source =>
+                          {
+                              source.Custom()
+                                    .ServerFiltering(true)
+                                    .ServerPaging(true)
+                                    .PageSize(20)
+                                    .Type("aspnetmvc-ajax")
+                                    .Transport(transport =>
+                                    {
+                                        transport.Read("GetDropdownOptions", "Grid", new { treeTable = "Region", optionCol = "Name" });
+                                    })
+                                    .Schema(schema =>
+                                    {
+                                        schema.Data("Data")
+                                              .Total("Total");
+                                    });
+                          })
+                          .Virtual(v => v.ItemHeight(26).ValueMapper("valueMapperRegion"))
+
+)

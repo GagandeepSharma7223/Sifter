@@ -1,0 +1,47 @@
+﻿<div class="pane-content">
+    <div class="col-md-12">
+        <blockquote class="blockquote">
+            <p class="mb-0">The Sifter</p>
+            <footer class="blockquote-footer"><cite title="Source Title">Food History Database</cite></footer>
+        </blockquote>
+        <p>Tables :</p>
+
+        <div class="demo-section k-content">
+            @(Html.Kendo().TreeView()
+                  .Name("treeview").Events(ev => ev.Select("loadData"))
+                  .Items(treeview =>
+                  {
+                      treeview.Add().Text("Lookup Tables")
+                          .Expanded(true)
+                          .Items(root =>
+                          {
+                              root.Add().Text("Category").HtmlAttributes(new { param = "category" });
+                              root.Add().Text("City").HtmlAttributes(new { param = "city" });
+                              root.Add().Text("Country").HtmlAttributes(new { param = "country" });
+                              root.Add().Text("Language").HtmlAttributes(new { param = "language" });
+                              root.Add().Text("Region").HtmlAttributes(new { param = "region" });
+                          });
+
+                      //treeview.Add().Text("List Tables")
+                      //.Expanded(true)
+                      //.Items(item =>
+                      //{
+                      //    item.Add().Text("Publisher").HtmlAttributes(new { param = "publisher" });
+                      //});
+
+
+                      treeview.Add().Text("Main Tables")
+                      .Expanded(true)
+                      .Items(item =>
+                      {
+                          item.Add().Text("Author").HtmlAttributes(new { param = "author" });
+                          item.Add().Text("Publisher").HtmlAttributes(new { param = "publisher" });
+                          item.Add().Text("Unit").HtmlAttributes(new { param = "unit" });
+                          item.Add().Text("Work").Selected(true).HtmlAttributes(new { param = "book" });
+                          item.Add().Text("WorkAuthor").HtmlAttributes(new { param = "workauthor" });
+                      });
+                  })
+            )
+        </div>
+    </div>
+</div>

@@ -1,0 +1,48 @@
+﻿@using ResearchApp.Data
+<div class="grid-container ml-2">
+    @(Html.Kendo().Grid<ResearchApp.ViewModel.WorkAuthorViewModel>()
+          .Name("grid")
+          .Columns(columns =>
+          {
+              columns.Bound(b => b.WorkAuthorID).Width(100);
+              columns.Bound(b => b.Work).ClientTemplate("#=(Work.Option == null) ? '' : Work.Option#").Editable("checkIfGridEditable");
+              columns.Bound(b => b.Author).ClientTemplate("#=(Author.Option == null) ? '' : Author.Option #").Editable("checkIfGridEditable");
+              columns.Bound(b => b.Role).Editable("checkIfGridEditable");
+              columns.Command(command => command.Destroy()).Width(100);
+          })
+          .ToolBar(toolbar =>
+          {
+              toolbar.Create().HtmlAttributes(new { @class = "d-none" });
+              toolbar.Save().HtmlAttributes(new { @class = "d-none" });
+          })
+          .Editable(editable => editable.Mode(GridEditMode.InCell))
+          .Pageable(page => page.ButtonCount(7).Responsive(true))
+          .Navigatable()
+          .Sortable()
+          .Filterable()
+          .Scrollable()
+          .Reorderable(x => x.Columns(true))
+          .ColumnMenu(col => col.Filterable(true).Enabled(true))
+          .Resizable(resize => resize.Columns(true))
+          .Events(e => e.DataBound("onDataBound").ColumnMenuInit("columnMenuInit"))
+          .DataSource(dataSource => dataSource
+              .Ajax()
+              .Batch(true)
+              .PageSize(1000)
+              .Events(events => events.Error("error_handler"))
+              .Model(model =>
+              {
+
+                  model.Id(p => p.WorkAuthorID);
+                  model.Field(field => field.WorkAuthorID).Editable(false);
+                  model.Field(field => field.Work).DefaultValue(new ResearchApp.ViewModel.DropdownOptions());
+                  model.Field(field => field.Author).DefaultValue(new ResearchApp.ViewModel.DropdownOptions());
+              })
+              .Create("WorkAuthor_Create", "Grid")
+              .Read("List", "Grid", new { type = GridTypes.WorkAuthor })
+              .Update("WorkAuthor_Update", "Grid")
+              .Destroy("WorkAuthor_Destroy", "Grid")
+          )
+    )
+
+</div>

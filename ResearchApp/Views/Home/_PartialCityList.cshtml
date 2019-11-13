@@ -1,0 +1,60 @@
+﻿@using ResearchApp.Data
+<div class="grid-container ml-2">
+    @(Html.Kendo().Grid<ResearchApp.ViewModel.CityViewModel>()
+                  .Name("grid")
+                  .Columns(columns =>
+                  {
+                      columns.Bound(b => b.CityID).Width(100);
+                      columns.Bound(b => b.Name).Editable("checkIfGridEditable");
+                      columns.Bound(b => b.DisplayName).Editable("checkIfGridEditable");
+                      columns.Bound(b => b.Country).ClientTemplate("#=(Country.Option == null) ? '' : Country.Option#").Editable("checkIfGridEditable");
+                      columns.Bound(b => b.Region).ClientTemplate("#=(Region.Option == null) ? '' : Region.Option#").Editable("checkIfGridEditable");
+                      columns.Bound(b => b.Population).ClientTemplate("#=(Population == null) ? '' : Population#").Editable("checkIfGridEditable");
+                      columns.Bound(b => b.Latitude).ClientTemplate("#=(Latitude == null) ? '' : Latitude#").Editable("checkIfGridEditable");
+                      columns.Bound(b => b.Longitude).ClientTemplate("#=(Longitude == null) ? '' : Longitude#").Editable("checkIfGridEditable");
+                      columns.Bound(b => b.TimeZone).Editable("checkIfGridEditable");
+                      columns.Bound(b => b.FeatureCode).Editable("checkIfGridEditable");
+                      columns.Bound(b => b.GeoNameId).ClientTemplate("#=(GeoNameId == null) ? '' : GeoNameId#").Editable("checkIfGridEditable");
+                      columns.Bound(b => b.AlternateNames).Editable("checkIfGridEditable");
+                      columns.Bound(b => b.NameAscii).Editable("checkIfGridEditable");
+                      columns.Bound(b => b.Slug).Editable("checkIfGridEditable");
+                      columns.Bound(b => b.SearchNames).Editable("checkIfGridEditable");
+                      columns.Command(command => command.Destroy()).Width(100);
+                  })
+                  .ToolBar(toolbar =>
+                  {
+                      toolbar.Create().HtmlAttributes(new { @class = "d-none" });
+                      toolbar.Save().HtmlAttributes(new { @class = "d-none" });
+                  })
+                  .Editable(editable => editable.Mode(GridEditMode.InCell))
+                  .Pageable(page => page.ButtonCount(7).Responsive(true))
+                  .Navigatable()
+                  .Sortable()
+                  .Filterable()
+                  .Reorderable(x => x.Columns(true))
+                  .Scrollable()
+                  .ColumnMenu(col => col.Filterable(true).Enabled(true))
+                  .Resizable(resize => resize.Columns(true))
+                  .Events(e => e.DataBound("onDataBound").ColumnMenuInit("columnMenuInit"))
+                  .DataSource(dataSource => dataSource
+                      .Ajax()
+                      .Batch(true)
+                      .PageSize(1000)
+                      .Events(events => events.Error("error_handler"))
+                      .Sort(sort => sort.Add(s=> s.Name))
+                      .Model(model =>
+                      {
+
+                          model.Id(p => p.CityID);
+                          model.Field(p => p.CityID).Editable(false);
+                          model.Field(field => field.Country).DefaultValue(new ResearchApp.ViewModel.DropdownOptions());
+                          model.Field(field => field.Region).DefaultValue(new ResearchApp.ViewModel.DropdownOptions());
+                      })
+                      .Create("City_Create", "Grid")
+                      .Read("List", "Grid", new { type = GridTypes.City })
+                      .Update("City_Update", "Grid")
+                      .Destroy("City_Destroy", "Grid")
+                  )
+    )
+
+</div>

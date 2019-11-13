@@ -1,0 +1,296 @@
+﻿html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    
+}
+
+/* #region Navbar styles */
+.navbar-header {
+    border-bottom: 1px solid rgba(255,255,255, 0.1);
+}
+
+.navbar-brand {
+    font-size: 2rem;
+    font-weight: lighter;
+}
+/* #endregion */
+
+
+/* #region Footer styles */
+.footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    font-size: 0.85em;
+}
+/* #endregion */
+
+/* #region custom Kendo UI styles */
+
+
+h1 a {
+    color: #fff;
+    text-decoration: none;
+}
+
+h2 {
+    font-weight: lighter;
+}
+
+.placeholder img {
+    display: inline-block;
+}
+
+p .k-button {
+    margin: 0 15px 0 0;
+}
+
+#configure {
+    display: none;
+}
+
+p .k-button {
+    margin: 0 15px 0 0;
+}
+
+.k-state-active .label {
+    font-size: 1em;
+}
+
+#responsive-panel {
+    padding: 0;
+    width: 100%;
+}
+
+    #responsive-panel .k-menu {
+        padding: .5rem;
+    }
+/* #endregion */
+
+@media (max-width: 767px) {
+    #responsive-panel {
+        transition: all linear .2s;
+    }
+
+    #configure {
+        display: block;
+        float: right;
+    }
+
+    .k-rpanel {
+        padding: 0 1rem;
+    }
+
+    .k-rpanel-expanded {
+        padding: .5rem 1rem;
+    }
+
+    .navbar-header {
+        width: 100%;
+    }
+
+    .navbar-brand {
+        font-size: 1.5rem;
+    }
+
+    h2 {
+        font-size: 2rem;
+    }
+
+    .k-menu .k-item,
+    .k-menu .k-link {
+        width: 100%;
+    }
+
+    .k-widget.k-menu-horizontal > .k-item {
+        border: none;
+    }
+
+    .k-menu .k-link {
+        box-sizing: border-box;
+    }
+}
+
+
+.pager-info {
+    flex: none !important;
+    order: 0 !important;
+}
+
+html,
+body {
+    height: 100%;
+    overflow-y: auto;
+}
+
+#horizontal {
+    height: 100%;
+}
+
+#vertical {
+    border-width: 0;
+}
+
+#fieldlist {
+    margin: 0 0 -2em;
+    padding: 0;
+}
+
+    #fieldlist li {
+        list-style: none;
+        padding-bottom: 2em;
+    }
+
+    #fieldlist label {
+        display: block;
+        padding-bottom: 1em;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 12px;
+        color: #444;
+    }
+
+    #fieldlist input {
+        width: 100%;
+    }
+
+span.k-tooltip {
+    margin-top: 5px;
+    line-height: 1.7em;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: left;
+}
+
+.k-animation-container > form {
+    width: 300px;
+    /*height: 300px;*/
+}
+
+.k-group.k-menu-group.k-popup {
+    width: 300px;
+}
+
+ul.k-reset.k-multicheck-wrap {
+    height: 175px;
+}
+
+.k-filter-menu .k-datepicker, .k-filter-menu .k-datetimepicker, .k-filter-menu .k-dropdown, .k-filter-menu .k-numerictextbox, .k-filter-menu .k-textbox, .k-filter-menu .k-timepicker {
+    width: 100%;
+}
+
+.k-filter-menu span.k-filter-and {
+    width: 100%;
+}
+
+.k-pager-wrap {
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.k-grid {
+    font-size: 12px;
+}
+
+.k-pane.k-scrollable {
+    margin-left: 0 !important;
+}
+
+.checkbox-ontainer {
+    max-height: 200px;
+    overflow: auto;
+    background: #f5f5f5;
+    border: none;
+}
+
+.k-command-cell {
+    padding: 0px 0.6em !important;
+    text-align: center;
+    font-size: 10px;
+}
+
+    .k-command-cell a {
+        padding: 3.5px 8px;
+    }
+
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    margin: 0;
+}
+
+#loader {
+    border: 5px solid #f3f3f3;
+    -webkit-animation: spin 1s linear infinite;
+    animation: spin 1s linear infinite;
+    border-top: 5px solid #555;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    position: absolute;
+    left: 50%;
+    top: 46%;
+}
+
+@-webkit-keyframes spin {
+    0% {
+        -webkit-transform: rotate(0deg);
+    }
+
+    100% {
+        -webkit-transform: rotate(360deg);
+    }
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Add animation to "page content" */
+.animate-bottom {
+    position: relative;
+    -webkit-animation-name: animatebottom;
+    -webkit-animation-duration: 1s;
+    animation-name: animatebottom;
+    animation-duration: 1s
+}
+
+@-webkit-keyframes animatebottom {
+    from {
+        bottom: -100px;
+        opacity: 0
+    }
+
+    to {
+        bottom: 0px;
+        opacity: 1
+    }
+}
+
+@keyframes animatebottom {
+    from {
+        bottom: -100px;
+        opacity: 0
+    }
+
+    to {
+        bottom: 0;
+        opacity: 1
+    }
+}
+
+#myDiv {
+    display: none;
+    text-align: center;
+}

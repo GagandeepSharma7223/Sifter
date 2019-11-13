@@ -1,0 +1,54 @@
+﻿@using ResearchApp.Data
+<div class="grid-container ml-2">
+    @(Html.Kendo().Grid<ResearchApp.ViewModel.CountryViewModel>()
+                  .Name("grid")
+                  .Columns(columns =>
+                  {
+                      columns.Bound(b => b.CountryID).Width(100);
+                      columns.Bound(b => b.Continent).Editable("checkIfGridEditable");
+                      columns.Bound(b => b.Name).Editable("checkIfGridEditable");
+                      columns.Bound(b => b.AlternateNames).Editable("checkIfGridEditable");
+                      columns.Bound(b => b.Code2).Editable("checkIfGridEditable");
+                      columns.Bound(b => b.Code3).Editable("checkIfGridEditable");
+                      columns.Bound(b => b.TLD).Editable("checkIfGridEditable");
+                      columns.Bound(b => b.Phone).Editable("checkIfGridEditable");
+                      columns.Bound(b => b.GeoNameId).ClientTemplate("#=(GeoNameId == null) ? '' : GeoNameId#").Editable("checkIfGridEditable");
+                      columns.Bound(b => b.NameAscii).Editable("checkIfGridEditable");
+                      columns.Bound(b => b.Slug).Editable("checkIfGridEditable");
+                      columns.Command(command => command.Destroy()).Width(100);
+                  })
+                  .ToolBar(toolbar =>
+                  {
+                      toolbar.Create().HtmlAttributes(new { @class = "d-none" });
+                      toolbar.Save().HtmlAttributes(new { @class = "d-none" });
+                  })
+                  .Editable(editable => editable.Mode(GridEditMode.InCell))
+                  .Pageable(page => page.ButtonCount(7).Responsive(true))
+                  .Navigatable()
+                  .Sortable()
+                  .Filterable()
+                  .Reorderable(x => x.Columns(true))
+                  .Scrollable()
+                  .ColumnMenu(col => col.Filterable(true).Enabled(true))
+                  .Resizable(resize => resize.Columns(true))
+                  .Events(e => e.DataBound("onDataBound").ColumnMenuInit("columnMenuInit"))
+                  .DataSource(dataSource => dataSource
+                      .Ajax()
+                      .Batch(true)
+                      .PageSize(1000)
+                      .Events(events => events.Error("error_handler"))
+                      .Sort(sort => sort.Add(s=> s.Name))
+                      .Model(model =>
+                      {
+
+                          model.Id(p => p.CountryID);
+                          model.Field(p => p.CountryID).Editable(false);
+                      })
+                      .Create("Country_Create", "Grid")
+                      .Read("List", "Grid", new { type = GridTypes.Country })
+                      .Update("Country_Update", "Grid")
+                      .Destroy("Country_Destroy", "Grid")
+                  )
+    )
+
+</div>
