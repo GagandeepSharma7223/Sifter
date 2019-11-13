@@ -19,7 +19,7 @@
                       columns.Bound(b => b.FirstActivityYear).ClientTemplate("#=(FirstActivityYear == null) ? '' : FirstActivityYear#").Editable("checkIfGridEditable").Width(100);
                       columns.Bound(b => b.Occupation).Editable("checkIfGridEditable").Width(150);
                       columns.Bound(b => b.Sources).Editable("checkIfGridEditable").Width(150);
-                      columns.Bound(b => b.Comments).Editable("checkIfGridEditable");
+                      columns.Bound(b => b.Comments).Editable("checkIfGridEditable").Width(150);
                       columns.Command(command => command.Destroy()).Width(100);
                   })
                   .ToolBar(toolbar =>

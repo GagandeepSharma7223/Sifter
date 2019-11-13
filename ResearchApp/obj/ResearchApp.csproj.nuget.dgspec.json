@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Projects\\ResearchApp\\ResearchApp\\ResearchApp.csproj": {}
+    "C:\\Projects\\Sifter\\ResearchApp\\ResearchApp.csproj": {}
   },
   "projects": {
-    "C:\\Projects\\ResearchApp\\ResearchApp\\ResearchApp.csproj": {
+    "C:\\Projects\\Sifter\\ResearchApp\\ResearchApp.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Projects\\ResearchApp\\ResearchApp\\ResearchApp.csproj",
+        "projectUniqueName": "C:\\Projects\\Sifter\\ResearchApp\\ResearchApp.csproj",
         "projectName": "ResearchApp",
-        "projectPath": "C:\\Projects\\ResearchApp\\ResearchApp\\ResearchApp.csproj",
+        "projectPath": "C:\\Projects\\Sifter\\ResearchApp\\ResearchApp.csproj",
         "packagesPath": "C:\\Users\\shubam\\.nuget\\packages\\",
-        "outputPath": "C:\\Projects\\ResearchApp\\ResearchApp\\obj\\",
+        "outputPath": "C:\\Projects\\Sifter\\ResearchApp\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
         ],
         "configFilePaths": [
-          "C:\\Projects\\ResearchApp\\NuGet.Config",
+          "C:\\Projects\\Sifter\\NuGet.Config",
           "C:\\Users\\shubam\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
