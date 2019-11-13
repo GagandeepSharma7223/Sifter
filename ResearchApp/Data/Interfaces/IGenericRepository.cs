@@ -18,6 +18,6 @@ namespace ResearchApp.Data
         Task Delete(int id);
 
         List<DropdownOptions> GetOptions(string type, string optionCol);
-        List<dynamic> GetFilterData(string type, string optionCol, int page, int pageSize);
+        List<dynamic> GetFilterData(string type, string optionCol, int page, int pageSize, string fieldType);
     }
 }

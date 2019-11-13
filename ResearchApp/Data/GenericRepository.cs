@@ -76,9 +76,20 @@ namespace ResearchApp.Data
             return result;
         }
 
-        public List<dynamic> GetFilterData(string type, string optionCol, int page, int pageSize)
+        public List<dynamic> GetFilterData(string type, string optionCol, int page, int pageSize, string fieldType)
         {
-            return _dbContext.DynamicListFromSql($"SELECT DISTINCT {optionCol} FROM {type} WHERE {optionCol}!=@a ORDER BY {optionCol} OFFSET { (page - 1) * pageSize } ROWS FETCH NEXT { pageSize } ROWS ONLY", new Dictionary<string, object> { { "a", string.Empty } }).ToList();
+            if (fieldType == "string")
+            {
+                return _dbContext.DynamicListFromSql($"SELECT DISTINCT {optionCol} FROM {type} WHERE {optionCol}!=@a ORDER BY {optionCol} OFFSET { (page - 1) * pageSize } ROWS FETCH NEXT { pageSize } ROWS ONLY", new Dictionary<string, object> { { "a", string.Empty } }).ToList();
+            }
+            else
+            {
+                var sqltblname = _dbContext.DynamicListFromSql($"SELECT FKTable  FROM TreeColumn WHERE TableName=@a and  DisplayName = @b", new Dictionary<string, object> { { "a", type }, { "b", optionCol } }).FirstOrDefault();
+                var colName = _dbContext.DynamicListFromSql($"SELECT FKDisplayCol  FROM TreeColumn WHERE TableName=@a and  DisplayName = @b", new Dictionary<string, object> { { "a", type }, { "b", optionCol } }).FirstOrDefault();
+                var joincol1 = _dbContext.DynamicListFromSql($"SELECT FKJoinCol  FROM TreeColumn WHERE TableName=@a and  DisplayName = @b", new Dictionary<string, object> { { "a", type }, { "b", optionCol } }).FirstOrDefault();
+                var joincol2 = _dbContext.DynamicListFromSql($"SELECT ColumnName  FROM TreeColumn WHERE TableName=@a and  DisplayName = @b", new Dictionary<string, object> { { "a", type }, { "b", optionCol } }).FirstOrDefault();
+                return _dbContext.DynamicListFromSql($" SELECT DISTINCT ( {colName} ) as {optionCol} FROM {sqltblname} t1 inner join {type} t2 on t2.{joincol2} = t1.{joincol1} where {colName} !=@a ORDER BY {colName} OFFSET { (page - 1) * pageSize } ROWS FETCH NEXT { pageSize } ROWS ONLY", new Dictionary<string, object> { { "a", string.Empty } }).ToList();
+            }
             //return _dbContext.Query($"ResearchApp.Models.{type}")
             //return _dbContext.Query($"ResearchApp.Models.{type}")
             //    .Select($"new ({optionCol})").Distinct();
