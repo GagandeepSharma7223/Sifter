@@ -845,6 +845,8 @@
                         e.preventDefault();
                         e.stopPropagation();
                         if (element) {
+
+                            debugger
                             var filter = dataSource.filter() || { logic: "and", filters: [] };
                             var fieldFilters = $.map(element.find(":checkbox:checked"), function (input, index) {
                                 //if (fieldType === 'object') {
@@ -855,8 +857,9 @@
                                 //        ddFilterTwo.value(input.value);
                                 //    }
                                 //}
+                                
                                 return {
-                                    field: field,
+                                    field: fieldType =='object' ? field+ 'Id' :field ,
                                     operator: 'eq',
                                     value: parseValue(fieldType, input.value)
                                 };
@@ -866,14 +869,14 @@
                             if (inputFilterOne || inputFilterTwo) {
                                 if (inputFilterOne) {
                                     fieldFilters.push({
-                                        field: field,
+                                        field: fieldType =='object' ? field+ 'Id' :field ,
                                         operator: filterOneValue,
                                         value: parseValue(fieldType, inputFilterOne)
                                     });
                                 }
                                 if (inputFilterTwo) {
                                     fieldFilters.push({
-                                        field: field,
+                                        field: fieldType =='object' ? field+ 'Id' :field ,
                                         operator: filterTwoValue,
                                         value: parseValue(fieldType, inputFilterTwo)
                                     });
@@ -973,7 +976,7 @@
             case 'number':
                 return parseInt(value);
             case 'object':
-                return (typeof value == 'string') ? value : parseInt(value);
+                return parseInt(value);//(typeof value == 'string') ? value : parseInt(value)
             default:
                 return value;
         }

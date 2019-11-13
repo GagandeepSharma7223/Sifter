@@ -88,7 +88,7 @@ namespace ResearchApp.Data
                 var colName = _dbContext.DynamicListFromSql($"SELECT FKDisplayCol  FROM TreeColumn WHERE TableName=@a and  DisplayName = @b", new Dictionary<string, object> { { "a", type }, { "b", optionCol } }).FirstOrDefault();
                 var joincol1 = _dbContext.DynamicListFromSql($"SELECT FKJoinCol  FROM TreeColumn WHERE TableName=@a and  DisplayName = @b", new Dictionary<string, object> { { "a", type }, { "b", optionCol } }).FirstOrDefault();
                 var joincol2 = _dbContext.DynamicListFromSql($"SELECT ColumnName  FROM TreeColumn WHERE TableName=@a and  DisplayName = @b", new Dictionary<string, object> { { "a", type }, { "b", optionCol } }).FirstOrDefault();
-                return _dbContext.DynamicListFromSql($" SELECT DISTINCT ( {colName} ) as {optionCol} FROM {sqltblname} t1 inner join {type} t2 on t2.{joincol2} = t1.{joincol1} where {colName} !=@a ORDER BY {colName} OFFSET { (page - 1) * pageSize } ROWS FETCH NEXT { pageSize } ROWS ONLY", new Dictionary<string, object> { { "a", string.Empty } }).ToList();
+                return _dbContext.DynamicListFromSql($" SELECT DISTINCT {colName}  FROM {sqltblname}  where {colName} !=@a ORDER BY {colName} ", new Dictionary<string, object> { { "a", string.Empty } }).ToList();
             }
 
             // test commit
