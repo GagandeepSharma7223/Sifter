@@ -659,8 +659,10 @@
                         listView.destroy();
                         $("#list-view-" + field).remove(); // remove all ListView HTML
                         element = $("<div id='list-view-" + field + "' class='checkbox-ontainer'></div>").insertAfter(ele).kendoListView({
-                            dataSource: columnDataSource,
-                            template: "<div><input type='checkbox' value='#:" + field + ".Id#'/>#:" + field + ".Option#</div>"
+                            dataSource: dataSourceListView,
+                            height: 135,
+                            template: "<div class='list-Item'><input type='checkbox' value='#:Id#'/>#:Option#</div>"
+                            //template: "<div><input type='checkbox' value='#:" + field + ".Id#'/>#:" + field + ".Option#</div>"
                         });
                     }
 
@@ -915,7 +917,7 @@
                 }
                 var processScroll = true;
                 $('#list-view-' + field).on('scroll', function (e) {
-                    if (processScroll && $(this).scrollTop() + $(this).innerHeight() >= $(this)[0].scrollHeight) {
+                    if (processScroll && $(this).scrollTop() + $(this).innerHeight() >= $(this)[0].scrollHeight - 5) {
                         processScroll = false;
                         pageModel[field]++;
                         console.log(pageModel);

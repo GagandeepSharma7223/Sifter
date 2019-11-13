@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ResearchApp.Models;
+using ResearchApp.ViewModel;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -35,7 +36,7 @@ namespace ResearchApp.Data
         }
 
 
-        public static IEnumerable<dynamic> DynamicListFromSql(this DbContext db, string Sql, Dictionary<string, object> Params)
+        public static IEnumerable<dynamic> DynamicListFromSql(this DbContext db, string Sql, Dictionary<string, object> Params, string fieldType = "string")
         {
             using (var cmd = db.Database.GetDbConnection().CreateCommand())
             {
@@ -54,7 +55,18 @@ namespace ResearchApp.Data
                 {
                     var indices = Enumerable.Range(0, dataReader.FieldCount).ToList();
                     foreach (IDataRecord record in dataReader as IEnumerable)
-                        yield return record[0];
+                        if (fieldType == "object")
+                        {
+                            yield return new DropdownOptions
+                            {
+                              Id = (int)record[0],
+                              Option = record[1].ToString()
+                            };
+                        }
+                        else
+                        {
+                            yield return record[0];
+                        }
                 }
             }
         }

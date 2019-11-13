@@ -86,15 +86,9 @@ namespace ResearchApp.Data
             {
                 var sqltblname = _dbContext.DynamicListFromSql($"SELECT FKTable  FROM TreeColumn WHERE TableName=@a and  DisplayName = @b", new Dictionary<string, object> { { "a", type }, { "b", optionCol } }).FirstOrDefault();
                 var colName = _dbContext.DynamicListFromSql($"SELECT FKDisplayCol  FROM TreeColumn WHERE TableName=@a and  DisplayName = @b", new Dictionary<string, object> { { "a", type }, { "b", optionCol } }).FirstOrDefault();
-                var joincol1 = _dbContext.DynamicListFromSql($"SELECT FKJoinCol  FROM TreeColumn WHERE TableName=@a and  DisplayName = @b", new Dictionary<string, object> { { "a", type }, { "b", optionCol } }).FirstOrDefault();
-                var joincol2 = _dbContext.DynamicListFromSql($"SELECT ColumnName  FROM TreeColumn WHERE TableName=@a and  DisplayName = @b", new Dictionary<string, object> { { "a", type }, { "b", optionCol } }).FirstOrDefault();
-                return _dbContext.DynamicListFromSql($" SELECT DISTINCT {colName}  FROM {sqltblname}  where {colName} !=@a ORDER BY {colName} ", new Dictionary<string, object> { { "a", string.Empty } }).ToList();
+                string query = $"SELECT MAX({sqltblname}ID) as {sqltblname}ID ,{colName} FROM {sqltblname} where {colName} != @a GROUP BY {colName} ORDER BY {colName}  OFFSET { (page - 1) * pageSize } ROWS FETCH NEXT { pageSize } ROWS ONLY";
+                return _dbContext.DynamicListFromSql(query, new Dictionary<string, object> { { "a", string.Empty } }, fieldType).ToList();
             }
-
-            // test commit
-            //return _dbContext.Query($"ResearchApp.Models.{type}")
-            //return _dbContext.Query($"ResearchApp.Models.{type}")
-            //    .Select($"new ({optionCol})").Distinct();
         }
 
         public void Dispose()
