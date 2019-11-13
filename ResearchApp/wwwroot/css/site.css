@@ -224,6 +224,10 @@ input[type=number]::-webkit-outer-spin-button {
     margin: 0;
 }
 
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
 #loader {
     background-repeat: no-repeat;
     position: absolute;
