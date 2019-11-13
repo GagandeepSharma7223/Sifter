@@ -78,7 +78,7 @@ namespace ResearchApp.Data
 
         public List<dynamic> GetFilterData(string type, string optionCol, int page, int pageSize, string fieldType)
         {
-            if (fieldType == "string")
+            if (fieldType != "object")
             {
                 return _dbContext.DynamicListFromSql($"SELECT DISTINCT {optionCol} FROM {type} WHERE {optionCol}!=@a ORDER BY {optionCol} OFFSET { (page - 1) * pageSize } ROWS FETCH NEXT { pageSize } ROWS ONLY", new Dictionary<string, object> { { "a", string.Empty } }).ToList();
             }

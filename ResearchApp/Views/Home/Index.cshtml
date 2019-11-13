@@ -581,7 +581,8 @@
             fieldType = fieldInfo.type;
         }
         var dataSource = this.dataSource;
-
+        var treeView = $('#treeview').data('kendoTreeView');
+        var treeTable = treeView.dataItem(treeView.select()).text;
         var dataSourceListView = new kendo.data.DataSource({
              type:"aspnetmvc-ajax",
              transport: {
@@ -589,7 +590,7 @@
                      type: "POST",
                      url: "/Grid/BindFilterListView",
                      data: {
-                         treeTable: 'Work',
+                         treeTable: treeTable,
                          optionCol: field,
                          fieldType: fieldType
                      }
@@ -606,7 +607,7 @@
                      type: "POST",
                      url: "/Grid/BindFilterListView",
                      data: {
-                         treeTable: 'Work',
+                         treeTable: treeTable,
                          optionCol: field,
                          fieldType: fieldType
                      }
