@@ -320,6 +320,17 @@ namespace ResearchApp.Controllers
             return list;
         }
 
+        [AcceptVerbs("Get")]
+        public IActionResult BindFilterDropDown([DataSourceRequest] DataSourceRequest request, string treeTable, string optionCol, string fieldType)
+        {
+            if(request.PageSize == 0)
+            {
+
+                request.PageSize = 10000;
+            }
+            var result = _workRepo.GetFilterData(treeTable, optionCol, request.Page, request.PageSize, fieldType);
+            return Json(result);
+        }
 
         [AcceptVerbs("Post")]
         public IActionResult BindFilterListView([DataSourceRequest] DataSourceRequest request, string treeTable, string optionCol, string fieldType)

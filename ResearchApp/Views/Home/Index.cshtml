@@ -148,6 +148,9 @@
             return this;
         };
 
+
+       
+
         populateDDSession('Author', 'FullName');
         populateDDSession('Category', 'Name');
         populateDDSession('City', 'Name');
@@ -622,6 +625,8 @@
         var pageModel = {};
         pageModel[field] = 1;
 
+        var columnDataSourceNew = dataSourceListViewScroll;
+
         var columnDataSource = new kendo.data.DataSource({
             data: uniqueForField(dataSource.data(), field, fieldType),
             sort: { field: field, dir: "asc" }
@@ -692,21 +697,37 @@
                                 inputSecond.removeClass('k-textbox').removeAttr("data-bind");
                                 var textField = field + ".Option";
                                 var valueField = field + ".Id";
-
-
+                                debugger
+                             var listView = $('#list-view-' + field).data('kendoListView');;
 
                                 var comboBoxDataSource = columnDataSource;
                                 var ddDataSource = new kendo.data.DataSource({
                                     data: comboBoxDataSource.data()
                                 });
                                 ddFilterOne = $(inputFirst).kendoDropDownList({
-                                    dataSource: ddDataSource,
-                                    dataTextField: textField,
-                                    dataValueField: valueField,
+                                   // dataSource: listView.dataSource,
+                                    dataSource: {
+                                        transport: {
+                                            read: {
+                                                dataType: "json",
+                                                url: "/Grid/BindFilterDropDown",
+                                                data: {
+                                                    treeTable: treeTable,
+                                                    optionCol: field,
+                                                    fieldType: fieldType
+                                                },
+
+                                            }
+                                        }
+
+                                    },
+                                    dataTextField: "Option",
+                                    dataValueField: "Id",
                                     change: function (e) {
                                         console.log('Dropdown filter selected:: ' + this.value());
                                         inputFilterOne = this.value();
-                                    }
+                                    },                                    
+                                    processScroll: true
                                 }).data("kendoDropDownList");
 
                                 ddFilterOne.setOptions({ optionLabel: "Select" });
@@ -714,12 +735,26 @@
                                 ddFilterOne.select(0);
 
                                 ddFilterTwo = $(inputSecond).kendoDropDownList({
-                                    dataSource: ddDataSource,
-                                    dataTextField: textField,
-                                    dataValueField: valueField,
+                                    dataSource: {
+                                        transport: {
+                                            read: {
+                                                dataType: "json",
+                                                url: "/Grid/BindFilterDropDown",
+                                                data: {
+                                                    treeTable: treeTable,
+                                                    optionCol: field,
+                                                    fieldType: fieldType
+                                                },
+
+                                            }
+                                        }
+                                    },
+                                    dataTextField: "Option",
+                                    dataValueField: "Id",
                                     change: function (e) {
                                         inputFilterTwo = this.value();
-                                    }
+                                    },
+                                    processScroll: true
                                 }).data("kendoDropDownList");
 
                                 ddFilterTwo.setOptions({ optionLabel: "Select" });
@@ -926,6 +961,8 @@
                         }
                     });
                 }
+                
+                
                 var processScroll = true;
                 $('#list-view-' + field).on('scroll', function (e) {
                     if (processScroll && $(this).scrollTop() + $(this).innerHeight() >= $(this)[0].scrollHeight - 5) {
