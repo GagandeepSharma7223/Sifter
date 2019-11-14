@@ -446,7 +446,8 @@
         });
     }
 
-       function valueMapperAuthor(options) {
+    function valueMapperAuthor(options) {
+        debugger
         $.ajax({
             url: "@Url.Action("Dropdown_ValueMapper", "Grid")",
             data: convertValues(options.value, 'Author'),
@@ -596,7 +597,7 @@
                      }
                  }
              },
-             pageSize: 50,
+             pageSize: 150,
              serverPaging: true
         });
 
@@ -613,7 +614,7 @@
                      }
                  }
              },
-             pageSize: 50,
+             pageSize: 150,
              serverPaging: true,
              serverSorting: true
         });
@@ -692,6 +693,8 @@
                                 var textField = field + ".Option";
                                 var valueField = field + ".Id";
 
+
+
                                 var comboBoxDataSource = columnDataSource;
                                 var ddDataSource = new kendo.data.DataSource({
                                     data: comboBoxDataSource.data()
@@ -759,6 +762,8 @@
                                 $(logicDropDown).change(function (e) {
                                     filterLogicValue = this.value;
                                 });
+
+                                
                             }
                             else {
                                 var filterOne = advancedOptionFrm.find('select:eq(0)');
@@ -908,10 +913,16 @@
                     $('#filter-search-' + field).on('keyup', function (e) {
                         console.log('search items::' + this.value);
                         if (fieldType === 'object') {
-                            columnDataSource.filter({ field: field + ".Option", operator: "contains", value: this.value });
+                            debugger
+                            var listView = $('#list-view-' + field).data('kendoListView');
+                            listView.dataSource.filter({ field: "Option", operator: "contains", value: this.value });
+                           // dataSourceListViewScroll.filter({ field: field + ".Option", operator: "contains", value: this.value });
                         }
                         else {
-                            columnDataSource.filter({ field: field, operator: "contains", value: this.value });
+                            debugger
+                            var listView = $('#list-view-' + field).data('kendoListView');
+                            listView.dataSource.filter({ operator: "contains", value: this.value });
+                            //columnDataSource.filter({ field: field, operator: "contains", value: this.value });
                         }
                     });
                 }
