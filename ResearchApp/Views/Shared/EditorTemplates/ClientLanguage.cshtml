@@ -22,7 +22,7 @@
                                         schema.Data("Data")
                                               .Total("Total");
                                     });
-                          })
+                          }).OptionLabel("Add New").Events(e => e.Select("onSelect"))
                           .Virtual(v => v.ItemHeight(26).ValueMapper("valueMapperLanguage"))
 
 )
