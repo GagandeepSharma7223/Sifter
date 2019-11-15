@@ -323,8 +323,59 @@
         }
     }
 
+
+    function loadEditData(obj) {
+        showLoading();
+        $("#myModal").kendoSplitter();
+        var splitter = $("#myModal").data("kendoSplitter");
+        var treeview = $("#treeview").data("kendoTreeView");
+
+      var bar = treeview.findByText(obj);
+                treeview.select(bar);
+        var view = obj;
+        switch (view) {
+            case "Author":
+                splitter.ajaxRequest(".k-pane:last", "/Grid/GetView", { type: @((int)GridTypes.Author) });
+                 $('#custom-add-btn').click();
+      
+                break;
+            case "Category":
+                splitter.ajaxRequest(".k-pane:last", "/Grid/GetView", { type: @((int)GridTypes.Category) });
+                break;
+            case "Language":
+                splitter.ajaxRequest(".k-pane:last", "/Grid/GetView", { type: @((int)GridTypes.Language) });
+                break;
+            case "City":
+                splitter.ajaxRequest(".k-pane:last", "/Grid/GetView", { type: @((int)GridTypes.City) });
+                break;
+            case "Region":
+                splitter.ajaxRequest(".k-pane:last", "/Grid/GetView", { type: @((int)GridTypes.Region) });
+                break;
+            case "Country":
+                splitter.ajaxRequest(".k-pane:last", "/Grid/GetView", { type: @((int)GridTypes.Country) });
+                break;
+            case "Publisher":
+                splitter.ajaxRequest(".k-pane:last", "/Grid/GetView", { type: @((int)GridTypes.Publisher) });
+                break;
+            case "Book":
+                splitter.ajaxRequest(".k-pane:last", "/Grid/GetView", { type: @((int)GridTypes.Work) });
+                break;
+            case "Workauthor":
+                splitter.ajaxRequest(".k-pane:last", "/Grid/GetView", { type: @((int)GridTypes.WorkAuthor) });
+                break;
+            case "Unit":
+                splitter.ajaxRequest(".k-pane:last", "/Grid/GetView", { type: @((int)GridTypes.Unit) });
+                break;
+            default:
+                splitter.ajaxRequest(".k-pane:last", "/Grid/GetView", { type: @((int)GridTypes.Work) });
+                break;
+        }
+    }
+   
     function onDataBound(e) {
         console.log("event data bound");
+        //alert(editfield);
+        
         $('.k-grid-content').scrollTop(0);
         customActions();
         toggleEdit();
@@ -380,7 +431,7 @@
     function onOpen(e) {
         $('#dialog input').focus();
     }
-
+    var chkEdit = false;
     $(document).on("click", '#startEditable', function (e) {
         if (!isLoggedIn) {
             $('#dialog').data("kendoDialog").open();
@@ -389,6 +440,7 @@
             toggleEditable();
             $('#startEditable').addClass("d-none");
             $('#stopEditable').removeClass("d-none");
+            chkEdit = true;
         }
         e.preventDefault();
     });
@@ -438,8 +490,18 @@
 
         });
     }
+     var editfield = "";
+    function onSelect(e) {
+        debugger
+       
+        if (editfield != '') {
 
+            loadEditData(editfield);
+        }
+
+        }
     function valueMapperLanguage(options) {
+        editfield = 'Language';
         $.ajax({
             url: "@Url.Action("Dropdown_ValueMapper", "Grid")",
             data: convertValues(options.value, 'Language'),
@@ -450,17 +512,20 @@
     }
 
     function valueMapperAuthor(options) {
-        
+        debugger
+         editfield = 'Author';
         $.ajax({
             url: "@Url.Action("Dropdown_ValueMapper", "Grid")",
             data: convertValues(options.value, 'Author'),
             success: function (data) {
+                debugger
                 options.success(data);
             }
         });
     }
 
-       function valueMapperCity(options) {
+    function valueMapperCity(options) {
+           editfield = 'City';
         $.ajax({
             url: "@Url.Action("Dropdown_ValueMapper", "Grid")",
             data: convertValues(options.value, 'City'),
@@ -470,7 +535,8 @@
         });
     }
 
-       function valueMapperCategory(options) {
+    function valueMapperCategory(options) {
+            editfield = 'Category';
         $.ajax({
             url: "@Url.Action("Dropdown_ValueMapper", "Grid")",
             data: convertValues(options.value, 'Category'),
@@ -480,7 +546,8 @@
         });
     }
 
-       function valueMapperCountry(options) {
+    function valueMapperCountry(options) {
+            editfield = 'Country';
         $.ajax({
             url: "@Url.Action("Dropdown_ValueMapper", "Grid")",
             data: convertValues(options.value, 'Country'),
@@ -490,7 +557,8 @@
         });
     }
 
-        function valueMapperRegion(options) {
+    function valueMapperRegion(options) {
+             editfield = 'Region';
         $.ajax({
             url: "@Url.Action("Dropdown_ValueMapper", "Grid")",
             data: convertValues(options.value, 'Region'),
@@ -500,7 +568,8 @@
         });
     }
 
-       function valueMapperWork(options) {
+    function valueMapperWork(options) {
+            editfield = 'Work';
         $.ajax({
             url: "@Url.Action("Dropdown_ValueMapper", "Grid")",
             data: convertValues(options.value, 'Work'),
@@ -510,7 +579,8 @@
         });
     }
 
-       function valueMapperPublisher(options) {
+    function valueMapperPublisher(options) {
+           editfield = 'Publisher';
         $.ajax({
             url: "@Url.Action("Dropdown_ValueMapper", "Grid")",
             data: convertValues(options.value, 'Publisher'),
@@ -569,15 +639,13 @@
         var dataSource = $("#grid").data().kendoGrid.dataSource;
         dataSource.filter(filter);
     }
-
+   
     function initColumnMenuFilter(e) {
         var menu = e.container.find(".k-menu").data("kendoMenu");
         var filterMenu = e.container.find("[data-role='filtermenu']").getKendoFilterMenu();
         var grid = e.sender;
         var field = e.field;
-        if (field.indexOf('.') > 0) {
-            field = field.split(".")[0];
-        }
+        
         var helpTextElement = e.container.children(":first").children(":last");
         var fieldType = 'string';
         var filterOneValue, filterLogicValue, filterTwoValue, inputFilterOne, inputFilterTwo, ddFilterOne, ddFilterTwo;
@@ -624,7 +692,7 @@
              serverPaging: true,
              serverSorting: true
         });
-
+          var processScroll = true;
         var pageModel = {};
         pageModel[field] = 1;
 
@@ -636,6 +704,7 @@
         });
 
         filterMenu.popup.bind("open", function (e) {
+            resizable: true
         });
 
         menu.bind("open", function (e) {
@@ -965,6 +1034,7 @@
                         processScroll = false;
                         pageModel[field]++;
                         console.log(pageModel);
+                        
                         var listView = $('#list-view-' + field).data('kendoListView');
                         dataSourceListViewScroll.query({
                             page: pageModel[field],
