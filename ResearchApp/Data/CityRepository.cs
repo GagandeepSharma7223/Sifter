@@ -1,4 +1,5 @@
-﻿using Kendo.Mvc.Extensions;
+﻿using Kendo.Mvc;
+using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
 using Microsoft.EntityFrameworkCore;
 using ResearchApp.Models;
@@ -20,6 +21,7 @@ namespace ResearchApp.Data
 
         public async Task<DataSourceResult> GetCities(DataSourceRequest request)
         {
+            request.ApplyFilter();
             DataSourceResult list = await GetAll().Include(x => x.Country).Include(x => x.Region).ToDataSourceResultAsync(request);
             var data = (IEnumerable<City>)list.Data;
             var result = data.Select(x => new CityViewModel

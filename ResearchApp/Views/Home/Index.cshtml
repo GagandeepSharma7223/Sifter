@@ -210,7 +210,7 @@
     }
 
     //function dataSourceShared(e) {
-    //    debugger;
+    //    ;
     //    var field = e.field;
     //    var dataSource = $("#grid").data().kendoGrid.dataSource;
     //    return new kendo.data.DataSource({
@@ -450,7 +450,7 @@
     }
 
     function valueMapperAuthor(options) {
-        debugger
+        
         $.ajax({
             url: "@Url.Action("Dropdown_ValueMapper", "Grid")",
             data: convertValues(options.value, 'Author'),
@@ -575,6 +575,9 @@
         var filterMenu = e.container.find("[data-role='filtermenu']").getKendoFilterMenu();
         var grid = e.sender;
         var field = e.field;
+        if (field.indexOf('.') > 0) {
+            field = field.split(".")[0];
+        }
         var helpTextElement = e.container.children(":first").children(":last");
         var fieldType = 'string';
         var filterOneValue, filterLogicValue, filterTwoValue, inputFilterOne, inputFilterTwo, ddFilterOne, ddFilterTwo;
@@ -697,7 +700,7 @@
                                 inputSecond.removeClass('k-textbox').removeAttr("data-bind");
                                 var textField = field + ".Option";
                                 var valueField = field + ".Id";
-                                debugger
+                                
                              var listView = $('#list-view-' + field).data('kendoListView');;
 
                                 var comboBoxDataSource = columnDataSource;
@@ -705,29 +708,14 @@
                                     data: comboBoxDataSource.data()
                                 });
                                 ddFilterOne = $(inputFirst).kendoDropDownList({
-                                   // dataSource: listView.dataSource,
-                                    dataSource: {
-                                        transport: {
-                                            read: {
-                                                dataType: "json",
-                                                url: "/Grid/BindFilterDropDown",
-                                                data: {
-                                                    treeTable: treeTable,
-                                                    optionCol: field,
-                                                    fieldType: fieldType
-                                                },
-
-                                            }
-                                        }
-
-                                    },
+                                    dataSource: dataSourceListView,
                                     dataTextField: "Option",
                                     dataValueField: "Id",
                                     change: function (e) {
                                         console.log('Dropdown filter selected:: ' + this.value());
                                         inputFilterOne = this.value();
-                                    },                                    
-                                    processScroll: true
+                                    },   
+                                    height: 135,
                                 }).data("kendoDropDownList");
 
                                 ddFilterOne.setOptions({ optionLabel: "Select" });
@@ -735,26 +723,27 @@
                                 ddFilterOne.select(0);
 
                                 ddFilterTwo = $(inputSecond).kendoDropDownList({
-                                    dataSource: {
-                                        transport: {
-                                            read: {
-                                                dataType: "json",
-                                                url: "/Grid/BindFilterDropDown",
-                                                data: {
-                                                    treeTable: treeTable,
-                                                    optionCol: field,
-                                                    fieldType: fieldType
-                                                },
+                                    //dataSource: {
+                                    //    transport: {
+                                    //        read: {
+                                    //            dataType: "json",
+                                    //            url: "/Grid/BindFilterDropDown",
+                                    //            data: {
+                                    //                treeTable: treeTable,
+                                    //                optionCol: field,
+                                    //                fieldType: fieldType
+                                    //            },
 
-                                            }
-                                        }
-                                    },
+                                    //        }
+                                    //    }
+                                    //},
+                                    dataSource: dataSourceListView,
                                     dataTextField: "Option",
                                     dataValueField: "Id",
                                     change: function (e) {
                                         inputFilterTwo = this.value();
                                     },
-                                    processScroll: true
+                                    height: 135,
                                 }).data("kendoDropDownList");
 
                                 ddFilterTwo.setOptions({ optionLabel: "Select" });
@@ -797,6 +786,11 @@
                                 $(logicDropDown).change(function (e) {
                                     filterLogicValue = this.value;
                                 });
+
+
+                                //ddFilterOne.element.on('scroll', function (e) {
+                                //    console.log("forign key first:: dropdown");
+                                //})
 
                                 
                             }
@@ -889,7 +883,7 @@
                         e.stopPropagation();
                         if (element) {
 
-                            debugger
+                            
                             var filter = dataSource.filter() || { logic: "and", filters: [] };
                             var fieldFilters = $.map(element.find(":checkbox:checked"), function (input, index) {
                                 //if (fieldType === 'object') {
@@ -947,23 +941,25 @@
 
                     $('#filter-search-' + field).on('keyup', function (e) {
                         console.log('search items::' + this.value);
-                        if (fieldType === 'object') {
-                            debugger
-                            var listView = $('#list-view-' + field).data('kendoListView');
-                            listView.dataSource.filter({ field: "Option", operator: "contains", value: this.value });
-                           // dataSourceListViewScroll.filter({ field: field + ".Option", operator: "contains", value: this.value });
-                        }
-                        else {
-                            debugger
-                            var listView = $('#list-view-' + field).data('kendoListView');
-                            listView.dataSource.filter({ operator: "contains", value: this.value });
-                            //columnDataSource.filter({ field: field, operator: "contains", value: this.value });
+                        if (this.value) {
+                            if (fieldType === 'object') {
+                                var listView = $('#list-view-' + field).data('kendoListView');
+                                listView.dataSource.filter({ field: "Option", operator: "contains", value: this.value });
+                                // dataSourceListViewScroll.filter({ field: field + ".Option", operator: "contains", value: this.value });
+                            }
+                            else {
+                                var listView = $('#list-view-' + field).data('kendoListView');
+                                listView.dataSource.filter({ operator: "contains", value: this.value });
+                                //columnDataSource.filter({ field: field, operator: "contains", value: this.value });
+                            }
                         }
                     });
                 }
                 
                 
                 var processScroll = true;
+
+
                 $('#list-view-' + field).on('scroll', function (e) {
                     if (processScroll && $(this).scrollTop() + $(this).innerHeight() >= $(this)[0].scrollHeight - 5) {
                         processScroll = false;
@@ -972,7 +968,7 @@
                         var listView = $('#list-view-' + field).data('kendoListView');
                         dataSourceListViewScroll.query({
                             page: pageModel[field],
-                            pageSize: 50,
+                            pageSize: 150,
                             sort: { field: field, dir: "asc" }
                         }).then(function () {
                             if (dataSourceListViewScroll.data().length) {

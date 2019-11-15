@@ -26,7 +26,7 @@ namespace ResearchApp.Data
             try
             {
                 GetFilters(request);
-
+                request.ApplyFilter();
                 list = await GetAll().OrderBy(x => x.WorkId).Include(x => x.Author).Include(x => x.Translator).Include(x => x.Editor).Include(x => x.Publisher)
                 .Include(x => x.Language).Include(x => x.City)
                 .ToDataSourceResultAsync(request);

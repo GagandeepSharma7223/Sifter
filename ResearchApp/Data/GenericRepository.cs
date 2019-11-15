@@ -9,6 +9,7 @@ using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
 using ResearchApp.Data;
+using Kendo.Mvc;
 
 namespace ResearchApp.Data
 {
@@ -88,6 +89,49 @@ namespace ResearchApp.Data
                 var colName = _dbContext.DynamicListFromSql($"SELECT FKDisplayCol  FROM TreeColumn WHERE TableName=@a and  DisplayName = @b", new Dictionary<string, object> { { "a", type }, { "b", optionCol } }).FirstOrDefault();
                 string query = $"SELECT MAX({sqltblname}ID) as {sqltblname}ID ,{colName} FROM {sqltblname} where {colName} != @a GROUP BY {colName} ORDER BY {colName}  OFFSET { (page - 1) * pageSize } ROWS FETCH NEXT { pageSize } ROWS ONLY";
                 return _dbContext.DynamicListFromSql(query, new Dictionary<string, object> { { "a", string.Empty } }, fieldType).ToList();
+            }
+        }
+
+        public void ApplyFilter(DataSourceRequest request)
+        {
+            if (request.Sorts.Any())
+            {
+                foreach (SortDescriptor sortDescriptor in request.Sorts)
+                {
+                    switch (sortDescriptor.Member)
+                    {
+                        case "Author":
+                            sortDescriptor.Member = "Author.FullName";
+                            break;
+                        case "Translator":
+                            sortDescriptor.Member = "Author.FullName";
+                            break;
+                        case "Editor":
+                            sortDescriptor.Member = "Author.FullName";
+                            break;
+                        case "City":
+                            sortDescriptor.Member = "City.Name";
+                            break;
+                        case "Publisher":
+                            sortDescriptor.Member = "Publisher.Name";
+                            break;
+                        case "Language":
+                            sortDescriptor.Member = "Language.Name";
+                            break;
+                        case "Region":
+                            sortDescriptor.Member = "Region.Name";
+                            break;
+                        case "Country":
+                            sortDescriptor.Member = "Country.Name";
+                            break;
+                        case "Category":
+                            sortDescriptor.Member = "Category.Name";
+                            break;
+                        case "Work":
+                            sortDescriptor.Member = "Work.Title";
+                            break;
+                    }
+                }
             }
         }
 

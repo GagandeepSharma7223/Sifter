@@ -1,4 +1,5 @@
-﻿using Kendo.Mvc.Extensions;
+﻿using Kendo.Mvc;
+using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
 using Microsoft.EntityFrameworkCore;
 using ResearchApp.Models;
@@ -20,6 +21,7 @@ namespace ResearchApp.Data
 
         public async Task<DataSourceResult> GetAuthors(DataSourceRequest request)
         {
+            request.ApplyFilter();
             DataSourceResult list = await GetAll().Include(x=> x.BirthCountry).ToDataSourceResultAsync(request);
             var authors = (IEnumerable<Author>)list.Data;
             var result = authors.Select(x => new AuthorViewModel

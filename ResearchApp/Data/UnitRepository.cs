@@ -22,6 +22,7 @@ namespace ResearchApp.Data
         {
             try
             {
+                request.ApplyFilter();
                 DataSourceResult list = await GetAll().Include(x => x.Category).Include(x => x.Work).ToDataSourceResultAsync(request);
                 var data = (IEnumerable<Unit>)list.Data;
                 var result = data.Select(x => new UnitViewModel

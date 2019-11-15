@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Kendo.Mvc;
+using Kendo.Mvc.UI;
+using Microsoft.EntityFrameworkCore;
 using ResearchApp.Models;
 using ResearchApp.ViewModel;
 using System;
@@ -79,6 +81,41 @@ namespace ResearchApp.Data
                 expandoDict[propertyName] = propertyValue;
             else
                 expandoDict.Add(propertyName, propertyValue);
+        }
+
+        public static void ApplyFilter(this DataSourceRequest request)
+        {
+            if (request.Sorts.Any())
+            {
+                foreach (SortDescriptor sortDescriptor in request.Sorts)
+                {
+                    switch (sortDescriptor.Member)
+                    {
+                        case "Author":
+                            sortDescriptor.Member = "Author.FullName";
+                            break;
+                        case "Translator":
+                            sortDescriptor.Member = "Author.FullName";
+                            break;
+                        case "Editor":
+                            sortDescriptor.Member = "Author.FullName";
+                            break;
+                        case "City":
+                            sortDescriptor.Member = "City.Name";
+                            break;
+                        case "Publisher":
+                            sortDescriptor.Member = "Publisher.Name";
+                            break;
+                        case "Language":
+                            sortDescriptor.Member = "Language.Name";
+                            break;
+                        case "Region":
+                            sortDescriptor.Member = "Region.Name";
+                            break;
+
+                    }
+                }
+            }
         }
     }
 }

@@ -20,6 +20,7 @@ namespace ResearchApp.Data
 
         public async Task<DataSourceResult> GetWorkAuthors(DataSourceRequest request)
         {
+            request.ApplyFilter();
             DataSourceResult list = await GetAll().Include(x=> x.Work).Include(x=> x.Author).ToDataSourceResultAsync(request);
             var data = (IEnumerable<WorkAuthor>)list.Data;
             var result = data.Select(x => new WorkAuthorViewModel

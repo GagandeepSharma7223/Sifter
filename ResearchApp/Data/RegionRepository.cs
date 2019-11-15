@@ -20,6 +20,7 @@ namespace ResearchApp.Data
 
         public async Task<DataSourceResult> GetRegions(DataSourceRequest request)
         {
+            request.ApplyFilter();
             DataSourceResult list = await GetAll().Include(x=> x.Country).ToDataSourceResultAsync(request);
             var data = (IEnumerable<Region>)list.Data;
             var result = data.Select(x => new RegionViewModel

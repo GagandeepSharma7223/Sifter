@@ -320,7 +320,7 @@ namespace ResearchApp.Controllers
             return list;
         }
 
-        [AcceptVerbs("Get")]
+        //[AcceptVerbs("Get")]
         public IActionResult BindFilterDropDown([DataSourceRequest] DataSourceRequest request, string treeTable, string optionCol, string fieldType)
         {
             if(request.PageSize == 0)
