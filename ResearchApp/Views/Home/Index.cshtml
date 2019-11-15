@@ -621,7 +621,7 @@
              serverPaging: true,
              serverSorting: true
         });
-
+          var processScroll = true;
         var pageModel = {};
         pageModel[field] = 1;
 
@@ -728,7 +728,7 @@
                                         inputFilterOne = this.value();
                                     },                                    
                                     processScroll: true
-                                }).data("kendoDropDownList");
+                                }).data("kendoDropDownList"); 
 
                                 ddFilterOne.setOptions({ optionLabel: "Select" });
                                 ddFilterOne.refresh();
@@ -947,15 +947,18 @@
 
                     $('#filter-search-' + field).on('keyup', function (e) {
                         console.log('search items::' + this.value);
+                        processScroll = true;
                         if (fieldType === 'object') {
                             debugger
                             var listView = $('#list-view-' + field).data('kendoListView');
+                            listView.dataSource.pageSize(10000);
                             listView.dataSource.filter({ field: "Option", operator: "contains", value: this.value });
                            // dataSourceListViewScroll.filter({ field: field + ".Option", operator: "contains", value: this.value });
                         }
                         else {
                             debugger
                             var listView = $('#list-view-' + field).data('kendoListView');
+                            listView.dataSource.pageSize(10000);
                             listView.dataSource.filter({ operator: "contains", value: this.value });
                             //columnDataSource.filter({ field: field, operator: "contains", value: this.value });
                         }
@@ -963,16 +966,17 @@
                 }
                 
                 
-                var processScroll = true;
+              
                 $('#list-view-' + field).on('scroll', function (e) {
                     if (processScroll && $(this).scrollTop() + $(this).innerHeight() >= $(this)[0].scrollHeight - 5) {
                         processScroll = false;
                         pageModel[field]++;
                         console.log(pageModel);
+                        
                         var listView = $('#list-view-' + field).data('kendoListView');
                         dataSourceListViewScroll.query({
                             page: pageModel[field],
-                            pageSize: 50,
+                            pageSize: 150,
                             sort: { field: field, dir: "asc" }
                         }).then(function () {
                             if (dataSourceListViewScroll.data().length) {
