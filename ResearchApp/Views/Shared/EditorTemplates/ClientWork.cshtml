@@ -6,6 +6,7 @@
                           .Filter(FilterType.Contains)
                           .MinLength(3)
                           .Height(200)
+                          .SelectedIndex(1)
                           .DataSource(source =>
                           {
                               source.Custom()
@@ -22,7 +23,7 @@
                                         schema.Data("Data")
                                               .Total("Total");
                                     });
-                          })
+                          }).OptionLabel("Add New").Events(e => e.Select("function(e){ onSelect(e, 'Work') }"))
                           .Virtual(v => v.ItemHeight(26).ValueMapper("valueMapperWork"))
 
 )

@@ -80,6 +80,7 @@
     var isGridEditable = false;
     var isLoggedIn = false;
     var isWordWrap = false;
+    var editfield = "";
     var browserWindow = $(window);
     var currentFilterColumn;
     //register custom validation rules
@@ -330,14 +331,12 @@
         var splitter = $("#myModal").data("kendoSplitter");
         var treeview = $("#treeview").data("kendoTreeView");
 
-      var bar = treeview.findByText(obj);
+        var bar = treeview.findByText(obj);
                 treeview.select(bar);
         var view = obj;
         switch (view) {
             case "Author":
                 splitter.ajaxRequest(".k-pane:last", "/Grid/GetView", { type: @((int)GridTypes.Author) });
-                 $('#custom-add-btn').click();
-      
                 break;
             case "Category":
                 splitter.ajaxRequest(".k-pane:last", "/Grid/GetView", { type: @((int)GridTypes.Category) });
@@ -357,16 +356,7 @@
             case "Publisher":
                 splitter.ajaxRequest(".k-pane:last", "/Grid/GetView", { type: @((int)GridTypes.Publisher) });
                 break;
-            case "Book":
-                splitter.ajaxRequest(".k-pane:last", "/Grid/GetView", { type: @((int)GridTypes.Work) });
-                break;
-            case "Workauthor":
-                splitter.ajaxRequest(".k-pane:last", "/Grid/GetView", { type: @((int)GridTypes.WorkAuthor) });
-                break;
-            case "Unit":
-                splitter.ajaxRequest(".k-pane:last", "/Grid/GetView", { type: @((int)GridTypes.Unit) });
-                break;
-            default:
+            case "Work":
                 splitter.ajaxRequest(".k-pane:last", "/Grid/GetView", { type: @((int)GridTypes.Work) });
                 break;
         }
@@ -374,8 +364,6 @@
    
     function onDataBound(e) {
         console.log("event data bound");
-        //alert(editfield);
-        
         $('.k-grid-content').scrollTop(0);
         customActions();
         toggleEdit();
@@ -389,6 +377,13 @@
         resizeGrid();
         resizeSplitter();
         browserWindow.resize(resizeSplitter);
+
+        if (editfield) {
+            editfield = '';
+            setTimeout(function () {
+                $('#custom-add-btn').click();
+            }, 500);
+        }
     }
 
     function toggleEdit() {
@@ -490,18 +485,15 @@
 
         });
     }
-     var editfield = "";
-    function onSelect(e) {
-        debugger
-       
-        if (editfield != '') {
 
+    function onSelect(e, field) {
+        if (e.dataItem.Option == 'Add New' && !editfield) {
+            editfield = field;
             loadEditData(editfield);
         }
+    }
 
-        }
     function valueMapperLanguage(options) {
-        editfield = 'Language';
         $.ajax({
             url: "@Url.Action("Dropdown_ValueMapper", "Grid")",
             data: convertValues(options.value, 'Language'),
@@ -512,20 +504,16 @@
     }
 
     function valueMapperAuthor(options) {
-        debugger
-         editfield = 'Author';
         $.ajax({
             url: "@Url.Action("Dropdown_ValueMapper", "Grid")",
             data: convertValues(options.value, 'Author'),
             success: function (data) {
-                debugger
                 options.success(data);
             }
         });
     }
 
     function valueMapperCity(options) {
-           editfield = 'City';
         $.ajax({
             url: "@Url.Action("Dropdown_ValueMapper", "Grid")",
             data: convertValues(options.value, 'City'),
@@ -536,7 +524,6 @@
     }
 
     function valueMapperCategory(options) {
-            editfield = 'Category';
         $.ajax({
             url: "@Url.Action("Dropdown_ValueMapper", "Grid")",
             data: convertValues(options.value, 'Category'),
@@ -547,7 +534,6 @@
     }
 
     function valueMapperCountry(options) {
-            editfield = 'Country';
         $.ajax({
             url: "@Url.Action("Dropdown_ValueMapper", "Grid")",
             data: convertValues(options.value, 'Country'),
@@ -558,7 +544,6 @@
     }
 
     function valueMapperRegion(options) {
-             editfield = 'Region';
         $.ajax({
             url: "@Url.Action("Dropdown_ValueMapper", "Grid")",
             data: convertValues(options.value, 'Region'),
@@ -569,7 +554,6 @@
     }
 
     function valueMapperWork(options) {
-            editfield = 'Work';
         $.ajax({
             url: "@Url.Action("Dropdown_ValueMapper", "Grid")",
             data: convertValues(options.value, 'Work'),
@@ -580,7 +564,6 @@
     }
 
     function valueMapperPublisher(options) {
-           editfield = 'Publisher';
         $.ajax({
             url: "@Url.Action("Dropdown_ValueMapper", "Grid")",
             data: convertValues(options.value, 'Publisher'),

@@ -5,6 +5,7 @@
                       .DataTextField("Option")
                       .Filter(FilterType.Contains)
                       .Height(200)
+                      .SelectedIndex(1)
                       .DataSource(source =>
                       {
                           source.Custom()
@@ -21,7 +22,7 @@
                                     schema.Data("Data")
                                           .Total("Total");
                                 });
-                      }).OptionLabel("Add New").Events(e => e.Select("onSelect"))
+                      }).OptionLabel("Add New").Events(e => e.Select("function(e){ onSelect(e, 'Category') }"))
                       .Virtual(v => v.ItemHeight(26).ValueMapper("valueMapperCategory"))
 
 )

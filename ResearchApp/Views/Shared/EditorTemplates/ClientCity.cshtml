@@ -5,6 +5,7 @@
                       .DataTextField("Option")
                       .Filter(FilterType.Contains)
                       .MinLength(3)
+                      .SelectedIndex(1)
                       .Height(200)
                       .DataSource(source =>
                       {
@@ -22,7 +23,7 @@
                                     schema.Data("Data")
                                           .Total("Total");
                                 });
-                      }).OptionLabel("Add New").Events(e => e.Select("onSelect"))
+                      }).OptionLabel("Add New").Events(e => e.Select("function(e){ onSelect(e, 'City') }"))
                       .Virtual(v => v.ItemHeight(26).ValueMapper("valueMapperCity"))
 
 )
