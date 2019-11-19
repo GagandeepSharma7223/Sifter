@@ -481,6 +481,7 @@
     }
 
     function populateGridSession(type) {
+        alert('yy');
         $.post('/Grid/List', { type: type }, function (success) {
 
         });
@@ -810,7 +811,9 @@
                                     { text: "Is equal to", value: "eq" },
                                     { text: "Is not equal to", value: "neq" },
                                     { text: "Is null", value: "isnull" },
-                                    { text: "Is not null", value: "isnotnull" }
+                                    { text: "Is not null", value: "isnotnull" },
+                                    { text: "Less than or equal to", value: "lte" },
+                                    { text: "Greater than or equal to", value: "gte" }
                                 ];
                                 $(firstValueDropDown).kendoDropDownList({
                                     dataTextField: "text",
