@@ -2,6 +2,7 @@
 using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using ResearchApp.Models;
 using ResearchApp.ViewModel;
 using System;
@@ -13,8 +14,8 @@ namespace ResearchApp.Data
 {
     public class AuthorRepository : GenericRepository<Author>, IAuthorRepository
     {
-        public AuthorRepository(SifterContext dbContext)
-        : base(dbContext)
+        public AuthorRepository(SifterContext dbContext, IMemoryCache memoryCache)
+        : base(dbContext, memoryCache)
         {
 
         }
@@ -39,11 +40,7 @@ namespace ResearchApp.Data
                     Option = x.Gender,
                     Id = x.Gender
                 },
-                IsOrganization = new TextDropdownOptions
-                {
-                    Option = x.IsOrganization,
-                    Id = x.IsOrganization
-                },
+                IsOrganization = x.IsOrganization == "Yes" ? true: false,
                 FullName = x.FullName,
                 FirstName = x.FirstName,
                 PenName = x.PenName,
@@ -73,7 +70,7 @@ namespace ResearchApp.Data
                 Title = model.Title,
                 FirstActivityYear = model.FirstActivityYear,
                 Gender = model.Gender?.Id,
-                IsOrganization = model.IsOrganization?.Id,
+                IsOrganization = model.IsOrganization ? "Yes" : "No",
                 FirstName= model.FirstName,
                 FullName = model.FullName,
                 PenName = model.PenName,
@@ -97,7 +94,7 @@ namespace ResearchApp.Data
                 dbAuthor.Title = model.Title;
                 dbAuthor.FirstActivityYear = model.FirstActivityYear;
                 dbAuthor.Gender = model.Gender?.Id;
-                dbAuthor.IsOrganization = model.IsOrganization?.Id;
+                dbAuthor.IsOrganization = model.IsOrganization ? "Yes" : "No";
                 dbAuthor.FirstName = model.FirstName;
                 dbAuthor.FullName = model.FullName;
                 dbAuthor.PenName = model.PenName;

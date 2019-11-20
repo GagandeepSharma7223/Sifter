@@ -1,6 +1,7 @@
 ﻿using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using ResearchApp.Models;
 using ResearchApp.ViewModel;
 using System;
@@ -12,8 +13,8 @@ namespace ResearchApp.Data
 {
     public class LanguageRepository : GenericRepository<Language>, ILanguageRepository
     {
-        public LanguageRepository(SifterContext dbContext)
-        : base(dbContext)
+        public LanguageRepository(SifterContext dbContext, IMemoryCache memoryCache)
+        : base(dbContext, memoryCache)
         {
 
         }

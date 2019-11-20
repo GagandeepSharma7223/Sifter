@@ -30,7 +30,7 @@
 
                                                     horizontalPanes.Add()
                                                        .HtmlAttributes(new { id = "myModal" })
-                                                       .LoadContentFrom("GetView", "Grid", new { type = GridTypes.Work });
+                                                       .LoadContentFrom("GetView", "Grid", new { type = GridTypes.Work});
                                                 }).ToHtmlString());
                                   })
             )
@@ -469,6 +469,13 @@
         clearFilter();
     });
 
+     //$(document).on("change", "input.chkbx", function(e) {
+     //    var grid = $("#grid").data("kendoGrid");
+     //    var dataItem = grid.dataItem($(e.target).closest("tr"));
+     //    dataItem.set("IsOrganization", this.checked);
+     //    dirtyField(dataItem, 'IsOrganization');
+     //   });
+
     function getAdditionalParam(e) {
         var widget = $("#dropDownList").data("kendoDropDownList");
         return { items: widget };
@@ -481,7 +488,6 @@
     }
 
     function populateGridSession(type) {
-        alert('yy');
         $.post('/Grid/List', { type: type }, function (success) {
 
         });
@@ -1135,5 +1141,14 @@
     //    dataSourceShared.data(e.items);
     //}
 
+    //function dirtyField(data, fieldName){
+    //    var hasClass = $("[data-uid=" + data.uid + "]").find(".k-dirty-cell").length < 1;
+    //    if(data.dirty && data.dirtyFields[fieldName] && hasClass){
+    //      return "<span class='k-dirty'></span>"
+    //    }
+    //    else{
+    //      return "";
+    //    }
+    //  }
 
 </script>

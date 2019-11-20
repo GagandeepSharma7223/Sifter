@@ -2,6 +2,7 @@
 using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using ResearchApp.Models;
 using ResearchApp.ViewModel;
 using System;
@@ -13,8 +14,8 @@ namespace ResearchApp.Data
 {
     public class CityRepository : GenericRepository<City>, ICityRepository
     {
-        public CityRepository(SifterContext dbContext)
-        : base(dbContext)
+        public CityRepository(SifterContext dbContext, IMemoryCache memoryCache)
+        : base(dbContext, memoryCache)
         {
 
         }

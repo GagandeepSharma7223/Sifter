@@ -10,6 +10,8 @@ using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
 using ResearchApp.Data;
 using Kendo.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+using ResearchApp.Data.Enum;
 
 namespace ResearchApp.Data
 {
@@ -17,10 +19,12 @@ namespace ResearchApp.Data
         where TEntity : class
     {
         public readonly SifterContext _dbContext;
+        private readonly IMemoryCache _cache;
 
-        public GenericRepository(SifterContext dbContext)
+        public GenericRepository(SifterContext dbContext, IMemoryCache memoryCache)
         {
             _dbContext = dbContext;
+            _cache = memoryCache;
         }
 
         public IQueryable<TEntity> GetAll()
@@ -34,6 +38,7 @@ namespace ResearchApp.Data
             {
                 await _dbContext.Set<TEntity>().AddAsync(entity);
                 await _dbContext.SaveChangesAsync();
+                _cache.Remove(GetClientCacheKey(typeof(TEntity).Name, CacheTypes.DropdownOptions));
             }
             catch (Exception e)
             {
@@ -47,6 +52,7 @@ namespace ResearchApp.Data
             {
                 _dbContext.Set<TEntity>().Update(entity);
                 await _dbContext.SaveChangesAsync();
+                _cache.Remove(GetClientCacheKey(typeof(TEntity).Name, CacheTypes.DropdownOptions));
             }
             catch (Exception ex)
             {
@@ -135,6 +141,16 @@ namespace ResearchApp.Data
             }
         }
 
+        public string GetClientCacheKey(string entityName, CacheTypes cacheType)
+        {
+            switch (cacheType)
+            {
+                case CacheTypes.DropdownOptions:
+                    return $"{entityName}Options";
+                default:
+                    return string.Empty;
+            }
+        }
         public void Dispose()
         {
             _dbContext.Dispose();

@@ -28,7 +28,7 @@ namespace ResearchApp.Controllers
         private readonly ICountryRepository _countryRepo;
         private readonly IWorkAuthorRepository _workAuthorRepo;
         private readonly IUnitRepository _unitRepo;
-        private IMemoryCache _cache;
+        private readonly IMemoryCache _cache;
 
         MemoryCacheEntryOptions CacheEntryOptions = new MemoryCacheEntryOptions()
                  .SetSlidingExpiration(TimeSpan.FromHours(1));
@@ -361,19 +361,6 @@ namespace ResearchApp.Controllers
             }
             return Json(cachedDetails);
         }
-
-        //public IActionResult PopulateGrid(string treeTable, string optionCol)
-        //{
-        //    if (!_cache.TryGetValue($"{treeTable}Options", out List<DropdownOptions> cachedDetails))
-        //    {
-        //        cachedDetails = _workRepo.GetOptions(treeTable, optionCol);
-        //        var cacheEntryOptions = new MemoryCacheEntryOptions()
-        //           .SetSlidingExpiration(TimeSpan.FromHours(1));
-
-        //        _cache.Set($"{treeTable}Options", cachedDetails, cacheEntryOptions);
-        //    }
-        //    return Json(cachedDetails);
-        //}
 
         public IActionResult Dropdown_ValueMapper(int[] values, string treeTable = "Author")
         {
