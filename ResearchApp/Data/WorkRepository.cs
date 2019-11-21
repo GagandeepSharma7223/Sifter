@@ -8,6 +8,7 @@ using ResearchApp.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -26,11 +27,42 @@ namespace ResearchApp.Data
             DataSourceResult list = new DataSourceResult();
             try
             {
-                GetFilters(request);
+                var query = GetAll();
+                var stringCompareFilters = await ModifyFilters(request.Filters, "Work");
                 request.ApplyFilter();
-                list = await GetAll().OrderBy(x => x.WorkId).Include(x => x.Author).Include(x => x.Translator).Include(x => x.Editor).Include(x => x.Publisher)
-                .Include(x => x.Language).Include(x => x.City)
-                .ToDataSourceResultAsync(request);
+                if (stringCompareFilters.Any())
+                {
+                    foreach (var filter in stringCompareFilters)
+                    {
+                        if (!string.IsNullOrEmpty(filter.FKColumn))
+                        {
+                            query = query.OrderBy($"{filter.Entity}.{filter.FKColumn} asc");
+                        }
+                    }
+                }
+                query = query.Include(x => x.Author).Include(x => x.Translator).Include(x => x.Editor).Include(x => x.Publisher)
+                    .Include(x => x.Language).Include(x => x.City);
+
+                if (stringCompareFilters.Any())
+                {
+                    string whereCondition = "";
+                    List<object> whereConditionParams = new List<object>();
+                    for (int i = 0; i < stringCompareFilters.Count; i++)
+                    {
+                        if (whereCondition != "")
+                        {
+                            whereCondition += " and ";
+                        }
+                        var stringFilter = stringCompareFilters[i];
+                        whereCondition += $"{stringFilter.Entity} != @{whereConditionParams.Count} and ";
+                        whereConditionParams.Add(null);
+                        whereCondition += $"{stringFilter.Entity}.{stringFilter.FKColumn}.CompareTo(@{whereConditionParams.Count}) {GetOperatorSymbol(stringFilter.Operator)} 0";
+                        whereConditionParams.Add(stringFilter.Value);
+                    }
+                    query = query.Where(whereCondition, whereConditionParams.ToArray());
+                }
+
+                list = await query.ToDataSourceResultAsync(request);
                 var books = (IEnumerable<Work>)list.Data;
                 var result = books.Select(x => new WorkViewModel
                 {
@@ -84,57 +116,6 @@ namespace ResearchApp.Data
                 //throw;
             }
             return list;
-        }
-
-        private static void GetFilters(DataSourceRequest request)
-        {
-            request.Filters.Each(item =>
-            {
-                var type = item.GetType();
-                if (type == typeof(FilterDescriptor))
-                {
-                    var descriptor = (FilterDescriptor)item;
-                    PropertyInfo propInfo = GetPropertyType(descriptor.Member);
-                    if (propInfo.PropertyType == typeof(DropdownOptions))
-                    {
-                        descriptor.Member = descriptor.Member + "Id";
-                    }
-                }
-                else if (type == typeof(CompositeFilterDescriptor))
-                {
-                    GetNestedFilter(item);
-                }
-            });
-        }
-
-        private static void GetNestedFilter(IFilterDescriptor item)
-        {
-            var filter = (CompositeFilterDescriptor)item;
-            filter.FilterDescriptors.Each(desc =>
-            {
-                var type = desc.GetType();
-                if (type == typeof(FilterDescriptor))
-                {
-                    var descriptor = (FilterDescriptor)desc;
-                    PropertyInfo propInfo = GetPropertyType(descriptor.Member);
-                    if (propInfo.PropertyType == typeof(DropdownOptions))
-                    {
-                        descriptor.Member = descriptor.Member + "Id";
-                    }
-                }
-                else if (type == typeof(CompositeFilterDescriptor))
-                {
-                    GetNestedFilter(desc);
-                }
-            });
-        }
-
-        private static PropertyInfo GetPropertyType(string propName)
-        {
-            var obj = new WorkViewModel();
-            Type type = obj.GetType();
-            PropertyInfo propInfo = type.GetProperty(propName);
-            return propInfo;
         }
 
         public async Task<int> CreateWork(WorkViewModel model)

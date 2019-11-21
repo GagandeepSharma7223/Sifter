@@ -12,6 +12,7 @@ using ResearchApp.Data;
 using Kendo.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using ResearchApp.Data.Enum;
+using System.Reflection;
 
 namespace ResearchApp.Data
 {
@@ -29,7 +30,7 @@ namespace ResearchApp.Data
 
         public IQueryable<TEntity> GetAll()
         {
-            return _dbContext.Set<TEntity>().AsNoTracking();
+            return _dbContext.Set<TEntity>();
         }
 
         public async Task Create(TEntity entity)
@@ -96,6 +97,90 @@ namespace ResearchApp.Data
                 string query = $"SELECT MAX({sqltblname}ID) as {sqltblname}ID ,{colName} FROM {sqltblname} where {colName} != @a GROUP BY {colName} ORDER BY {colName}  OFFSET { (page - 1) * pageSize } ROWS FETCH NEXT { pageSize } ROWS ONLY";
                 return _dbContext.DynamicListFromSql(query, new Dictionary<string, object> { { "a", string.Empty } }, fieldType).ToList();
             }
+        }
+
+        public async Task<List<StringCompareRequest>> ModifyFilters(IList<IFilterDescriptor> filters, string repoTable)
+        {
+            var listOfStringCompare = new List<StringCompareRequest>();
+            if (filters.Any())
+            {
+                for (int i = filters.Count() - 1; i > -1; i--)
+                {
+                    var descriptor = filters.ElementAt(i) as FilterDescriptor;
+                    if (descriptor != null)
+                    {
+                        // Filter For Greater Than and less than 
+                        if (descriptor.Operator == FilterOperator.IsGreaterThanOrEqualTo ||
+                            descriptor.Operator == FilterOperator.IsLessThanOrEqualTo ||
+                            descriptor.Operator == FilterOperator.IsGreaterThan ||
+                            descriptor.Operator == FilterOperator.IsLessThan)
+                        {
+                            int value = Convert.ToInt32(descriptor.Value);
+                            var fkColumn = await GetTreeColumns().Where(x => x.TableName == repoTable && x.DisplayName == descriptor.Member).Select(x => x.FkdisplayCol).FirstOrDefaultAsync();
+                            // Get String Value From Integer Value
+                            var dropdownText = _dbContext.DynamicListFromSql($"SELECT {fkColumn}  FROM {descriptor.Member} WHERE {descriptor.Member}Id=@0", new Dictionary<string, object> { { "0", value } }).FirstOrDefault();
+                            if (!string.IsNullOrEmpty(dropdownText))
+                            {
+                                listOfStringCompare.Add(new StringCompareRequest
+                                {
+                                    Entity = descriptor.Member,
+                                    Value = dropdownText,
+                                    Operator = descriptor.Operator,
+                                    FKColumn = fkColumn
+                                });
+                            }
+                            filters.RemoveAt(i);
+                        }
+                        else
+                        {
+                            PropertyInfo propInfo = GetPropertyType(descriptor.Member);
+                            if (propInfo.PropertyType == typeof(DropdownOptions))
+                            {
+                                descriptor.Member = descriptor.Member + "Id";
+                            }
+                        }
+                    }
+                    else if (filters.ElementAt(i) is CompositeFilterDescriptor)
+                    {
+                        var list = await ModifyFilters(((CompositeFilterDescriptor)filters.ElementAt(i)).FilterDescriptors, repoTable);
+                        if (list.Any())
+                        {
+                            listOfStringCompare.AddRange(list);
+                        }
+                    }
+                }
+            }
+            return listOfStringCompare;
+        }
+
+        private static PropertyInfo GetPropertyType(string propName)
+        {
+            var obj = new WorkViewModel();
+            Type type = obj.GetType();
+            PropertyInfo propInfo = type.GetProperty(propName);
+            return propInfo;
+        }
+
+        public string GetOperatorSymbol(FilterOperator op)
+        {
+            switch (op)
+            {
+                case FilterOperator.IsLessThan:
+                    return "<";
+                case FilterOperator.IsLessThanOrEqualTo:
+                    return "<=";
+                case FilterOperator.IsGreaterThanOrEqualTo:
+                    return ">=";
+                case FilterOperator.IsGreaterThan:
+                    return ">";
+                default:
+                    return ">";
+            }
+        }
+
+        public IQueryable<TreeColumn> GetTreeColumns()
+        {
+            return _dbContext.TreeColumn;
         }
 
         public void ApplyFilter(DataSourceRequest request)

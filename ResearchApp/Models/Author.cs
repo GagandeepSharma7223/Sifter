@@ -7,7 +7,7 @@ namespace ResearchApp.Models
         public string FullName { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
-        public string IsOrganization { get; set; }
+        public bool? IsOrganization { get; set; }
         public string Gender { get; set; }
         public int? BirthYear { get; set; }
         public int? BirthCountryId { get; set; }

@@ -1,13 +1,12 @@
-﻿using Kendo.Mvc;
-using Kendo.Mvc.Extensions;
+﻿using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using ResearchApp.Models;
 using ResearchApp.ViewModel;
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
 
 namespace ResearchApp.Data
@@ -22,8 +21,43 @@ namespace ResearchApp.Data
 
         public async Task<DataSourceResult> GetCities(DataSourceRequest request)
         {
+            DataSourceResult list = new DataSourceResult();
+            var query = GetAll();
+            var stringCompareFilters = await ModifyFilters(request.Filters, "City");
             request.ApplyFilter();
-            DataSourceResult list = await GetAll().Include(x => x.Country).Include(x => x.Region).ToDataSourceResultAsync(request);
+
+            if (stringCompareFilters.Any())
+            {
+                foreach (var filter in stringCompareFilters)
+                {
+                    if (!string.IsNullOrEmpty(filter.FKColumn))
+                    {
+                        query = query.OrderBy($"{filter.Entity}.{filter.FKColumn} asc");
+                    }
+                }
+            }
+            query = query.Include(x => x.Country).Include(x => x.Region);
+
+            if (stringCompareFilters.Any())
+            {
+                string whereCondition = "";
+                List<object> whereConditionParams = new List<object>();
+                for (int i = 0; i < stringCompareFilters.Count; i++)
+                {
+                    if (whereCondition != "")
+                    {
+                        whereCondition += " and ";
+                    }
+                    var stringFilter = stringCompareFilters[i];
+                    whereCondition += $"{stringFilter.Entity} != @{whereConditionParams.Count} and ";
+                    whereConditionParams.Add(null);
+                    whereCondition += $"{stringFilter.Entity}.{stringFilter.FKColumn}.CompareTo(@{whereConditionParams.Count}) {GetOperatorSymbol(stringFilter.Operator)} 0";
+                    whereConditionParams.Add(stringFilter.Value);
+                }
+                query = query.Where(whereCondition, whereConditionParams.ToArray());
+            }
+
+            list = await query.ToDataSourceResultAsync(request);
             var data = (IEnumerable<City>)list.Data;
             var result = data.Select(x => new CityViewModel
             {

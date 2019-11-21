@@ -261,9 +261,11 @@
         isGridEditable = !isGridEditable;
         var grid = $("#grid").data("kendoGrid");
         if (isGridEditable) {
+            $('.chkbx').removeAttr('disabled');
             grid.showColumn(grid.columns[grid.columns.length - 1]);
         }
         else {
+            $('.chkbx').attr('disabled', 'disabled');
             grid.hideColumn(grid.columns[grid.columns.length - 1]);
         }
     }
@@ -391,11 +393,13 @@
         if (isGridEditable) {
             $('#stopEditable').removeClass("d-none");
             $('#startEditable').addClass("d-none");
+            $('.chkbx').removeAttr('disabled');
             grid.showColumn(grid.columns[grid.columns.length - 1]);
         }
         else {
             $('#stopEditable').addClass("d-none");
             $('#startEditable').removeClass("d-none");
+            $('.chkbx').attr('disabled', 'disabled');
             grid.hideColumn(grid.columns[grid.columns.length - 1]);
         }
     }
@@ -469,12 +473,13 @@
         clearFilter();
     });
 
-     //$(document).on("change", "input.chkbx", function(e) {
-     //    var grid = $("#grid").data("kendoGrid");
-     //    var dataItem = grid.dataItem($(e.target).closest("tr"));
-     //    dataItem.set("IsOrganization", this.checked);
-     //    dirtyField(dataItem, 'IsOrganization');
-     //   });
+    $(document).on("change", "input.chkbx", function (e) {
+        var grid = $("#grid").data("kendoGrid"),
+            dataItem = grid.dataItem($(e.target).closest("tr"));
+        $(e.target).closest("td").prepend("<span class='k-dirty'></span>");
+        dataItem.IsOrganization = this.checked;
+        dataItem.dirty = true;
+    });
 
     function getAdditionalParam(e) {
         var widget = $("#dropDownList").data("kendoDropDownList");
@@ -611,7 +616,7 @@
                 var filter = { logic: "or", filters: [] };
                 var values = this.value();
                 $.each(values, function (i, v) {
-                    filter.filters.push({ field: currentFilterColumn + 'Id', operator: "eq", value: v });
+                    filter.filters.push({ field: currentFilterColumn , operator: "eq", value: v });
                 });
                 console.log(this.dataSource.data());
                 var dataSource = $("#grid").data().kendoGrid.dataSource;
@@ -957,7 +962,7 @@
                                 //}
                                 
                                 return {
-                                    field: fieldType =='object' ? field+ 'Id' :field ,
+                                    field: fieldType =='object' ? field :field ,
                                     operator: 'eq',
                                     value: parseValue(fieldType, input.value)
                                 };
@@ -967,14 +972,14 @@
                             if (inputFilterOne || inputFilterTwo) {
                                 if (inputFilterOne) {
                                     fieldFilters.push({
-                                        field: fieldType =='object' ? field+ 'Id' :field ,
+                                        field: fieldType =='object' ? field :field ,
                                         operator: filterOneValue,
                                         value: parseValue(fieldType, inputFilterOne)
                                     });
                                 }
                                 if (inputFilterTwo) {
                                     fieldFilters.push({
-                                        field: fieldType =='object' ? field+ 'Id' :field ,
+                                        field: fieldType =='object' ? field :field ,
                                         operator: filterTwoValue,
                                         value: parseValue(fieldType, inputFilterTwo)
                                     });

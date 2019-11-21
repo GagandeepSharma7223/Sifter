@@ -1,13 +1,12 @@
-﻿using Kendo.Mvc;
-using Kendo.Mvc.Extensions;
+﻿using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using ResearchApp.Models;
 using ResearchApp.ViewModel;
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
 
 namespace ResearchApp.Data
@@ -22,8 +21,44 @@ namespace ResearchApp.Data
 
         public async Task<DataSourceResult> GetAuthors(DataSourceRequest request)
         {
+            DataSourceResult list = new DataSourceResult();
+            var query = GetAll();
+            var stringCompareFilters = await ModifyFilters(request.Filters, "Author");
             request.ApplyFilter();
-            DataSourceResult list = await GetAll().Include(x=> x.BirthCountry).ToDataSourceResultAsync(request);
+
+            if (stringCompareFilters.Any())
+            {
+                foreach (var filter in stringCompareFilters)
+                {
+                    if (!string.IsNullOrEmpty(filter.FKColumn))
+                    {
+                        query = query.OrderBy($"{filter.Entity}.{filter.FKColumn} asc");
+                    }
+                }
+            }
+
+            query = query.Include(x => x.BirthCountry);
+
+            if (stringCompareFilters.Any())
+            {
+                string whereCondition = "";
+                List<object> whereConditionParams = new List<object>();
+                for (int i = 0; i < stringCompareFilters.Count; i++)
+                {
+                    if (whereCondition != "")
+                    {
+                        whereCondition += " and ";
+                    }
+                    var stringFilter = stringCompareFilters[i];
+                    whereCondition += $"{stringFilter.Entity} != @{whereConditionParams.Count} and ";
+                    whereConditionParams.Add(null);
+                    whereCondition += $"{stringFilter.Entity}.{stringFilter.FKColumn}.CompareTo(@{whereConditionParams.Count}) {GetOperatorSymbol(stringFilter.Operator)} 0";
+                    whereConditionParams.Add(stringFilter.Value);
+                }
+                query = query.Where(whereCondition, whereConditionParams.ToArray());
+            }
+
+            list = await query.ToDataSourceResultAsync(request);
             var authors = (IEnumerable<Author>)list.Data;
             var result = authors.Select(x => new AuthorViewModel
             {
@@ -40,7 +75,7 @@ namespace ResearchApp.Data
                     Option = x.Gender,
                     Id = x.Gender
                 },
-                IsOrganization = x.IsOrganization == "Yes" ? true: false,
+                IsOrganization = x.IsOrganization,
                 FullName = x.FullName,
                 FirstName = x.FirstName,
                 PenName = x.PenName,
@@ -70,7 +105,7 @@ namespace ResearchApp.Data
                 Title = model.Title,
                 FirstActivityYear = model.FirstActivityYear,
                 Gender = model.Gender?.Id,
-                IsOrganization = model.IsOrganization ? "Yes" : "No",
+                IsOrganization = model.IsOrganization,
                 FirstName= model.FirstName,
                 FullName = model.FullName,
                 PenName = model.PenName,
@@ -94,7 +129,7 @@ namespace ResearchApp.Data
                 dbAuthor.Title = model.Title;
                 dbAuthor.FirstActivityYear = model.FirstActivityYear;
                 dbAuthor.Gender = model.Gender?.Id;
-                dbAuthor.IsOrganization = model.IsOrganization ? "Yes" : "No";
+                dbAuthor.IsOrganization = model.IsOrganization;
                 dbAuthor.FirstName = model.FirstName;
                 dbAuthor.FullName = model.FullName;
                 dbAuthor.PenName = model.PenName;

@@ -9,8 +9,8 @@ namespace ResearchApp.ViewModel
         public string FirstName { get; set; }
         public string LastName { get; set; }
         //[UIHint("ClientYesNo")]
-        [UIHint("Boolean")]
-        public bool IsOrganization { get; set; }
+        //[UIHint("Boolean")]
+        public bool? IsOrganization { get; set; }
         [UIHint("ClientGender")]
         public TextDropdownOptions Gender { get; set; }
         public int? BirthYear { get; set; }

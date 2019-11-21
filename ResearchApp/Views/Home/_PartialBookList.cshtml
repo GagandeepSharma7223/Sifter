@@ -36,7 +36,7 @@
                       .Ajax()
                       .Batch(true)
                       .PageSize(1000)
-                      .Sort(sort => sort.Add(s=> s.Title))
+                      //.Sort(sort => sort.Add(s=> s.Title))
                       .Events(events => events.Error("error_handler"))
                       .Model(model =>
                       {
