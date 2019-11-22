@@ -4,12 +4,9 @@ namespace ResearchApp.ViewModel
     public class AuthorViewModel
     {
         public int AuthorID { get; set; }
-        [Required]
         public string FullName { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
-        //[UIHint("ClientYesNo")]
-        //[UIHint("Boolean")]
         public bool? IsOrganization { get; set; }
         [UIHint("ClientGender")]
         public TextDropdownOptions Gender { get; set; }

@@ -4,6 +4,7 @@
                   .Name("grid")
                   .Columns(columns =>
                   {
+                      columns.Command(command => command.Destroy()).Width(100);
                       columns.Bound(b => b.RegionID).Width(100);
                       columns.Bound(b => b.Name).Editable("checkIfGridEditable");
                       columns.Bound(b => b.Country).ClientTemplate("#=(Country.Option == null) ? '' : Country.Option#").Editable("checkIfGridEditable");
@@ -13,7 +14,6 @@
                       columns.Bound(b => b.GeoNameId).ClientTemplate("#=(GeoNameId == null) ? '' : GeoNameId#").Editable("checkIfGridEditable");
                       columns.Bound(b => b.NameAscii).Editable("checkIfGridEditable");
                       columns.Bound(b => b.Slug).Editable("checkIfGridEditable");
-                      columns.Command(command => command.Destroy()).Width(100);
                   })
                   .ToolBar(toolbar =>
                   {

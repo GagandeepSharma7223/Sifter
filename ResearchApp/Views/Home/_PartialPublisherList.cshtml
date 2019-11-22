@@ -4,9 +4,9 @@
                   .Name("grid")
                   .Columns(columns =>
                   {
+                      columns.Command(command => command.Destroy()).Width(100);
                       columns.Bound(b => b.PublisherID).Width(100);
                       columns.Bound(b => b.Name).Editable("checkIfGridEditable");
-                      columns.Command(command => command.Destroy()).Width(100);
                   })
                   .ToolBar(toolbar =>
                   {

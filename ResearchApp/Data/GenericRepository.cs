@@ -99,7 +99,7 @@ namespace ResearchApp.Data
             }
         }
 
-        public async Task<List<StringCompareRequest>> ModifyFilters(IList<IFilterDescriptor> filters, string repoTable)
+        public async Task<List<StringCompareRequest>> ModifyFilters(TEntity entity, IList<IFilterDescriptor> filters, string repoTable)
         {
             var listOfStringCompare = new List<StringCompareRequest>();
             if (filters.Any())
@@ -133,7 +133,7 @@ namespace ResearchApp.Data
                         }
                         else
                         {
-                            PropertyInfo propInfo = GetPropertyType(descriptor.Member);
+                            PropertyInfo propInfo = GetPropertyType(entity, descriptor.Member);
                             if (propInfo.PropertyType == typeof(DropdownOptions))
                             {
                                 descriptor.Member = descriptor.Member + "Id";
@@ -142,7 +142,7 @@ namespace ResearchApp.Data
                     }
                     else if (filters.ElementAt(i) is CompositeFilterDescriptor)
                     {
-                        var list = await ModifyFilters(((CompositeFilterDescriptor)filters.ElementAt(i)).FilterDescriptors, repoTable);
+                        var list = await ModifyFilters(entity, ((CompositeFilterDescriptor)filters.ElementAt(i)).FilterDescriptors, repoTable);
                         if (list.Any())
                         {
                             listOfStringCompare.AddRange(list);
@@ -153,10 +153,9 @@ namespace ResearchApp.Data
             return listOfStringCompare;
         }
 
-        private static PropertyInfo GetPropertyType(string propName)
+        private static PropertyInfo GetPropertyType(TEntity entity, string propName)
         {
-            var obj = new WorkViewModel();
-            Type type = obj.GetType();
+            Type type = entity.GetType();
             PropertyInfo propInfo = type.GetProperty(propName);
             return propInfo;
         }

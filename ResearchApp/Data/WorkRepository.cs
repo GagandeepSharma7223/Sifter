@@ -28,7 +28,7 @@ namespace ResearchApp.Data
             try
             {
                 var query = GetAll();
-                var stringCompareFilters = await ModifyFilters(request.Filters, "Work");
+                var stringCompareFilters = await ModifyFilters(new Work(), request.Filters, "Work");
                 request.ApplyFilter();
                 if (stringCompareFilters.Any())
                 {

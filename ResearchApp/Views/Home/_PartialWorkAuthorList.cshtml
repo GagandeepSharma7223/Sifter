@@ -4,11 +4,11 @@
           .Name("grid")
           .Columns(columns =>
           {
+              columns.Command(command => command.Destroy()).Width(100);
               columns.Bound(b => b.WorkAuthorID).Width(100);
               columns.Bound(b => b.Work).ClientTemplate("#=(Work.Option == null) ? '' : Work.Option#").Editable("checkIfGridEditable");
               columns.Bound(b => b.Author).ClientTemplate("#=(Author.Option == null) ? '' : Author.Option #").Editable("checkIfGridEditable");
               columns.Bound(b => b.Role).Editable("checkIfGridEditable");
-              columns.Command(command => command.Destroy()).Width(100);
           })
           .ToolBar(toolbar =>
           {

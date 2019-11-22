@@ -4,6 +4,7 @@
                   .Name("grid")
                   .Columns(columns =>
                   {
+                      columns.Command(command => command.Destroy()).Width(100);
                       columns.Bound(b => b.WorkID).Width(100);
                       columns.Bound(b => b.Title).Editable("checkIfGridEditable").Width(150);
                       columns.Bound(b => b.PublicationYear).Width(70).Format("#").ClientTemplate("#=(PublicationYear == null) ? '' : PublicationYear#").Editable("checkIfGridEditable");
@@ -15,7 +16,6 @@
                       columns.Bound(b => b.Translator).ClientTemplate("#=(Translator.Option == null) ? '' : Translator.Option#").Editable("checkIfGridEditable").Width(100);
                       columns.Bound(b => b.TitleEnglish).Editable("checkIfGridEditable").Width(150);
                       columns.Bound(b => b.TitleLiteral).Editable("checkIfGridEditable");
-                      columns.Command(command => command.Destroy()).Width(100);
                   })
                   .ToolBar(toolbar =>
                   {

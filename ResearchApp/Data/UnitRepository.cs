@@ -26,7 +26,7 @@ namespace ResearchApp.Data
             {
                 DataSourceResult list = new DataSourceResult();
                 var query = GetAll();
-                var stringCompareFilters = await ModifyFilters(request.Filters, "Unit");
+                var stringCompareFilters = await ModifyFilters(new Unit(), request.Filters, "Unit");
                 request.ApplyFilter();
 
                 if (stringCompareFilters.Any())

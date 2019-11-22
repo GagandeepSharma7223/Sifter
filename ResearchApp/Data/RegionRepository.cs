@@ -24,7 +24,7 @@ namespace ResearchApp.Data
         {
             DataSourceResult list = new DataSourceResult();
             var query = GetAll();
-            var stringCompareFilters = await ModifyFilters(request.Filters, "Region");
+            var stringCompareFilters = await ModifyFilters(new Region(), request.Filters, "Region");
             request.ApplyFilter();
 
             if (stringCompareFilters.Any())

@@ -4,6 +4,7 @@
                   .Name("grid")
                   .Columns(columns =>
                   {
+                      columns.Command(command => command.Destroy()).Width(100);
                       columns.Bound(b => b.AuthorID).Width(80);
                       columns.Bound(b => b.FullName).Editable("checkIfGridEditable").Width(130);
                       columns.Bound(b => b.FirstName).Editable("checkIfGridEditable").Width(100);
@@ -20,7 +21,6 @@
                       columns.Bound(b => b.Occupation).Editable("checkIfGridEditable").Width(150);
                       columns.Bound(b => b.Sources).Editable("checkIfGridEditable").Width(150);
                       columns.Bound(b => b.Comments).Editable("checkIfGridEditable").Width(150);
-                      columns.Command(command => command.Destroy()).Width(100);
                   })
                   .ToolBar(toolbar =>
                   {

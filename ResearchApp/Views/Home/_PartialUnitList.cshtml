@@ -4,6 +4,7 @@
                   .Name("grid")
                   .Columns(columns =>
                   {
+                      columns.Command(command => command.Destroy()).Width(100);
                       columns.Bound(b => b.UnitID).Width(100);
                       columns.Bound(b => b.Work).ClientTemplate("#=(Work.Option == null) ? '' : Work.Option#").Editable("checkIfGridEditable");
                       columns.Bound(b => b.StartPage).Editable("checkIfGridEditable");
@@ -13,7 +14,6 @@
                       columns.Bound(b => b.Title).Editable("checkIfGridEditable");
                       columns.Bound(b => b.TitleEnglish).Editable("checkIfGridEditable");
                       columns.Bound(b => b.Attribution).Editable("checkIfGridEditable");
-                      columns.Command(command => command.Destroy()).Width(100);
                   })
                   .ToolBar(toolbar =>
                   {

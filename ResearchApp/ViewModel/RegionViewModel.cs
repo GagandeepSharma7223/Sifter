@@ -9,7 +9,6 @@ namespace ResearchApp.ViewModel
             Country = new DropdownOptions();
         }
         public int? RegionID { get; set; }
-        [Required]
         public string Name { get; set; }
         public int? CountryId { get; set; }
         public string DisplayName { get; set; }

@@ -13,7 +13,6 @@ namespace ResearchApp.ViewModel
             Language = new DropdownOptions();
         }
         public int? WorkID { get; set; }
-        [Required]
         public string Title { get; set; }
         public int? PublicationYear { get; set; }
         public int? AuthorId { get; set; }

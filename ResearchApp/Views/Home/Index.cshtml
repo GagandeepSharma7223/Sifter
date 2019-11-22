@@ -262,11 +262,11 @@
         var grid = $("#grid").data("kendoGrid");
         if (isGridEditable) {
             $('.chkbx').removeAttr('disabled');
-            grid.showColumn(grid.columns[grid.columns.length - 1]);
+            grid.showColumn(grid.columns[0]);
         }
         else {
             $('.chkbx').attr('disabled', 'disabled');
-            grid.hideColumn(grid.columns[grid.columns.length - 1]);
+            grid.hideColumn(grid.columns[0]);
         }
     }
 
@@ -394,13 +394,13 @@
             $('#stopEditable').removeClass("d-none");
             $('#startEditable').addClass("d-none");
             $('.chkbx').removeAttr('disabled');
-            grid.showColumn(grid.columns[grid.columns.length - 1]);
+            grid.showColumn(grid.columns[0]);
         }
         else {
             $('#stopEditable').addClass("d-none");
             $('#startEditable').removeClass("d-none");
             $('.chkbx').attr('disabled', 'disabled');
-            grid.hideColumn(grid.columns[grid.columns.length - 1]);
+            grid.hideColumn(grid.columns[0]);
         }
     }
 
@@ -691,7 +691,7 @@
         var pageModel = {};
         pageModel[field] = 1;
 
-        var columnDataSourceNew = dataSourceListViewScroll;
+        //var columnDataSourceNew = dataSourceListViewScroll;
 
         var columnDataSource = new kendo.data.DataSource({
             data: uniqueForField(dataSource.data(), field, fieldType),
@@ -717,28 +717,30 @@
                 if (parentEle.find('#list-view-' + field).length === 0) {
                     elementToInsertAfter.addClass('d-none');  //hide text above search box
                     var advancedOption = $(container).clone();
-
-                    var ele = $("<div class='k-textbox k-space-right'><input id='filter-search-" + field + "' placeholder='Search'><span class='k-icon k-i-zoom'></span></div>").insertAfter(elementToInsertAfter);
-                    var element = $("<div id='list-view-" + field + "' class='checkbox-ontainer'></div>").insertAfter(ele).kendoListView({
-                        dataSource: dataSourceListView,
-                        height: 135,
-                        template: "<div class='list-Item'><input type='checkbox' value='#:data#'/>#:data#</div>"
-                    });
-
-                   
-
-                    if (fieldType === 'object') {
-                        var listView = $("#list-view-" + field).data("kendoListView");
-                        listView.destroy();
-                        $("#list-view-" + field).remove(); // remove all ListView HTML
-                        element = $("<div id='list-view-" + field + "' class='checkbox-ontainer'></div>").insertAfter(ele).kendoListView({
-                            dataSource: dataSourceListView,
-                            height: 135,
-                            template: "<div class='list-Item'><input type='checkbox' value='#:Id#'/>#:Option#</div>"
-                            //template: "<div><input type='checkbox' value='#:" + field + ".Id#'/>#:" + field + ".Option#</div>"
-                        });
+                    var element, ele;
+                    
+                    switch (fieldType) {
+                        case 'object':
+                            ele = $("<div class='k-textbox k-space-right'><input id='filter-search-" + field + "' placeholder='Search'><span class='k-icon k-i-zoom'></span></div>").insertAfter(elementToInsertAfter);
+                            element = $("<div id='list-view-" + field + "' class='checkbox-ontainer'></div>").insertAfter(ele).kendoListView({
+                                dataSource: dataSourceListView,
+                                height: 135,
+                                template: "<div class='list-Item'><input type='checkbox' value='#:Id#'/>#:Option#</div>"
+                            });
+                            break;
+                        case 'boolean':
+                            ele = $("<div class='k-textbox k-space-right'><input disabled=disabled id='filter-search-" + field + "' placeholder='Search'><span class='k-icon k-i-zoom'></span></div>").insertAfter(elementToInsertAfter);
+                            element = $("<div id='list-view-" + field + "' class='checkbox-ontainer'><div class='list-Item'><input type='checkbox' class='filter-chk'/></div></div>").insertAfter(ele);
+                            break;
+                        default:
+                             ele = $("<div class='k-textbox k-space-right'><input id='filter-search-" + field + "' placeholder='Search'><span class='k-icon k-i-zoom'></span></div>").insertAfter(elementToInsertAfter);
+                             element = $("<div id='list-view-" + field + "' class='checkbox-ontainer'></div>").insertAfter(ele).kendoListView({
+                                dataSource: dataSourceListView,
+                                height: 135,
+                                template: "<div class='list-Item'><input type='checkbox' value='#:data#'/>#:data#</div>"
+                             });
+                            break;
                     }
-
 
                     var advancedMenu = $("<ul id='advanced-menu-" + field + "'></ul>").insertAfter($("#list-view-" + field)).kendoMenu({
                         orientation: 'vertical'
@@ -753,239 +755,217 @@
                         }
                     ]);
 
-                    advancedMenu.bind("open", function (e) {
-                        if (!inputFilterOne && !inputFilterTwo) {
-                            var advancedOptionFrm = $('#advanced-menu-' + field).find('.k-filter-menu-container');
-                            console.log("advanced menu form ::" + advancedOptionFrm);
-                            if (fieldType === 'object') {
-                                var inputFirst = advancedOptionFrm.find("input:eq(0)");
-                                var inputSecond = advancedOptionFrm.find("input:eq(1)");
-                                inputFirst.removeClass('k-textbox').removeAttr("data-bind");
-                                inputSecond.removeClass('k-textbox').removeAttr("data-bind");
-                                var textField = field + ".Option";
-                                var valueField = field + ".Id";
-                                
-                             var listView = $('#list-view-' + field).data('kendoListView');;
+                    if (fieldType === 'boolean') {
+                        var item = advancedMenu.element.eq(0).children("li").eq(0);
+                        advancedMenu.enable(item, false);
+                    }
 
-                                var comboBoxDataSource = columnDataSource;
-                                var ddDataSource = new kendo.data.DataSource({
-                                    data: comboBoxDataSource.data()
-                                });
-                                ddFilterOne = $(inputFirst).kendoDropDownList({
-                                    dataSource: dataSourceListView,
-                                    dataTextField: "Option",
-                                    dataValueField: "Id",
-                                    change: function (e) {
-                                        console.log('Dropdown filter selected:: ' + this.value());
-                                        inputFilterOne = this.value();
-                                    },   
-                                    height: 135,
-                                }).data("kendoDropDownList");
+                    if (fieldType !== 'boolean') {
+                        advancedMenu.bind("open", function (e) {
+                            if (!inputFilterOne && !inputFilterTwo) {
+                                var advancedOptionFrm = $('#advanced-menu-' + field).find('.k-filter-menu-container');
+                                console.log("advanced menu form ::" + advancedOptionFrm);
+                                if (fieldType === 'object') {
+                                    var inputFirst = advancedOptionFrm.find("input:eq(0)");
+                                    var inputSecond = advancedOptionFrm.find("input:eq(1)");
+                                    inputFirst.removeClass('k-textbox').removeAttr("data-bind");
+                                    inputSecond.removeClass('k-textbox').removeAttr("data-bind");
 
-                                ddFilterOne.setOptions({ optionLabel: "Select" });
-                                ddFilterOne.refresh();
-                                ddFilterOne.select(0);
+                                    ddFilterOne = $(inputFirst).kendoDropDownList({
+                                        dataSource: dataSourceListView,
+                                        dataTextField: "Option",
+                                        dataValueField: "Id",
+                                        change: function (e) {
+                                            console.log('Dropdown filter selected:: ' + this.value());
+                                            inputFilterOne = this.value();
+                                        },
+                                        height: 135,
+                                    }).data("kendoDropDownList");
 
-                                ddFilterTwo = $(inputSecond).kendoDropDownList({
-                                    //dataSource: {
-                                    //    transport: {
-                                    //        read: {
-                                    //            dataType: "json",
-                                    //            url: "/Grid/BindFilterDropDown",
-                                    //            data: {
-                                    //                treeTable: treeTable,
-                                    //                optionCol: field,
-                                    //                fieldType: fieldType
-                                    //            },
+                                    ddFilterOne.setOptions({ optionLabel: "Select" });
+                                    ddFilterOne.refresh();
+                                    ddFilterOne.select(0);
 
-                                    //        }
-                                    //    }
-                                    //},
-                                    dataSource: dataSourceListView,
-                                    dataTextField: "Option",
-                                    dataValueField: "Id",
-                                    change: function (e) {
-                                        inputFilterTwo = this.value();
-                                    },
-                                    height: 135,
-                                }).data("kendoDropDownList");
+                                    ddFilterTwo = $(inputSecond).kendoDropDownList({
+                                        dataSource: dataSourceListView,
+                                        dataTextField: "Option",
+                                        dataValueField: "Id",
+                                        change: function (e) {
+                                            inputFilterTwo = this.value();
+                                        },
+                                        height: 135,
+                                    }).data("kendoDropDownList");
 
-                                ddFilterTwo.setOptions({ optionLabel: "Select" });
-                                ddFilterTwo.refresh();
-                                ddFilterTwo.select(0);
+                                    ddFilterTwo.setOptions({ optionLabel: "Select" });
+                                    ddFilterTwo.refresh();
+                                    ddFilterTwo.select(0);
 
-                                var firstValueDropDown = advancedOptionFrm.find("select:eq(0)");
-                                var logicDropDown = advancedOptionFrm.find("select:eq(1)");
-                                var secondValueDropDown = advancedOptionFrm.find("select:eq(2)");
-                                logicDropDown.kendoDropDownList();
-                                var data = [
-                                    { text: "Is equal to", value: "eq" },
-                                    { text: "Is not equal to", value: "neq" },
-                                    { text: "Is null", value: "isnull" },
-                                    { text: "Is not null", value: "isnotnull" },
-                                    { text: "Less than or equal to", value: "lte" },
-                                    { text: "Greater than or equal to", value: "gte" }
-                                ];
-                                $(firstValueDropDown).kendoDropDownList({
-                                    dataTextField: "text",
-                                    dataValueField: "value",
-                                    dataSource: data,
-                                    index: 0,
-                                    change: function (e) {
-                                        filterOneValue = this.value();
-                                    }
-                                });
-                                $(secondValueDropDown).kendoDropDownList({
-                                    dataTextField: "text",
-                                    dataValueField: "value",
-                                    dataSource: data,
-                                    index: 0,
-                                    change: function (e) {
-                                        filterTwoValue = this.value();
-                                    }
-                                });
-
-                                filterOneValue = firstValueDropDown.val();
-                                filterTwoValue = secondValueDropDown.val();
-                                filterLogicValue = logicDropDown.val();
-
-                                $(logicDropDown).change(function (e) {
-                                    filterLogicValue = this.value;
-                                });
-
-
-                                //ddFilterOne.element.on('scroll', function (e) {
-                                //    console.log("forign key first:: dropdown");
-                                //})
-
-                                
-                            }
-                            else {
-                                var filterOne = advancedOptionFrm.find('select:eq(0)');
-                                var filterLogic = advancedOptionFrm.find('select:eq(1)');
-                                var filterTwo = advancedOptionFrm.find('select:eq(2)');
-                                filterOne.kendoDropDownList();
-                                filterLogic.kendoDropDownList();
-                                filterTwo.kendoDropDownList();
-                                filterOneValue = filterOne.val();
-                                filterTwoValue = filterTwo.val();
-                                filterLogicValue = filterLogic.val();
-                                if (fieldType === 'number') {
-                                    advancedOptionFrm.children('.k-numerictextbox').remove();
-
-                                    $("<input />").insertAfter(advancedOptionFrm.children("span:first")).kendoNumericTextBox({
-                                        spinners: false,
-                                        decimals: 0,
-                                        format: "#"
+                                    var firstValueDropDown = advancedOptionFrm.find("select:eq(0)");
+                                    var logicDropDown = advancedOptionFrm.find("select:eq(1)");
+                                    var secondValueDropDown = advancedOptionFrm.find("select:eq(2)");
+                                    logicDropDown.kendoDropDownList();
+                                    var data = [
+                                        { text: "Is equal to", value: "eq" },
+                                        { text: "Is not equal to", value: "neq" },
+                                        { text: "Is null", value: "isnull" },
+                                        { text: "Is not null", value: "isnotnull" },
+                                        { text: "Less than or equal to", value: "lte" },
+                                        { text: "Greater than or equal to", value: "gte" }
+                                    ];
+                                    $(firstValueDropDown).kendoDropDownList({
+                                        dataTextField: "text",
+                                        dataValueField: "value",
+                                        dataSource: data,
+                                        index: 0,
+                                        change: function (e) {
+                                            filterOneValue = this.value();
+                                        }
                                     });
-                                    $("<input />").insertAfter(advancedOptionFrm.children("span:last")).kendoNumericTextBox({
-                                        spinners: false,
-                                        decimals: 0,
-                                        format: "#"
+                                    $(secondValueDropDown).kendoDropDownList({
+                                        dataTextField: "text",
+                                        dataValueField: "value",
+                                        dataSource: data,
+                                        index: 0,
+                                        change: function (e) {
+                                            filterTwoValue = this.value();
+                                        }
+                                    });
+
+                                    filterOneValue = firstValueDropDown.val();
+                                    filterTwoValue = secondValueDropDown.val();
+                                    filterLogicValue = logicDropDown.val();
+
+                                    $(logicDropDown).change(function (e) {
+                                        filterLogicValue = this.value;
                                     });
                                 }
                                 else {
-                                    advancedOptionFrm.children('.k-textbox').remove();
-                                    $("<textarea class='k-textbox'></textarea>").insertAfter(advancedOptionFrm.children("span:first"));
-                                    $("<textarea class='k-textbox'></textarea>").insertAfter(advancedOptionFrm.children("span:last"));
-                                }
-                                var inputFilters = advancedOptionFrm.find('input[style*="display: none"]');
-                                if (inputFilters.length === 0) {
-                                    inputFilters = advancedOptionFrm.find('input:not([style*="display: none"])');
-                                }
-                                if (inputFilters.length) {
-                                    $(inputFilters[0]).on('keyup mouseup change', function (e) {
-                                        console.log("filter one input event::" + this.value);
-                                        inputFilterOne = this.value;
+                                    var filterOne = advancedOptionFrm.find('select:eq(0)');
+                                    var filterLogic = advancedOptionFrm.find('select:eq(1)');
+                                    var filterTwo = advancedOptionFrm.find('select:eq(2)');
+                                    filterOne.kendoDropDownList();
+                                    filterLogic.kendoDropDownList();
+                                    filterTwo.kendoDropDownList();
+                                    filterOneValue = filterOne.val();
+                                    filterTwoValue = filterTwo.val();
+                                    filterLogicValue = filterLogic.val();
+                                    if (fieldType === 'number') {
+                                        advancedOptionFrm.children('.k-numerictextbox').remove();
+
+                                        $("<input />").insertAfter(advancedOptionFrm.children("span:first")).kendoNumericTextBox({
+                                            spinners: false,
+                                            decimals: 0,
+                                            format: "#"
+                                        });
+                                        $("<input />").insertAfter(advancedOptionFrm.children("span:last")).kendoNumericTextBox({
+                                            spinners: false,
+                                            decimals: 0,
+                                            format: "#"
+                                        });
+                                    }
+                                    else {
+                                        advancedOptionFrm.children('.k-textbox').remove();
+                                        $("<textarea class='k-textbox'></textarea>").insertAfter(advancedOptionFrm.children("span:first"));
+                                        $("<textarea class='k-textbox'></textarea>").insertAfter(advancedOptionFrm.children("span:last"));
+                                    }
+                                    var inputFilters = advancedOptionFrm.find('input[style*="display: none"]');
+                                    if (inputFilters.length === 0) {
+                                        inputFilters = advancedOptionFrm.find('input:not([style*="display: none"])');
+                                    }
+                                    if (inputFilters.length) {
+                                        $(inputFilters[0]).on('keyup mouseup change', function (e) {
+                                            console.log("filter one input event::" + this.value);
+                                            inputFilterOne = this.value;
+                                        });
+
+                                        $(inputFilters[1]).on('keyup mouseup change', function (e) {
+                                            console.log("filter two input event::" + this.value);
+                                            inputFilterTwo = this.value;
+                                        });
+                                    }
+
+                                    var textareaFilters = advancedOptionFrm.find('textarea');
+
+                                    if (textareaFilters.length) {
+                                        $(textareaFilters[0]).on('keyup mouseup change', function (e) {
+                                            console.log("filter one input event::" + this.value);
+                                            inputFilterOne = this.value;
+                                        });
+
+                                        $(textareaFilters[1]).on('keyup mouseup change', function (e) {
+                                            console.log("filter two input event::" + this.value);
+                                            inputFilterTwo = this.value;
+                                        });
+                                    }
+
+                                    $(filterOne).change(function (e) {
+                                        console.log("filter one dropdown event::" + this.value);
+                                        filterOneValue = this.value;
                                     });
 
-                                    $(inputFilters[1]).on('keyup mouseup change', function (e) {
-                                        console.log("filter two input event::" + this.value);
-                                        inputFilterTwo = this.value;
+                                    $(filterTwo).change(function (e) {
+                                        console.log("filter two dropdown event::" + this.value);
+                                        filterTwoValue = this.value;
+                                    });
+
+                                    $(filterLogic).change(function (e) {
+                                        console.log("filter logic dropdown event::" + this.value);
+                                        filterLogicValue = this.value;
                                     });
                                 }
-
-                                var textareaFilters = advancedOptionFrm.find('textarea');
-
-                                if (textareaFilters.length) {
-                                    $(textareaFilters[0]).on('keyup mouseup change', function (e) {
-                                        console.log("filter one input event::" + this.value);
-                                        inputFilterOne = this.value;
-                                    });
-
-                                    $(textareaFilters[1]).on('keyup mouseup change', function (e) {
-                                        console.log("filter two input event::" + this.value);
-                                        inputFilterTwo = this.value;
-                                    });
-                                }
-
-                                $(filterOne).change(function (e) {
-                                    console.log("filter one dropdown event::" + this.value);
-                                    filterOneValue = this.value;
-                                });
-
-                                $(filterTwo).change(function (e) {
-                                    console.log("filter two dropdown event::" + this.value);
-                                    filterTwoValue = this.value;
-                                });
-
-                                $(filterLogic).change(function (e) {
-                                    console.log("filter logic dropdown event::" + this.value);
-                                    filterLogicValue = this.value;
-                                });
                             }
-                        }
-                        setTimeout(function () {
-                            $('#advanced-menu-' + field).find('input:first').focus();
-                        }, 100);
-                    });
+                            setTimeout(function () {
+                                $('#advanced-menu-' + field).find('input:first').focus();
+                            }, 100);
+                        });
+                    }
 
                     // remove elements after advanced menu
                     $(container).find("ul").nextAll('span').remove();
                     $(container).find("ul").nextAll('input').remove();
+                    $(container).find("#list-view-" + field).nextAll('label').remove();
 
                     container.find("[type='submit']").click(function (e) {
                         e.preventDefault();
                         e.stopPropagation();
                         if (element) {
-
-                            
                             var filter = dataSource.filter() || { logic: "and", filters: [] };
-                            var fieldFilters = $.map(element.find(":checkbox:checked"), function (input, index) {
-                                //if (fieldType === 'object') {
-                                //    if (index == 0) {
-                                //        ddFilterOne.value(input.value);
-                                //    }
-                                //    if (index == 1) {
-                                //        ddFilterTwo.value(input.value);
-                                //    }
+                            var fieldFilters = [];
+                            if (fieldType != 'boolean') {
+                                fieldFilters = $.map(element.find(":checkbox:checked"), function (input, index) {
+                                    return {
+                                        field: fieldType == 'object' ? field : field,
+                                        operator: 'eq',
+                                        value: parseValue(fieldType, input.value)
+                                    };
+                                });
+                                // Get Field Filters
+                                //if (inputFilterOne || inputFilterTwo) {
+                                //    if (inputFilterOne) {
+                                        fieldFilters.push({
+                                            field: fieldType == 'object' ? field : field,
+                                            operator: filterOneValue,
+                                            value: parseValue(fieldType, inputFilterOne)
+                                        });
+                                    //}
+                                    //if (inputFilterTwo) {
+                                        fieldFilters.push({
+                                            field: fieldType == 'object' ? field : field,
+                                            operator: filterTwoValue,
+                                            value: parseValue(fieldType, inputFilterTwo)
+                                        });
+                                    //}
                                 //}
-                                
-                                return {
-                                    field: fieldType =='object' ? field :field ,
-                                    operator: 'eq',
-                                    value: parseValue(fieldType, input.value)
-                                };
-                            });
-
-                            // Get Field Filters
-                            if (inputFilterOne || inputFilterTwo) {
-                                if (inputFilterOne) {
-                                    fieldFilters.push({
-                                        field: fieldType =='object' ? field :field ,
-                                        operator: filterOneValue,
-                                        value: parseValue(fieldType, inputFilterOne)
-                                    });
-                                }
-                                if (inputFilterTwo) {
-                                    fieldFilters.push({
-                                        field: fieldType =='object' ? field :field ,
-                                        operator: filterTwoValue,
-                                        value: parseValue(fieldType, inputFilterTwo)
-                                    });
-                                }
                             }
-
+                            else {
+                             fieldFilters = $.map(element.find(":checkbox"), function (input, index) {
+                                    return {
+                                        field: field,
+                                        operator: 'eq',
+                                        value: input.checked
+                                    };
+                                });
+                            }
 
 
                             if (fieldFilters.length) {
