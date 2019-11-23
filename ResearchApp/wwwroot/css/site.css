@@ -297,16 +297,3 @@ input[type=number] {
     display: none;
     text-align: center;
 }
-
-/*.k-listview:after {
-    content: ".";
-    display: block;
-    height: 0;
-    clear: both;
-    visibility: hidden;
-}*/
-
-.k-listview {
-    /*padding: 5px;
-    margin-bottom: -1px;*/
-}

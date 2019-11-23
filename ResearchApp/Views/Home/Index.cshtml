@@ -149,9 +149,6 @@
             return this;
         };
 
-
-       
-
         populateDDSession('Author', 'FullName');
         populateDDSession('Category', 'Name');
         populateDDSession('City', 'Name');
@@ -159,17 +156,6 @@
         populateDDSession('Language', 'Name');
         populateDDSession('Publisher', 'Name');
         populateDDSession('Work', 'Title');
-
-        @*populateGridSession(@((int)GridTypes.Author));
-        populateGridSession(@((int)GridTypes.Category));
-        populateGridSession(@((int)GridTypes.City));
-        populateGridSession(@((int)GridTypes.Country));
-        populateGridSession(@((int)GridTypes.Language));
-        populateGridSession(@((int)GridTypes.Publisher));
-        populateGridSession(@((int)GridTypes.Region));
-        populateGridSession(@((int)GridTypes.Unit));
-        populateGridSession(@((int)GridTypes.Work));
-        populateGridSession(@((int)GridTypes.WorkAuthor));*@
 
         var container = $("#loginForm");
         kendo.init(container);
@@ -209,15 +195,6 @@
 
         $(output).insertAfter(container.find("[name='" + name + "']"));
     }
-
-    //function dataSourceShared(e) {
-    //    ;
-    //    var field = e.field;
-    //    var dataSource = $("#grid").data().kendoGrid.dataSource;
-    //    return new kendo.data.DataSource({
-    //        data: uniqueForField(dataSource.data(), field)
-    //    });
-    //}
 
     function error_handler(e) {
         if (e.errors) {
@@ -687,11 +664,8 @@
              serverPaging: true,
              serverSorting: true
         });
-          var processScroll = true;
         var pageModel = {};
         pageModel[field] = 1;
-
-        //var columnDataSourceNew = dataSourceListViewScroll;
 
         var columnDataSource = new kendo.data.DataSource({
             data: uniqueForField(dataSource.data(), field, fieldType),
@@ -705,6 +679,9 @@
         menu.bind("open", function (e) {
             if ($(e.item).find('.k-link').first().text() == "Filter") {
                 var parentEle = helpTextElement.children(":last").children(":first");
+                $(helpTextElement.children(":last")).resizable({
+                    alsoResize: "#list-view-" + field
+                });
                 var elementToInsertAfter = parentEle.find('.k-filter-help-text');
                 var container = parentEle.find('form');
 
@@ -741,7 +718,7 @@
                              });
                             break;
                     }
-
+                    $( "#list-view-" + field ).resizable();
                     var advancedMenu = $("<ul id='advanced-menu-" + field + "'></ul>").insertAfter($("#list-view-" + field)).kendoMenu({
                         orientation: 'vertical'
                     }).data("kendoMenu");
@@ -941,20 +918,20 @@
                                 });
                                 // Get Field Filters
                                 //if (inputFilterOne || inputFilterTwo) {
-                                //    if (inputFilterOne) {
+                                    if (inputFilterOne || chkNullableFilter(filterOneValue)) {
                                         fieldFilters.push({
                                             field: fieldType == 'object' ? field : field,
                                             operator: filterOneValue,
                                             value: parseValue(fieldType, inputFilterOne)
                                         });
-                                    //}
-                                    //if (inputFilterTwo) {
+                                    }
+                                    if (inputFilterTwo) {
                                         fieldFilters.push({
                                             field: fieldType == 'object' ? field : field,
                                             operator: filterTwoValue,
                                             value: parseValue(fieldType, inputFilterTwo)
                                         });
-                                    //}
+                                    }
                                 //}
                             }
                             else {
@@ -1000,6 +977,9 @@
                             }
                         }
                     });
+
+                    var resizableAdvanceSearchEle = $('#advanced-menu-' + field).children(":first").children(":last");
+                    $(resizableAdvanceSearchEle).resizable();
                 }
                 
                 
@@ -1044,6 +1024,21 @@
             }
         });
     }
+
+    function chkNullableFilter(operator) {
+        switch (operator) {
+            case 'isnull':
+            case 'isnotnull':
+            case 'isempty':
+            case 'isnotempty':
+            case 'isnullorempty':
+            case 'isnotnullorempty':
+                return true;
+            default:
+                return false;
+        }
+    }
+
     function removeDuplicates(items, field) {
         var getter = function (item) { return item[field] },
             result = [],
@@ -1121,19 +1116,5 @@
         }
         return result;
     }
-
-    //function onChange(e) {
-    //    dataSourceShared.data(e.items);
-    //}
-
-    //function dirtyField(data, fieldName){
-    //    var hasClass = $("[data-uid=" + data.uid + "]").find(".k-dirty-cell").length < 1;
-    //    if(data.dirty && data.dirtyFields[fieldName] && hasClass){
-    //      return "<span class='k-dirty'></span>"
-    //    }
-    //    else{
-    //      return "";
-    //    }
-    //  }
 
 </script>
