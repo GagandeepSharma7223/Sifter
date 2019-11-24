@@ -9,7 +9,7 @@
                       columns.Bound(b => b.FullName).Editable("checkIfGridEditable").Width(130);
                       columns.Bound(b => b.FirstName).Editable("checkIfGridEditable").Width(100);
                       columns.Bound(b => b.LastName).Editable("checkIfGridEditable").Width(100);
-                      columns.Bound(b => b.IsOrganization).ClientTemplate("<input disabled='disabled' type='checkbox' #= IsOrganization ? checked='checked':'' # class='chkbx' />").Editable("function(e){ return false; }").Width(100);
+                      columns.Bound(b => b.IsOrganization).HtmlAttributes(new { @class = "text-center" }).ClientTemplate("<input disabled='disabled' type='checkbox' #= IsOrganization ? checked='checked':'' # class='chkbx' />").Editable("function(e){ return false; }").Width(100);
                       columns.Bound(b => b.Gender).ClientTemplate("#=(Gender.Option == null) ? '' : Gender.Option#").Editable("checkIfGridEditable").Width(100);
                       columns.Bound(b => b.BirthYear).ClientTemplate("#=(BirthYear == null) ? '' : BirthYear#").Editable("checkIfGridEditable").Width(100);
                       columns.Bound(b => b.BirthCountry).ClientTemplate("#=(BirthCountry.Option == null) ? '' : BirthCountry.Option#").Editable("checkIfGridEditable").Width(100);

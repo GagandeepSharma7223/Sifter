@@ -66,6 +66,7 @@
 
 <script type="text/x-kendo-template" id="custom-toolbar">
     <div class="text-right" style="flex:1;">
+        <span class="label">Form View</span> <input type="checkbox" id="form-switch" aria-label="Forms Switch" />
         <span class="label">Word Wrap</span> <input type="checkbox" id="wrap-switch" aria-label="Notifications Switch" />
         <a role="button" class="k-button k-button-icontext k-grid-StartEditing" id="removeFilter" href="">Remove Filters</a>
         <a role="button" class="k-button k-button-icontext k-grid-StartEditing" id="startEditable" href="">Start Editing</a>
@@ -77,10 +78,7 @@
 </script>
 
 <script type="text/javascript">
-    var isGridEditable = false;
-    var isLoggedIn = false;
-    var isWordWrap = false;
-    var editfield = "";
+    var isGridEditable = false, isWordWrap = false, isFormWrap = false, isLoggedIn = false, editfield = "";
     var browserWindow = $(window);
     var currentFilterColumn;
     //register custom validation rules
@@ -398,6 +396,13 @@
                     }
                 }
             });
+
+            $("#form-switch").kendoSwitch({
+                checked: isFormWrap,
+                change: function (e) {
+                    isFormWrap = !isFormWrap;
+                }
+            });
         }
     }
 
@@ -672,16 +677,14 @@
             sort: { field: field, dir: "asc" }
         });
 
-        filterMenu.popup.bind("open", function (e) {
-            resizable: true
-        });
+        //filterMenu.popup.bind("open", function (e) {
+        //    resizable: true
+        //});
 
         menu.bind("open", function (e) {
             if ($(e.item).find('.k-link').first().text() == "Filter") {
-                var parentEle = helpTextElement.children(":last").children(":first");
-                $(helpTextElement.children(":last")).resizable({
-                    alsoResize: "#list-view-" + field
-                });
+                var filterContainer = helpTextElement.children(":last");
+                var parentEle = filterContainer.children(":first");
                 var elementToInsertAfter = parentEle.find('.k-filter-help-text');
                 var container = parentEle.find('form');
 
@@ -692,6 +695,9 @@
                 }
 
                 if (parentEle.find('#list-view-' + field).length === 0) {
+                     $(helpTextElement.children(":last")).resizable({
+                        alsoResize: "#list-view-" + field
+                     });
                     elementToInsertAfter.addClass('d-none');  //hide text above search box
                     var advancedOption = $(container).clone();
                     var element, ele;
@@ -707,7 +713,11 @@
                             break;
                         case 'boolean':
                             ele = $("<div class='k-textbox k-space-right'><input disabled=disabled id='filter-search-" + field + "' placeholder='Search'><span class='k-icon k-i-zoom'></span></div>").insertAfter(elementToInsertAfter);
-                            element = $("<div id='list-view-" + field + "' class='checkbox-ontainer'><div class='list-Item'><input type='checkbox' class='filter-chk'/></div></div>").insertAfter(ele);
+                            element = $(`<div id='list-view-${field}' class='checkbox-ontainer'>
+                                            <div class='list-Item'><input type='checkbox' value='true' class='filter-chk'/>True</div>
+                                            <div class='list-Item'><input type='checkbox' value='false' class='filter-chk'/>False</div>
+                                            <div class='list-Item'><input type='checkbox' value='null' class='filter-chk'/>Null</div>
+                                        </div>`).insertAfter(ele);
                             break;
                         default:
                              ele = $("<div class='k-textbox k-space-right'><input id='filter-search-" + field + "' placeholder='Search'><span class='k-icon k-i-zoom'></span></div>").insertAfter(elementToInsertAfter);
@@ -718,7 +728,9 @@
                              });
                             break;
                     }
-                    $( "#list-view-" + field ).resizable();
+                    $( "#list-view-" + field ).resizable({
+                        alsoResize: filterContainer
+                    });
                     var advancedMenu = $("<ul id='advanced-menu-" + field + "'></ul>").insertAfter($("#list-view-" + field)).kendoMenu({
                         orientation: 'vertical'
                     }).data("kendoMenu");
@@ -935,11 +947,11 @@
                                 //}
                             }
                             else {
-                             fieldFilters = $.map(element.find(":checkbox"), function (input, index) {
+                             fieldFilters = $.map(element.find(":checkbox:checked"), function (input, index) {
                                     return {
                                         field: field,
                                         operator: 'eq',
-                                        value: input.checked
+                                        value: parseValue(fieldType, input.value)
                                     };
                                 });
                             }
@@ -1064,6 +1076,13 @@
         switch (type) {
             case 'number':
                 return parseInt(value);
+            case 'boolean':
+                if (value == 'true')
+                    return true;
+                else if (value == 'false')
+                    return false;
+                else
+                    return null;
             case 'object':
                 return parseInt(value);//(typeof value == 'string') ? value : parseInt(value)
             default:
