@@ -64,16 +64,16 @@ namespace ResearchApp.Data
                 CityID = x.CityId,
                 Name = x.Name,
                 AlternateNames = x.AlternateNames,
-                CountryId = x.CountryId,
+                CountryID = x.CountryId,
                 DisplayName = x.DisplayName,
                 FeatureCode = x.FeatureCode,
-                GeoNameId = x.GeoNameId,
+                GeoNameID = x.GeoNameId,
                 Latitude = x.Latitude,
                 SearchNames = x.SearchNames,
                 Longitude = x.Longitude,
                 NameAscii = x.NameAscii,
                 Population = x.Population,
-                RegionId = x.RegionId,
+                RegionID = x.RegionId,
                 Slug = x.Slug,
                 TimeZone = x.TimeZone,
                 Country = new DropdownOptions
@@ -100,7 +100,7 @@ namespace ResearchApp.Data
                 CountryId = model.Country?.Id,
                 DisplayName = model.DisplayName,
                 FeatureCode = model.FeatureCode,
-                GeoNameId = model.GeoNameId,
+                GeoNameId = model.GeoNameID,
                 Latitude = model.Latitude,
                 SearchNames = model.SearchNames,
                 Longitude = model.Longitude,
@@ -123,7 +123,7 @@ namespace ResearchApp.Data
                 dbCity.CountryId = model.Country?.Id;
                 dbCity.DisplayName = model.DisplayName;
                 dbCity.FeatureCode = model.FeatureCode;
-                dbCity.GeoNameId = model.GeoNameId;
+                dbCity.GeoNameId = model.GeoNameID;
                 dbCity.Latitude = model.Latitude;
                 dbCity.SearchNames = model.SearchNames;
                 dbCity.Longitude = model.Longitude;

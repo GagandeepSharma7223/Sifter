@@ -10,7 +10,7 @@
         public string Code3 { get; set; }
         public string TLD { get; set; }
         public string Phone { get; set; }
-        public int? GeoNameId { get; set; }
+        public int? GeoNameID { get; set; }
         public string NameAscii { get; set; }
         public string Slug { get; set; }
     }

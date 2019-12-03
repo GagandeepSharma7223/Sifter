@@ -1,9 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
-namespace ResearchApp.Models
+namespace ResearchApp.ViewModel
 {
-    public partial class TreeColumn
+    public class FormViewModel
+    {
+        public dynamic SelectedItem { get; set; }
+        public IList<TreeColumnViewModel> TableColumns { get; set; }
+    }
+    public class TreeColumnViewModel
     {
         public string TableName { get; set; }
         public string ColumnName { get; set; }

@@ -28,17 +28,16 @@
                       .Batch(true)
                       .PageSize(1000)
                       .Events(events => events.Error("error_handler"))
-                      //.Sort(sort => sort.Add(s=> s.Name))
                       .Model(model =>
                       {
 
                           model.Id(p => p.PublisherID);
                           model.Field(p => p.PublisherID).Editable(false);
                       })
-                      .Create("Publishers_Create", "Grid")
+                      .Create("Publisher_Create", "Grid")
                       .Read("List", "Grid", new { type = GridTypes.Publisher })
-                      .Update("Publishers_Update", "Grid")
-                      .Destroy("Publishers_Destroy", "Grid")
+                      .Update("Publisher_Update", "Grid")
+                      .Destroy("Publisher_Destroy", "Grid")
                   )
     )
 

@@ -71,12 +71,12 @@ namespace ResearchApp.Data
                     Title = x.Title,
                     TitleEnglish = x.TitleEnglish,
                     TitleLiteral = x.TitleLiteral,
-                    AuthorId = x.AuthorId,
-                    CityId = x.CityId,
-                    LanguageId = x.LanguageId,
-                    PublisherId = x.PublisherId,
-                    TranslatorId = x.TranslatorId,
-                    EditorId = x.EditorId,
+                    AuthorID = x.AuthorId,
+                    CityID = x.CityId,
+                    LanguageID = x.LanguageId,
+                    PublisherID = x.PublisherId,
+                    TranslatorID = x.TranslatorId,
+                    EditorID = x.EditorId,
                     Author = new DropdownOptions
                     {
                         Option = x.Author?.FullName,
@@ -145,12 +145,12 @@ namespace ResearchApp.Data
                 dbWork.Title = model.Title;
                 dbWork.TitleEnglish = model.TitleEnglish;
                 dbWork.TitleLiteral = model.TitleLiteral;
-                dbWork.AuthorId = model.Author?.Id;
-                dbWork.CityId = model.City?.Id;
-                dbWork.LanguageId = model.Language?.Id;
-                dbWork.PublisherId = model.Publisher?.Id;
-                dbWork.TranslatorId = model.Translator?.Id;
-                dbWork.EditorId = model.Editor?.Id;
+                dbWork.AuthorId = model.Author == null ? model.AuthorID : model.Author.Id;
+                dbWork.CityId = model.City == null ? model.CityID : model.City.Id;
+                dbWork.LanguageId = model.Language == null ? model.LanguageID : model.Language.Id;
+                dbWork.PublisherId = model.Publisher == null ? model.PublisherID : model.Publisher.Id;
+                dbWork.TranslatorId = model.Translator == null ? model.TranslatorID : model.Translator.Id;
+                dbWork.EditorId = model.Editor == null ? model.EditorID : model.Editor.Id;
                 await Update(dbWork);
             }
         }

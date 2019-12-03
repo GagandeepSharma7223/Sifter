@@ -1,0 +1,139 @@
+﻿@using ResearchApp.ViewModel
+@model FormViewModel
+<div class="grid-container">
+    <div class="k-grid k-widget">
+        <div class="k-grid-content k-auto-scrollable">
+            <div class="col-md-12 mt-3">
+                <form id="edit-form">
+                    @foreach (var item in Model.TableColumns)
+                    {
+                        if (!item.IDColumn)
+                        {
+                            <div class="row">
+                                <div class="col-md-10">
+                                    <div class="row form-group">
+                                        <label class="col-md-2 col-form-label">@(item.Type == "dropdown" ? item.DisplayName : item.ColumnName)</label>
+                                        <div class="col-md-9">
+                                            @switch (item.Type)
+                                            {
+                                                case "string":
+                                                    string value = Model.SelectedItem[item.ColumnName];
+                                                    if (item.ColumnName != "Gender")
+                                                    {
+                                                        @(Html.TextArea(item.ColumnName, value, new { @class = "k-textbox" }))
+                                                    }
+                                                    else
+                                                    {
+                                                        @(Html.Kendo().DropDownList()
+                                                            .Name(item.ColumnName)
+                                                            .Value(value)
+                                                            .OptionLabel("Select")
+                                                            .DataValueField("Id")
+                                                            .DataTextField("Option")
+                                                            .BindTo(new List<TextDropdownOptions>
+                                                                {
+                                                                    new TextDropdownOptions{
+                                                                        Id = "Male",
+                                                                        Option = "Male"
+                                                                    },
+                                                                    new TextDropdownOptions{
+                                                                        Id = "Female",
+                                                                        Option = "Female"
+                                                                    }
+                                                                })
+                                                        )
+                                                    }
+                                                    break;
+                                                case "int":
+                                                    @(Html.Kendo().NumericTextBox().Name(item.ColumnName).Value(Model.SelectedItem[item.ColumnName]))
+                                                    break;
+                                                case "boolean":
+                                                    bool chkValue = Model.SelectedItem[item.ColumnName] ?? false;
+                                                    @(Html.CheckBox(item.ColumnName, chkValue))
+                                                    break;
+                                                case "dropdown":
+                                                    value = Convert.ToString(Model.SelectedItem[item.ColumnName] ?? "");
+                                                    @(Html.Kendo().DropDownList()
+                                                  .Name(item.DisplayName + "ID")
+                                                  .Value(value)
+                                                  .DataValueField("Id")
+                                                  .DataTextField("Option")
+                                                  .Filter(FilterType.Contains)
+                                                  .MinLength(3)
+                                                  .Height(200)
+                                                  .SelectedIndex(1)
+                                                  .OptionLabel("Select")
+                                                  .DataSource(source =>
+                                                  {
+                                                      source.Custom()
+                                                            .ServerFiltering(true)
+                                                            .ServerPaging(true)
+                                                            .PageSize(20)
+                                                            .Type("aspnetmvc-ajax")
+                                                            .Transport(transport =>
+                                                            {
+                                                                transport.Read("GetDropdownOptions", "Grid", new { treeTable = item.Fktable, optionCol = item.FkdisplayCol });
+                                                            })
+                                                            .Schema(schema =>
+                                                            {
+                                                                schema.Data("Data")
+                                                                      .Total("Total");
+                                                            });
+                                                  })
+                                                  .Virtual(v => v.ItemHeight(26).ValueMapper("valueMapper" + item.Fktable))
+
+                                                    )
+                                                    break;
+                                                default:
+                                                    value = Model.SelectedItem[item.ColumnName];
+                                                    Html.Kendo().TextBox().Name(item.ColumnName).Value(value);
+                                                    break;
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            @(Html.Hidden(item.ColumnName, Model.SelectedItem[item.ColumnName] != null ? (int)Model.SelectedItem[item.ColumnName] : 0))
+                        }
+                    }
+                </form>
+            </div>
+        </div>
+        <div id="form-footer">
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        var customToolbarTemp = kendo.template($("#form-view-custom-toolbar").html());
+        $('#form-footer').append(customToolbarTemp);
+        $("#form-switch").kendoSwitch({
+            checked: isFormWrap,
+            change: function (e) {
+                isFormWrap = !isFormWrap;
+                if (!isFormWrap) {
+                    var treeView = $('#treeview').data('kendoTreeView');
+                    var treeTable = treeView.dataItem(treeView.select()).text;
+                    loadEditData(treeTable);
+                }
+            }
+        });
+
+        if (isGridEditable) {
+            $('.stopEditable').removeClass("d-none");
+            $('.startEditable').addClass("d-none");
+        }
+        else {
+            $('.stopEditable').addClass("d-none");
+            $('.startEditable').removeClass("d-none");
+        }
+
+        if (selectedItemIndex === 0) {
+            $('#prev-form-btn').addClass('k-state-disabled');
+        }
+    });
+</script>

@@ -37,7 +37,6 @@
                       .Ajax()
                       .Batch(true)
                       .PageSize(1000)
-                      //.Sort(sort => sort.Add(s=> s.Title))
                       .Events(events => events.Error("error_handler"))
                       .Model(model =>
                       {
@@ -50,10 +49,10 @@
                           model.Field(field => field.Publisher).DefaultValue(new ResearchApp.ViewModel.DropdownOptions());
                           model.Field(field => field.Language).DefaultValue(new ResearchApp.ViewModel.DropdownOptions());
                       })
-                      .Create("Works_Create", "Grid")
+                      .Create("Work_Create", "Grid")
                       .Read("List", "Grid", new { type = GridTypes.Work })
-                      .Update("Works_Update", "Grid")
-                      .Destroy("Works_Destroy", "Grid")
+                      .Update("Work_Update", "Grid")
+                      .Destroy("Work_Destroy", "Grid")
                   )
     )
 

@@ -67,13 +67,13 @@ namespace ResearchApp.Data
                 var result = data.Select(x => new UnitViewModel
                 {
                     UnitID = x.UnitId,
-                    CategoryId = x.CategoryId,
+                    CategoryID = x.CategoryId,
                     StartPage = x.StartPage,
                     Text = x.Text,
                     Title = x.Title,
                     LiteralTitle = x.LiteralTitle,
                     TitleEnglish = x.TitleEnglish,
-                    WorkId = x.WorkId,
+                    WorkID = x.WorkId,
                     Work = new DropdownOptions
                     {
                         Id = x.Work?.WorkId,

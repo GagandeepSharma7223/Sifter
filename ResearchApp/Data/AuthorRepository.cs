@@ -64,17 +64,13 @@ namespace ResearchApp.Data
             {
                 AuthorID = x.AuthorId,
                 AlsoKnownAs = x.AlsoKnownAs,
-                BirthCountryId = x.BirthCountryId,
+                BirthCountryID = x.BirthCountryId,
                 BirthYear = x.BirthYear,
                 Comments = x.Comments,
                 DeathYear = x.DeathYear,
                 Occupation = x.Occupation,
                 FirstActivityYear = x.FirstActivityYear,
-                Gender = new TextDropdownOptions
-                {
-                    Option = x.Gender,
-                    Id = x.Gender
-                },
+                Gender = x.Gender,
                 IsOrganization = x.IsOrganization,
                 FullName = x.FullName,
                 FirstName = x.FirstName,
@@ -104,7 +100,7 @@ namespace ResearchApp.Data
                 Occupation = model.Occupation,
                 Title = model.Title,
                 FirstActivityYear = model.FirstActivityYear,
-                Gender = model.Gender?.Id,
+                Gender = model.Gender,
                 IsOrganization = model.IsOrganization,
                 FirstName= model.FirstName,
                 FullName = model.FullName,
@@ -128,7 +124,7 @@ namespace ResearchApp.Data
                 dbAuthor.Occupation = model.Occupation;
                 dbAuthor.Title = model.Title;
                 dbAuthor.FirstActivityYear = model.FirstActivityYear;
-                dbAuthor.Gender = model.Gender?.Id;
+                dbAuthor.Gender = model.Gender;
                 dbAuthor.IsOrganization = model.IsOrganization;
                 dbAuthor.FirstName = model.FirstName;
                 dbAuthor.FullName = model.FullName;

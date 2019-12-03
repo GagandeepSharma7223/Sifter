@@ -19,5 +19,6 @@ namespace ResearchApp.Data
 
         List<DropdownOptions> GetOptions(string type, string optionCol);
         List<dynamic> GetFilterData(string type, string optionCol, int page, int pageSize, string fieldType);
+        Task<IList<TreeColumnViewModel>> GetTreeColumnsForTable(string tableName);
     }
 }

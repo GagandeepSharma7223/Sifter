@@ -66,11 +66,11 @@ namespace ResearchApp.Data
                 RegionID = x.RegionId,
                 Name = x.Name,
                 AlternateNames = x.AlternateNames,
-                CountryId = x.CountryId,
+                CountryID = x.CountryId,
                 NameAscii = x.NameAscii,
                 DisplayName = x.DisplayName,
                 GeoNameCode = x.GeoNameCode,
-                GeoNameId = x.GeoNameId,
+                GeoNameID = x.GeoNameId,
                 Slug = x.Slug,
                 Country = new DropdownOptions
                 {
@@ -92,7 +92,7 @@ namespace ResearchApp.Data
                 NameAscii = model.NameAscii,
                 DisplayName = model.DisplayName,
                 GeoNameCode = model.GeoNameCode,
-                GeoNameId = model.GeoNameId,
+                GeoNameId = model.GeoNameID,
                 Slug = model.Slug
             };
             await Create(newRegion);
@@ -109,7 +109,7 @@ namespace ResearchApp.Data
                 dbRegion.NameAscii = model.NameAscii;
                 dbRegion.DisplayName = model.DisplayName;
                 dbRegion.GeoNameCode = model.GeoNameCode;
-                dbRegion.GeoNameId = model.GeoNameId;
+                dbRegion.GeoNameId = model.GeoNameID;
                 dbRegion.Slug = model.Slug;
                 await Update(dbRegion);
             }

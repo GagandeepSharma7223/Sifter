@@ -31,7 +31,7 @@ namespace ResearchApp.Data
                 Code2 = x.Code2,
                 Code3 = x.Code3,
                 Continent = x.Continent,
-                GeoNameId = x.GeoNameId,
+                GeoNameID = x.GeoNameId,
                 Phone = x.Phone,
                 Slug = x.Slug,
                 TLD = x.Tld
@@ -50,7 +50,7 @@ namespace ResearchApp.Data
                 Code2 = model.Code2,
                 Code3 = model.Code3,
                 Continent = model.Continent,
-                GeoNameId = model.GeoNameId,
+                GeoNameId = model.GeoNameID,
                 Phone = model.Phone,
                 Slug = model.Slug,
                 Tld = model.TLD
@@ -69,7 +69,7 @@ namespace ResearchApp.Data
                 dbCountry.Code2 = model.Code2;
                 dbCountry.Code3 = model.Code3;
                 dbCountry.Continent = model.Continent;
-                dbCountry.GeoNameId = model.GeoNameId;
+                dbCountry.GeoNameId = model.GeoNameID;
                 dbCountry.Phone = model.Phone;
                 dbCountry.Slug = model.Slug;
                 dbCountry.Tld = model.TLD;

@@ -57,7 +57,7 @@ namespace ResearchApp.Data
             }
             catch (Exception ex)
             {
-                                //throw;
+                //throw;
             }
         }
 
@@ -180,6 +180,25 @@ namespace ResearchApp.Data
         public IQueryable<TreeColumn> GetTreeColumns()
         {
             return _dbContext.TreeColumn;
+        }
+
+        public async Task<IList<TreeColumnViewModel>> GetTreeColumnsForTable(string tableName)
+        {
+            return await _dbContext.TreeColumn.Where(x => x.TableName == tableName).OrderBy(x => x.ColSeq)
+                .Select(x => new TreeColumnViewModel
+                {
+                    ColSeq = x.ColSeq,
+                    ColumnName = x.ColumnName,
+                    Display = x.Display,
+                    IDColumn = x.IDColumn,
+                    DisplayName = x.DisplayName,
+                    Editable = x.Editable,
+                    FkdisplayCol = x.FkdisplayCol,
+                    FkjoinCol = x.FkjoinCol,
+                    Fktable = x.Fktable,
+                    TableName = x.TableName,
+                    Type = !string.IsNullOrEmpty(x.Fktable) ? "dropdown" : x.Type
+                }).ToListAsync();
         }
 
         public void ApplyFilter(DataSourceRequest request)

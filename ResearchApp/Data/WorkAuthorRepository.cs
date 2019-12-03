@@ -64,8 +64,8 @@ namespace ResearchApp.Data
             var result = data.Select(x => new WorkAuthorViewModel
             {
                 WorkAuthorID = x.WorkAuthorId,
-                AuthorId = x.AuthorId,
-                WorkId = x.WorkId,
+                AuthorID = x.AuthorId,
+                WorkID = x.WorkId,
                 Role = x.Role,
                 Work = new DropdownOptions
                 {

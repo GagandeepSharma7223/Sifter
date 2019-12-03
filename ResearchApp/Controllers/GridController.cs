@@ -52,7 +52,7 @@ namespace ResearchApp.Controllers
 
         #region Books
         [AcceptVerbs("Post")]
-        public async Task<IActionResult> Works_Create([DataSourceRequest] DataSourceRequest request, [Bind(Prefix = "models")]IEnumerable<WorkViewModel> works)
+        public async Task<IActionResult> Work_Create([DataSourceRequest] DataSourceRequest request, [Bind(Prefix = "models")]IEnumerable<WorkViewModel> works)
         {
             var results = new List<WorkViewModel>();
 
@@ -69,7 +69,7 @@ namespace ResearchApp.Controllers
         }
 
         [AcceptVerbs("Post")]
-        public async Task<IActionResult> Works_Update([DataSourceRequest] DataSourceRequest request, [Bind(Prefix = "models")]IEnumerable<WorkViewModel> works)
+        public async Task<IActionResult> Work_Update([DataSourceRequest] DataSourceRequest request, [Bind(Prefix = "models")]IEnumerable<WorkViewModel> works)
         {
             if (works != null && ModelState.IsValid)
             {
@@ -82,7 +82,7 @@ namespace ResearchApp.Controllers
         }
 
         [AcceptVerbs("Post")]
-        public async Task<IActionResult> Works_Destroy([DataSourceRequest] DataSourceRequest request, [Bind(Prefix = "models")]IEnumerable<WorkViewModel> works)
+        public async Task<IActionResult> Work_Destroy([DataSourceRequest] DataSourceRequest request, [Bind(Prefix = "models")]IEnumerable<WorkViewModel> works)
         {
             if (works.Any())
             {
@@ -98,7 +98,7 @@ namespace ResearchApp.Controllers
 
         #region Authors
         [AcceptVerbs("Post")]
-        public async Task<IActionResult> Authors_Create([DataSourceRequest] DataSourceRequest request, [Bind(Prefix = "models")]IEnumerable<AuthorViewModel> authors)
+        public async Task<IActionResult> Author_Create([DataSourceRequest] DataSourceRequest request, [Bind(Prefix = "models")]IEnumerable<AuthorViewModel> authors)
         {
             var results = new List<AuthorViewModel>();
 
@@ -115,7 +115,7 @@ namespace ResearchApp.Controllers
         }
 
         [AcceptVerbs("Post")]
-        public async Task<IActionResult> Authors_Update([DataSourceRequest] DataSourceRequest request, [Bind(Prefix = "models")]IEnumerable<AuthorViewModel> authors)
+        public async Task<IActionResult> Author_Update([DataSourceRequest] DataSourceRequest request, [Bind(Prefix = "models")]IEnumerable<AuthorViewModel> authors)
         {
             if (authors != null && ModelState.IsValid)
             {
@@ -128,7 +128,7 @@ namespace ResearchApp.Controllers
         }
 
         [AcceptVerbs("Post")]
-        public async Task<IActionResult> Authors_Destroy([DataSourceRequest] DataSourceRequest request, [Bind(Prefix = "models")]IEnumerable<AuthorViewModel> authors)
+        public async Task<IActionResult> Author_Destroy([DataSourceRequest] DataSourceRequest request, [Bind(Prefix = "models")]IEnumerable<AuthorViewModel> authors)
         {
             if (authors.Any())
             {
@@ -148,14 +148,8 @@ namespace ResearchApp.Controllers
             return PartialView("~/Views/Home/_PartialPublisherList.cshtml");
         }
 
-        public async Task<IActionResult> Publishers_Read([DataSourceRequest]DataSourceRequest request)
-        {
-            DataSourceResult list = await _publisherRepo.GetPublishers(request);
-            return Json(list);
-        }
-
         [AcceptVerbs("Post")]
-        public async Task<IActionResult> Publishers_Create([DataSourceRequest] DataSourceRequest request, [Bind(Prefix = "models")]IEnumerable<PublisherViewModel> publishers)
+        public async Task<IActionResult> Publisher_Create([DataSourceRequest] DataSourceRequest request, [Bind(Prefix = "models")]IEnumerable<PublisherViewModel> publishers)
         {
             var results = new List<PublisherViewModel>();
 
@@ -172,7 +166,7 @@ namespace ResearchApp.Controllers
         }
 
         [AcceptVerbs("Post")]
-        public async Task<IActionResult> Publishers_Update([DataSourceRequest] DataSourceRequest request, [Bind(Prefix = "models")]IEnumerable<PublisherViewModel> publishers)
+        public async Task<IActionResult> Publisher_Update([DataSourceRequest] DataSourceRequest request, [Bind(Prefix = "models")]IEnumerable<PublisherViewModel> publishers)
         {
             if (publishers != null && ModelState.IsValid)
             {
@@ -185,7 +179,7 @@ namespace ResearchApp.Controllers
         }
 
         [AcceptVerbs("Post")]
-        public async Task<IActionResult> Publishers_Destroy([DataSourceRequest] DataSourceRequest request, [Bind(Prefix = "models")]IEnumerable<PublisherViewModel> publishers)
+        public async Task<IActionResult> Publisher_Destroy([DataSourceRequest] DataSourceRequest request, [Bind(Prefix = "models")]IEnumerable<PublisherViewModel> publishers)
         {
             if (publishers.Any())
             {
@@ -238,6 +232,68 @@ namespace ResearchApp.Controllers
                     break;
             }
             return PartialView(view);
+        }
+
+        public async Task<IActionResult> GetFormView(GridTypes type, string selectedItem)
+        {
+            string view = "~/Views/Home/_PartialWorkForm.cshtml";
+            dynamic item = JsonConvert.DeserializeObject<Dictionary<string, object>>(selectedItem);
+            var controls = await _workRepo.GetTreeColumnsForTable(type.ToString());
+            var formViewModel = new FormViewModel
+            {
+                SelectedItem = item,
+                TableColumns = controls
+            };
+            return PartialView(view, formViewModel);
+        }
+
+        [AcceptVerbs("Post")]
+        public async Task<IActionResult> SaveForm(GridTypes type, string selectedItem)
+        {
+            switch (type)
+            {
+                case GridTypes.Category:
+                    var category = JsonConvert.DeserializeObject<CategoryViewModel>(selectedItem);
+                    await _categoryRepo.UpdateCategory(category);
+                    break;
+                case GridTypes.Language:
+                    var language = JsonConvert.DeserializeObject<LanguageViewModel>(selectedItem);
+                    await _languageRepo.UpdateLanguage(language);
+                    break;
+                case GridTypes.City:
+                    var city = JsonConvert.DeserializeObject<CityViewModel>(selectedItem);
+                    await _cityRepo.UpdateCity(city);
+                    break;
+                case GridTypes.Region:
+                    var region = JsonConvert.DeserializeObject<RegionViewModel>(selectedItem);
+                    await _regionRepo.UpdateRegion(region);
+                    break;
+                case GridTypes.Country:
+                    var country = JsonConvert.DeserializeObject<CountryViewModel>(selectedItem);
+                    await _countryRepo.UpdateCountry(country);
+                    break;
+                case GridTypes.Publisher:
+                    var publisher = JsonConvert.DeserializeObject<PublisherViewModel>(selectedItem);
+                    await _publisherRepo.UpdatePublisher(publisher);
+                    break;
+                case GridTypes.Work:
+                    var work = JsonConvert.DeserializeObject<WorkViewModel>(selectedItem);
+                    await _workRepo.UpdateWork(work);
+                    break;
+                case GridTypes.Author:
+                    var author = JsonConvert.DeserializeObject<AuthorViewModel>(selectedItem);
+                    await _authorRepo.UpdateAuthor(author);
+                    break;
+                case GridTypes.WorkAuthor:
+                    var workAuthor = JsonConvert.DeserializeObject<WorkAuthorViewModel>(selectedItem);
+                    await _workAuthorRepo.UpdateWorkAuthor(workAuthor);
+                    break;
+                case GridTypes.Unit:
+                    var unit = JsonConvert.DeserializeObject<UnitViewModel>(selectedItem);
+                    await _unitRepo.UpdateUnit(unit);
+                    break;
+            }
+            return Ok();
         }
 
         public async Task<IActionResult> List([DataSourceRequest]DataSourceRequest request, GridTypes type)
@@ -323,7 +379,7 @@ namespace ResearchApp.Controllers
         //[AcceptVerbs("Get")]
         public IActionResult BindFilterDropDown([DataSourceRequest] DataSourceRequest request, string treeTable, string optionCol, string fieldType)
         {
-            if(request.PageSize == 0)
+            if (request.PageSize == 0)
             {
 
                 request.PageSize = 10000;
@@ -385,9 +441,23 @@ namespace ResearchApp.Controllers
             return Json(indices);
         }
 
+        [AcceptVerbs("Post")]
+        public IActionResult GenderOptions([DataSourceRequest] DataSourceRequest request)
+        {
+            List<TextDropdownOptions> genders = GetGenderOptions();
+            return Json(genders.ToDataSourceResult(request));
+        }
+
+
         private void PopulateGenders()
         {
-            var genders = new List<TextDropdownOptions>
+            List<TextDropdownOptions> genders = GetGenderOptions();
+            ViewData["genders"] = genders;
+        }
+
+        private List<TextDropdownOptions> GetGenderOptions()
+        {
+            return new List<TextDropdownOptions>
             {
                 new TextDropdownOptions{
                     Id = "",
@@ -402,12 +472,24 @@ namespace ResearchApp.Controllers
                     Option = "Female"
                 }
             };
-            ViewData["genders"] = genders;
+        }
+
+        [AcceptVerbs("Post")]
+        public IActionResult YesNoOptions([DataSourceRequest] DataSourceRequest request)
+        {
+            List<TextDropdownOptions> options = GetYesNoOptions();
+            return Json(options.ToDataSourceResult(request));
         }
 
         private void PopulateYesNo()
         {
-            var genders = new List<TextDropdownOptions>
+            List<TextDropdownOptions> options = GetYesNoOptions();
+            ViewData["yesNoOptions"] = options;
+        }
+
+        private static List<TextDropdownOptions> GetYesNoOptions()
+        {
+            return new List<TextDropdownOptions>
             {
                 new TextDropdownOptions{
                     Id = "",
@@ -422,7 +504,6 @@ namespace ResearchApp.Controllers
                     Option = "Yes"
                 }
             };
-            ViewData["yesNoOptions"] = genders;
         }
         #endregion
 

@@ -11,7 +11,7 @@
                       columns.Bound(b => b.DisplayName).Editable("checkIfGridEditable");
                       columns.Bound(b => b.GeoNameCode).Editable("checkIfGridEditable");
                       columns.Bound(b => b.AlternateNames).Editable("checkIfGridEditable");
-                      columns.Bound(b => b.GeoNameId).ClientTemplate("#=(GeoNameId == null) ? '' : GeoNameId#").Editable("checkIfGridEditable");
+                      columns.Bound(b => b.GeoNameID).ClientTemplate("#=(GeoNameId == null) ? '' : GeoNameId#").Editable("checkIfGridEditable");
                       columns.Bound(b => b.NameAscii).Editable("checkIfGridEditable");
                       columns.Bound(b => b.Slug).Editable("checkIfGridEditable");
                   })
@@ -35,7 +35,6 @@
                       .Batch(true)
                       .PageSize(1000)
                       .Events(events => events.Error("error_handler"))
-                      //.Sort(sort => sort.Add(s=> s.Name))
                       .Model(model =>
                       {
 

@@ -10,7 +10,7 @@
                       columns.Bound(b => b.FirstName).Editable("checkIfGridEditable").Width(100);
                       columns.Bound(b => b.LastName).Editable("checkIfGridEditable").Width(100);
                       columns.Bound(b => b.IsOrganization).HtmlAttributes(new { @class = "text-center" }).ClientTemplate("<input disabled='disabled' type='checkbox' #= IsOrganization ? checked='checked':'' # class='chkbx' />").Editable("function(e){ return false; }").Width(100);
-                      columns.Bound(b => b.Gender).ClientTemplate("#=(Gender.Option == null) ? '' : Gender.Option#").Editable("checkIfGridEditable").Width(100);
+                      columns.Bound(b => b.Gender).ClientTemplate("#=(Gender == null) ? '' : Gender#").Editable("checkIfGridEditable").Width(100);
                       columns.Bound(b => b.BirthYear).ClientTemplate("#=(BirthYear == null) ? '' : BirthYear#").Editable("checkIfGridEditable").Width(100);
                       columns.Bound(b => b.BirthCountry).ClientTemplate("#=(BirthCountry.Option == null) ? '' : BirthCountry.Option#").Editable("checkIfGridEditable").Width(100);
                       columns.Bound(b => b.PenName).Editable("checkIfGridEditable").Width(100);
@@ -34,6 +34,7 @@
                   .Filterable()
                   .Reorderable(x => x.Columns(true))
                   .Scrollable()
+                  .Selectable(config=> config.Mode(GridSelectionMode.Single))
                   .ColumnMenu(col => col.Filterable(true).Enabled(true))
                   .Resizable(resize => resize.Columns(true))
                   .Events(e => e.DataBound("onDataBound").ColumnMenuInit("columnMenuInit"))
@@ -42,18 +43,17 @@
                       .Batch(true)
                       .PageSize(1000)
                       .Events(events => events.Error("error_handler"))
-                      //.Sort(sort => sort.Add(s=> s.FullName))
                       .Model(model =>
                       {
                           model.Id(p => p.AuthorID);
                           model.Field(p => p.AuthorID).Editable(false);
                           model.Field(field => field.BirthCountry).DefaultValue(new ResearchApp.ViewModel.DropdownOptions());
-                          model.Field(field => field.Gender).DefaultValue(new ResearchApp.ViewModel.TextDropdownOptions());
+                          //model.Field(field => field.Gender).DefaultValue(new ResearchApp.ViewModel.TextDropdownOptions());
                       })
-                      .Create("Authors_Create", "Grid")
+                      .Create("Author_Create", "Grid")
                       .Read("List", "Grid", new { type = GridTypes.Author })
-                      .Update("Authors_Update", "Grid")
-                      .Destroy("Authors_Destroy", "Grid")
+                      .Update("Author_Update", "Grid")
+                      .Destroy("Author_Destroy", "Grid")
                   )
     )
 </div>

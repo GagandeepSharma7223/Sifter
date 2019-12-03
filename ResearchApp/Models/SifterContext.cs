@@ -2109,8 +2109,6 @@ namespace ResearchApp.Models
                     .HasMaxLength(100)
                     .IsUnicode(false);
 
-                entity.Property(e => e.FkfullList).HasColumnName("FKFullList");
-
                 entity.Property(e => e.FkjoinCol)
                     .HasColumnName("FKJoinCol")
                     .HasMaxLength(100)
