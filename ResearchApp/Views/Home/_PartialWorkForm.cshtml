@@ -1,132 +1,129 @@
 ﻿@using ResearchApp.ViewModel
 @model FormViewModel
-<div class="grid-container">
-    <div class="k-grid k-widget">
-        <form id="edit-form">
-            <div class="k-grid-content k-auto-scrollable">
-                <div class="col-md-12 mt-3">
-                    @foreach (var item in Model.TableColumns)
+<div class="k-grid k-widget">
+    <form id="edit-form">
+        <div class="k-grid-content k-auto-scrollable">
+            <div class="col-md-12 mt-3">
+                @foreach (var item in Model.TableColumns)
+                {
+                    if (!item.IDColumn)
                     {
-                        if (!item.IDColumn)
-                        {
-                            <div class="row">
-                                <div class="col-md-10">
-                                    <div class="row form-group">
-                                        <label class="col-md-2 col-form-label">@(item.Type == "dropdown" ? item.DisplayName : item.ColumnName)</label>
-                                        <div class="col-md-9">
-                                            @switch (item.Type)
-                                            {
-                                                case "string":
-                                                    string value = Model.SelectedItem != null ? Model.SelectedItem[item.ColumnName] : null;
-                                                    if (item.ColumnName != "Gender")
-                                                    {
-                                                        @(Html.TextArea(item.ColumnName, value, new { @class = "k-textbox", style = "width:60%", @cols = 80, @rows = 5 }))
-                                                    }
-                                                    else
-                                                    {
-                                                        @(Html.Kendo().DropDownList()
-                                                            .Name(item.ColumnName)
-                                                            .Value(value)
-                                                            .OptionLabel("Select")
-                                                            .DataValueField("Id")
-                                                            .DataTextField("Option")
-                                                            .HtmlAttributes(new { style = "width:60%" })
-                                                            .BindTo(new List<TextDropdownOptions>
-                                                                {
-                                                                    new TextDropdownOptions{
-                                                                        Id = "Male",
-                                                                        Option = "Male"
-                                                                    },
-                                                                    new TextDropdownOptions{
-                                                                        Id = "Female",
-                                                                        Option = "Female"
-                                                                    }
-                                                                })
-                                                        )
-                                                    }
-                                                    break;
-                                                case "int":
-                                                    @(Html.Kendo().NumericTextBox()
-                                                        .Spinners(false)
-                                                        .Name(item.ColumnName)
-                                                        .Value(Model.SelectedItem != null ? Model.SelectedItem[item.ColumnName] : null))
-                                                    break;
-                                                case "decimal":
-                                                    @(Html.Kendo().NumericTextBox().Name(item.ColumnName).Value(Model.SelectedItem != null ? Model.SelectedItem[item.ColumnName] : null))
-                                                    break;
-                                                case "boolean":
-                                                    bool chkValue = Model.SelectedItem != null ? Model.SelectedItem[item.ColumnName] ?? false : false;
-                                                    @(Html.CheckBox(item.ColumnName, chkValue))
-                                                    break;
-                                                case "dropdown":
-                                                    value = Model.SelectedItem != null ? Convert.ToString(Model.SelectedItem[item.ColumnName] ?? null) : null;
-                                                    @(Html.Kendo().DropDownList()
-                                                          .Name(item.DisplayName + "ID")
-                                                          .Value(value)
-                                                          .DataValueField("Id")
-                                                          .DataTextField("Option")
-                                                          .Filter(FilterType.Contains)
-                                                          .MinLength(3)
-                                                          .Height(200)
-                                                          .OptionLabel("Select")
-                                                          .HtmlAttributes(new { style = "width:60%" })
-                                                          .DataSource(source =>
-                                                          {
-                                                              source.Custom()
-                                                                    .ServerFiltering(true)
-                                                                    .ServerPaging(true)
-                                                                    .PageSize(20)
-                                                                    .Type("aspnetmvc-ajax")
-                                                                    .Transport(transport =>
-                                                                    {
-                                                                        transport.Read("GetDropdownOptions", "Grid", new { treeTable = item.Fktable, optionCol = item.FkdisplayCol });
-                                                                    })
-                                                                    .Schema(schema =>
-                                                                    {
-                                                                        schema.Data("Data")
-                                                                              .Total("Total");
-                                                                    });
-                                                          })
-                                                          .Virtual(v => v.ItemHeight(26).ValueMapper("valueMapper" + item.Fktable))
-
-                                                    )
-                                                    break;
-                                                default:
-                                                    value = Model.SelectedItem != null ? Model.SelectedItem[item.ColumnName] : null;
+                        <div class="row">
+                            <div class="col-md-10">
+                                <div class="row form-group">
+                                    <label class="col-md-2 col-form-label">@(item.Type == "dropdown" ? item.DisplayName : item.ColumnName)</label>
+                                    <div class="col-md-9">
+                                        @switch (item.Type)
+                                        {
+                                            case "string":
+                                                string value = Model.SelectedItem != null ? Model.SelectedItem[item.ColumnName] : null;
+                                                if (item.ColumnName != "Gender")
+                                                {
                                                     @(Html.TextArea(item.ColumnName, value, new { @class = "k-textbox", style = "width:60%", @cols = 80, @rows = 5 }))
-                                                    break;
-                                            }
-                                        </div>
+                                                }
+                                                else
+                                                {
+                                                    @(Html.Kendo().DropDownList()
+                                                        .Name(item.ColumnName)
+                                                        .Value(value)
+                                                        .OptionLabel("Select")
+                                                        .DataValueField("Id")
+                                                        .DataTextField("Option")
+                                                        .HtmlAttributes(new { style = "width:60%" })
+                                                        .BindTo(new List<TextDropdownOptions>
+                                                            {
+                                                                new TextDropdownOptions{
+                                                                    Id = "Male",
+                                                                    Option = "Male"
+                                                                },
+                                                                new TextDropdownOptions{
+                                                                    Id = "Female",
+                                                                    Option = "Female"
+                                                                }
+                                                            })
+                                                    )
+                                                }
+                                                break;
+                                            case "int":
+                                                @(Html.Kendo().NumericTextBox()
+                                                    .Spinners(false)
+                                                    .Name(item.ColumnName)
+                                                    .Format("#")
+                                                    .Value(Model.SelectedItem != null ? Model.SelectedItem[item.ColumnName] : null))
+                                                break;
+                                            case "decimal":
+                                                @(Html.Kendo().NumericTextBox()
+                                                    .Spinners(false)
+                                                    .Name(item.ColumnName)
+                                                    .Value(Model.SelectedItem != null ? Model.SelectedItem[item.ColumnName] : null))
+                                                break;
+                                            case "boolean":
+                                                bool chkValue = Model.SelectedItem != null ? Model.SelectedItem[item.ColumnName] ?? false : false;
+                                                @(Html.CheckBox(item.ColumnName, chkValue))
+                                                break;
+                                            case "dropdown":
+                                                value = Model.SelectedItem != null ? Convert.ToString(Model.SelectedItem[item.ColumnName] ?? null) : null;
+                                                @(Html.Kendo().DropDownList()
+                                                      .Name(item.DisplayName + "ID")
+                                                      .Value(value)
+                                                      .DataValueField("Id")
+                                                      .DataTextField("Option")
+                                                      .Filter(FilterType.Contains)
+                                                      .MinLength(3)
+                                                      .Height(200)
+                                                      .OptionLabel("Select")
+                                                      .HtmlAttributes(new { style = "width:60%" })
+                                                      .DataSource(source =>
+                                                      {
+                                                          source.Custom()
+                                                                .ServerFiltering(true)
+                                                                .ServerPaging(true)
+                                                                .PageSize(20)
+                                                                .Type("aspnetmvc-ajax")
+                                                                .Transport(transport =>
+                                                                {
+                                                                    transport.Read("GetDropdownOptions", "Grid", new { treeTable = item.Fktable, optionCol = item.FkdisplayCol });
+                                                                })
+                                                                .Schema(schema =>
+                                                                {
+                                                                    schema.Data("Data")
+                                                                          .Total("Total");
+                                                                });
+                                                      })
+                                                      .Virtual(v => v.ItemHeight(26).ValueMapper("valueMapper" + item.Fktable))
+
+                                                )
+                                                break;
+                                            default:
+                                                value = Model.SelectedItem != null ? Model.SelectedItem[item.ColumnName] : null;
+                                                @(Html.TextArea(item.ColumnName, value, new { @class = "k-textbox", style = "width:60%", @cols = 80, @rows = 5 }))
+                                                break;
+                                        }
                                     </div>
                                 </div>
                             </div>
-                        }
-                        else if (Model.SelectedItem != null)
-                        {
-                            @(Html.Hidden(item.ColumnName, (int)(Model.SelectedItem[item.ColumnName])))
-                        }
+                        </div>
                     }
-                </div>
+                    else if (Model.SelectedItem != null)
+                    {
+                        @(Html.Hidden(item.ColumnName, (int)(Model.SelectedItem[item.ColumnName])))
+                    }
+                }
             </div>
-            <div id="form-footer">
-            </div>
-        </form>
-    </div>
+        </div>
+        <div id="form-footer">
+        </div>
+    </form>
 </div>
 
 <script>
     $(function () {
         var customToolbarTemp = kendo.template($("#form-view-custom-toolbar").html());
         $('#form-footer').append(customToolbarTemp);
-        $("#form-switch").kendoSwitch({
+        $("#form-view-switch").kendoSwitch({
             checked: isFormWrap,
             change: function (e) {
-                isFormWrap = !isFormWrap;
-                if (!isFormWrap) {
-                    var treeView = $('#treeview').data('kendoTreeView');
-                    var treeTable = treeView.dataItem(treeView.select()).text;
-                    loadEditData(treeTable);
-                }
+                toggleFormView();
             }
         });
 

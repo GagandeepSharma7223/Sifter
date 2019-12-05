@@ -1,5 +1,6 @@
 ﻿@using ResearchApp.Data
 <div class="grid-container ml-2">
+    <div id="kendo-grid-container">
     @(Html.Kendo().Grid<ResearchApp.ViewModel.CityViewModel>()
                   .Name("grid")
                   .Columns(columns =>
@@ -56,5 +57,6 @@
                       .Destroy("City_Destroy", "Grid")
                   )
     )
-
+</div>
+    <div id="form-container"></div>
 </div>

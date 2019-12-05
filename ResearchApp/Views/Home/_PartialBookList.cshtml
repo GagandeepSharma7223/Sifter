@@ -1,59 +1,63 @@
 ﻿@using ResearchApp.Data
 <div class="grid-container ml-2">
-    @(Html.Kendo().Grid<ResearchApp.ViewModel.WorkViewModel>()
-                  .Name("grid")
-                  .Columns(columns =>
-                  {
-                      columns.Command(command => command.Destroy()).Width(100);
-                      columns.Bound(b => b.WorkID).Width(100);
-                      columns.Bound(b => b.Title).Editable("checkIfGridEditable").Width(150);
-                      columns.Bound(b => b.PublicationYear).Width(70).Format("#").ClientTemplate("#=(PublicationYear == null) ? '' : PublicationYear#").Editable("checkIfGridEditable");
-                      columns.Bound(b => b.Author).ClientTemplate("#=(Author.Option == null) ? '' : Author.Option#").Editable("checkIfGridEditable").Width(100);
-                      columns.Bound(b => b.Language).ClientTemplate("#=(Language.Option == null) ? '' : Language.Option#").Editable("checkIfGridEditable").Width(80);
-                      columns.Bound(b => b.City).ClientTemplate("#=(City.Option == null) ? '' : City.Option#").Editable("checkIfGridEditable").Width(80);
-                      columns.Bound(b => b.Publisher).ClientTemplate("#=(Publisher.Option == null) ? '' : Publisher.Option#").Editable("checkIfGridEditable").Width(100);
-                      columns.Bound(b => b.Editor).ClientTemplate("#=(Editor.Option == null) ? '' : Editor.Option#").Editable("checkIfGridEditable").Width(100);
-                      columns.Bound(b => b.Translator).ClientTemplate("#=(Translator.Option == null) ? '' : Translator.Option#").Editable("checkIfGridEditable").Width(100);
-                      columns.Bound(b => b.TitleEnglish).Editable("checkIfGridEditable").Width(150);
-                      columns.Bound(b => b.TitleLiteral).Editable("checkIfGridEditable");
-                  })
-                  .ToolBar(toolbar =>
-                  {
-                      toolbar.Create().HtmlAttributes(new { @class = "d-none" });
-                      toolbar.Save().HtmlAttributes(new { @class = "d-none" });
-                  })
-                  .Editable(editable => editable.Mode(GridEditMode.InCell))
-                  .Pageable(page => page.ButtonCount(7).Responsive(true))
-                  .Navigatable()
-                  .Sortable()
-                  .Filterable()
-                  .Reorderable(x => x.Columns(true))
-                  .Scrollable()
-                  .Selectable(config=> config.Mode(GridSelectionMode.Single))
-                  .ColumnMenu(col => col.Filterable(true).Enabled(true))
-                  .Resizable(resize => resize.Columns(true))
-                  .Events(e => e.DataBound("onDataBound").ColumnMenuInit("columnMenuInit"))
-                  .DataSource(dataSource => dataSource
-                      .Ajax()
-                      .Batch(true)
-                      .PageSize(1000)
-                      .Events(events => events.Error("error_handler"))
-                      .Model(model =>
+    <div id="kendo-grid-container">
+        @(Html.Kendo().Grid<ResearchApp.ViewModel.WorkViewModel>()
+                      .Name("grid")
+                      .Columns(columns =>
                       {
-                          model.Id(p => p.WorkID);
-                          model.Field(p => p.WorkID).Editable(false);
-                          model.Field(field => field.Author).DefaultValue(new ResearchApp.ViewModel.DropdownOptions());
-                          model.Field(field => field.Editor).DefaultValue(new ResearchApp.ViewModel.DropdownOptions());
-                          model.Field(field => field.Translator).DefaultValue(new ResearchApp.ViewModel.DropdownOptions());
-                          model.Field(field => field.City).DefaultValue(new ResearchApp.ViewModel.DropdownOptions());
-                          model.Field(field => field.Publisher).DefaultValue(new ResearchApp.ViewModel.DropdownOptions());
-                          model.Field(field => field.Language).DefaultValue(new ResearchApp.ViewModel.DropdownOptions());
+                          columns.Command(command => command.Destroy()).Width(100);
+                          columns.Bound(b => b.WorkID).Width(100);
+                          columns.Bound(b => b.Title).Editable("checkIfGridEditable").Width(150);
+                          columns.Bound(b => b.PublicationYear).Width(70).Format("#").ClientTemplate("#=(PublicationYear == null) ? '' : PublicationYear#").Editable("checkIfGridEditable");
+                          columns.Bound(b => b.Author).ClientTemplate("#=(Author.Option == null) ? '' : Author.Option#").Editable("checkIfGridEditable").Width(100);
+                          columns.Bound(b => b.Language).ClientTemplate("#=(Language.Option == null) ? '' : Language.Option#").Editable("checkIfGridEditable").Width(80);
+                          columns.Bound(b => b.City).ClientTemplate("#=(City.Option == null) ? '' : City.Option#").Editable("checkIfGridEditable").Width(80);
+                          columns.Bound(b => b.Publisher).ClientTemplate("#=(Publisher.Option == null) ? '' : Publisher.Option#").Editable("checkIfGridEditable").Width(100);
+                          columns.Bound(b => b.Editor).ClientTemplate("#=(Editor.Option == null) ? '' : Editor.Option#").Editable("checkIfGridEditable").Width(100);
+                          columns.Bound(b => b.Translator).ClientTemplate("#=(Translator.Option == null) ? '' : Translator.Option#").Editable("checkIfGridEditable").Width(100);
+                          columns.Bound(b => b.TitleEnglish).Editable("checkIfGridEditable").Width(150);
+                          columns.Bound(b => b.TitleLiteral).Editable("checkIfGridEditable");
                       })
-                      .Create("Work_Create", "Grid")
-                      .Read("List", "Grid", new { type = GridTypes.Work })
-                      .Update("Work_Update", "Grid")
-                      .Destroy("Work_Destroy", "Grid")
-                  )
-    )
-
+                      .ToolBar(toolbar =>
+                      {
+                          toolbar.Create().HtmlAttributes(new { @class = "d-none" });
+                          toolbar.Save().HtmlAttributes(new { @class = "d-none" });
+                      })
+                      .Editable(editable => editable.Mode(GridEditMode.InCell))
+                      .Pageable(page => page.ButtonCount(7).Responsive(true))
+                      .Navigatable()
+                      .Sortable()
+                      .Filterable()
+                      .Reorderable(x => x.Columns(true))
+                      .Scrollable()
+                      .Selectable(config => config.Mode(GridSelectionMode.Single))
+                      .ColumnMenu(col => col.Filterable(true).Enabled(true))
+                      .Resizable(resize => resize.Columns(true))
+                      .Events(e => e.DataBound("onDataBound").ColumnMenuInit("columnMenuInit"))
+                      .DataSource(dataSource => dataSource
+                          .Ajax()
+                          .Batch(true)
+                          .PageSize(1000)
+                          .Events(events => events.Error("error_handler"))
+                          .Model(model =>
+                          {
+                              model.Id(p => p.WorkID);
+                              model.Field(p => p.WorkID).Editable(false);
+                              model.Field(field => field.Author).DefaultValue(new ResearchApp.ViewModel.DropdownOptions());
+                              model.Field(field => field.Editor).DefaultValue(new ResearchApp.ViewModel.DropdownOptions());
+                              model.Field(field => field.Translator).DefaultValue(new ResearchApp.ViewModel.DropdownOptions());
+                              model.Field(field => field.City).DefaultValue(new ResearchApp.ViewModel.DropdownOptions());
+                              model.Field(field => field.Publisher).DefaultValue(new ResearchApp.ViewModel.DropdownOptions());
+                              model.Field(field => field.Language).DefaultValue(new ResearchApp.ViewModel.DropdownOptions());
+                          })
+                          .Create("Work_Create", "Grid")
+                          .Read("List", "Grid", new { type = GridTypes.Work })
+                          .Update("Work_Update", "Grid")
+                          .Destroy("Work_Destroy", "Grid")
+                      )
+        )
+    </div>
+    <div id="form-container"></div>
 </div>
+
+

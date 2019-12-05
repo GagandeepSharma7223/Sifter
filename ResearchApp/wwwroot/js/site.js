@@ -56,6 +56,7 @@ function resizeSplitter() {
     var outerSplitter = $("#vertical").data("kendoSplitter");
     outerSplitter.wrapper.height($('.grid-container').height());
     outerSplitter.resize();
+    //outerSplitter.trigger("resize");
 }
 
 function resizeGrid() {
@@ -181,11 +182,7 @@ function loadEditData(obj) {
     splitter.ajaxRequest(".k-pane:last", "/Grid/GetView", { type: obj });
 }
 
-function onDataBound(e) {
-    grid = $("#grid").data("kendoGrid");
-    e.sender.select("tr:eq(0)");
-    console.log("event data bound");
-    $('.k-grid-content').scrollTop(0);
+function gridDataBoundConfig() {
     customActions();
     toggleEdit();
     if (isWordWrap) {
@@ -207,8 +204,15 @@ function onDataBound(e) {
     }
 }
 
+function onDataBound(e) {
+    console.log("event data bound");
+    grid = $("#grid").data("kendoGrid");
+    e.sender.select("tr:eq(0)");
+    $('.k-grid-content').scrollTop(0);
+    gridDataBoundConfig();
+}
+
 function toggleEdit() {
-    //var grid = $("#grid").data("kendoGrid");
     if (isGridEditable) {
         $('.stopEditable').removeClass("d-none");
         $('.startEditable').addClass("d-none");
@@ -249,14 +253,38 @@ function customActions() {
                     formViewSelectedItem = grid.dataItem(grid.select());
                     selectedItemIndex = grid.dataSource.data().indexOf(formViewSelectedItem);
                     $("#myModal").kendoSplitter();
-                    var splitter = $("#myModal").data("kendoSplitter");
-                    var treeTable = getSelectTable();
                     gridFooterEle = $('.k-pager-wrap').clone(true);
-                    splitter.ajaxRequest(".k-pane:last", "/Grid/GetFormView", { type: treeTable, selectedItem: JSON.stringify(formViewSelectedItem) });
+                    getFormView();
                 }
             }
         });
     }
+}
+
+function getFormView() {
+    var treeTable = getSelectTable();
+    var data = {
+        type: treeTable,
+        selectedItem: JSON.stringify(formViewSelectedItem)
+    };
+    $.ajax({
+        url: '/Grid/GetFormView',
+        type: 'POST',
+        cache: false,
+        dataType: "html",
+        data: data
+    })
+        .done(function (result) {
+            $('#form-container').html(result);
+            $('#form-container').css('visibility', 'visible');
+            $('#kendo-grid-container').css('visibility', 'hidden');
+            resizeGrid();
+            resizeSplitter();
+            browserWindow.resize(resizeSplitter);
+        }).fail(function (xhr) {
+            console.log('error : ' + xhr.status + ' - ' + xhr.statusText + ' - ' + xhr.responseText);
+        });
+
 }
 
 function onClose() {
@@ -528,10 +556,6 @@ function initColumnMenuFilter(e) {
         sort: { field: field, dir: "asc" }
     });
 
-    //filterMenu.popup.bind("open", function (e) {
-    //    resizable: true
-    //});
-
     menu.bind("open", function (e) {
         if ($(e.item).find('.k-link').first().text() == "Filter") {
             var filterContainer = helpTextElement.children(":last");
@@ -780,7 +804,6 @@ function initColumnMenuFilter(e) {
                                 };
                             });
                             // Get Field Filters
-                            //if (inputFilterOne || inputFilterTwo) {
                             if (inputFilterOne || chkNullableFilter(filterOneValue)) {
                                 fieldFilters.push({
                                     field: fieldType == 'object' ? field : field,
@@ -795,7 +818,6 @@ function initColumnMenuFilter(e) {
                                     value: parseValue(fieldType, inputFilterTwo)
                                 });
                             }
-                            //}
                         }
                         else {
                             fieldFilters = $.map(element.find(":checkbox:checked"), function (input, index) {
@@ -831,12 +853,10 @@ function initColumnMenuFilter(e) {
                         if (fieldType === 'object') {
                             var listView = $('#list-view-' + field).data('kendoListView');
                             listView.dataSource.filter({ field: "Option", operator: "contains", value: this.value });
-                            // dataSourceListViewScroll.filter({ field: field + ".Option", operator: "contains", value: this.value });
                         }
                         else {
-                            var listView = $('#list-view-' + field).data('kendoListView');
+                            listView = $('#list-view-' + field).data('kendoListView');
                             listView.dataSource.filter({ operator: "contains", value: this.value });
-                            //columnDataSource.filter({ field: field, operator: "contains", value: this.value });
                         }
                     }
                 });
@@ -868,9 +888,6 @@ function initColumnMenuFilter(e) {
                             listView.dataSource.sync();
                             listView.refresh();
                             processScroll = true;
-                            console.log(dataSourceListViewScroll.data());
-                            console.log(listView.dataSource.data());
-                            //$('#list-view-' + field).scrollTo($('#list-view-' + field + ' .list-Item').last());
                         }
                         else {
                             processScroll = false;
@@ -1009,34 +1026,61 @@ $(document).on("click", '#save-form-btn', function (e) {
         });
 });
 
+$(document).on("click", '#cancel-form-btn', function (e) {
+    e.preventDefault();
+    toggleFormView();
+});
+
+function toggleFormView() {
+    isFormWrap = !isFormWrap;
+    if (!isFormWrap) {
+        $('#form-container').css('visibility', 'hidden');
+        $('#kendo-grid-container').css('visibility', 'visible');
+        resizeGrid();
+        resizeSplitter();
+        browserWindow.resize(resizeSplitter);
+        var formSwitch = $("#form-switch").data('kendoSwitch');
+        formSwitch.check(isFormWrap);
+    }
+}
+
 function loadFormData() {
     var splitter = $("#myModal").data("kendoSplitter");
     var treeTable = getSelectTable();
     splitter.ajaxRequest(".k-pane:last", "/Grid/GetFormView", { type: treeTable, selectedItem: JSON.stringify(formViewSelectedItem) });
 }
 
+function selectGridRow() {
+    grid.select(`tr:eq(${selectedItemIndex})`);
+    grid.element.find(".k-grid-content").animate({ 
+        scrollTop: grid.select().offset().top 
+    }, 400);
+}
+
 $(document).on("click", '#prev-form-btn', function (e) {
     selectedItemIndex--;
     formViewSelectedItem = grid.dataSource.data()[selectedItemIndex];
-    loadFormData();
+    getFormView();
     if (selectedItemIndex === 0) {
         $('#prev-form-btn').addClass('k-state-disabled');
     }
     else if ($('#prev-form-btn').hasClass('k-state-disabled')) {
         $('#prev-form-btn').removeClass('k-state-disabled');
     }
+    selectGridRow();
 });
 
 $(document).on("click", '#next-form-btn', function (e) {
     selectedItemIndex++;
     formViewSelectedItem = grid.dataSource.data()[selectedItemIndex];
-    loadFormData();
+    getFormView();
     if (selectedItemIndex === grid.dataSource.data().length - 1) {
         $('#prev-form-btn').addClass('k-state-disabled');
     }
     else if ($('#prev-form-btn').hasClass('k-state-disabled')) {
         $('#prev-form-btn').removeClass('k-state-disabled');
     }
+    selectGridRow();
 });
 
 $(document).on("click", '#add-form-btn', function (e) {
