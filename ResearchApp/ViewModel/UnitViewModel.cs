@@ -9,7 +9,7 @@ namespace ResearchApp.ViewModel
             Work = new DropdownOptions();
             Category = new DropdownOptions();
         }
-        public int UnitID { get; set; }
+        public int? UnitID { get; set; }
         public int? WorkID { get; set; }
         public int? StartPage { get; set; }
         public int? CategoryID { get; set; }

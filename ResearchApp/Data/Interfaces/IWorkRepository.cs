@@ -8,7 +8,7 @@ namespace ResearchApp.Data
     public interface IWorkRepository : IGenericRepository<Work>
     {
         Task<DataSourceResult> GetWorks(DataSourceRequest request, bool filterRequest = false);
-        Task<int> CreateWork(WorkViewModel model);
-        Task UpdateWork(WorkViewModel model);
+        Task<int> CreateWork(WorkViewModel model, bool updateForm = false);
+        Task UpdateWork(WorkViewModel model, bool updateForm = false);
     }
 }

@@ -88,12 +88,12 @@ namespace ResearchApp.Data
             return list;
         }
 
-        public async Task<int> CreateAuthor(AuthorViewModel model)
+        public async Task<int> CreateAuthor(AuthorViewModel model, bool updateForm = false)
         {
             var newAuthor = new Author
             {
                 AlsoKnownAs = model.AlsoKnownAs,
-                BirthCountryId = model.BirthCountry?.Id,
+                BirthCountryId = updateForm ? model.BirthCountryID : model.BirthCountry?.Id,
                 BirthYear = model.BirthYear,
                 Comments = model.Comments,
                 DeathYear = model.DeathYear,
@@ -111,13 +111,13 @@ namespace ResearchApp.Data
             await Create(newAuthor);
             return newAuthor.AuthorId;
         }
-        public async Task UpdateAuthor(AuthorViewModel model)
+        public async Task UpdateAuthor(AuthorViewModel model, bool updateForm = false)
         {
             var dbAuthor = await GetAll().Where(x => x.AuthorId == model.AuthorID).FirstOrDefaultAsync();
             if (dbAuthor != null)
             {
                 dbAuthor.AlsoKnownAs = model.AlsoKnownAs;
-                dbAuthor.BirthCountryId = model.BirthCountry?.Id;
+                dbAuthor.BirthCountryId = updateForm ? model.BirthCountryID : model.BirthCountry?.Id;
                 dbAuthor.BirthYear = model.BirthYear;
                 dbAuthor.Comments = model.Comments;
                 dbAuthor.DeathYear = model.DeathYear;

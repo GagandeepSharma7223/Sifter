@@ -15,7 +15,7 @@
                       columns.Bound(b => b.Longitude).ClientTemplate("#=(Longitude == null) ? '' : Longitude#").Editable("checkIfGridEditable");
                       columns.Bound(b => b.TimeZone).Editable("checkIfGridEditable");
                       columns.Bound(b => b.FeatureCode).Editable("checkIfGridEditable");
-                      columns.Bound(b => b.GeoNameID).ClientTemplate("#=(GeoNameId == null) ? '' : GeoNameId#").Editable("checkIfGridEditable");
+                      columns.Bound(b => b.GeoNameID).ClientTemplate("#=(GeoNameID == null) ? '' : GeoNameID#").Editable("checkIfGridEditable");
                       columns.Bound(b => b.AlternateNames).Editable("checkIfGridEditable");
                       columns.Bound(b => b.NameAscii).Editable("checkIfGridEditable");
                       columns.Bound(b => b.Slug).Editable("checkIfGridEditable");
@@ -32,6 +32,7 @@
                   .Sortable()
                   .Filterable()
                   .Reorderable(x => x.Columns(true))
+                  .Selectable(config=> config.Mode(GridSelectionMode.Single))
                   .Scrollable()
                   .ColumnMenu(col => col.Filterable(true).Enabled(true))
                   .Resizable(resize => resize.Columns(true))

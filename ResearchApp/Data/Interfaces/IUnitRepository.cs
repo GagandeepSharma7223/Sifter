@@ -8,7 +8,7 @@ namespace ResearchApp.Data
     public interface IUnitRepository : IGenericRepository<Unit>
     {
         Task<DataSourceResult> GetUnits(DataSourceRequest request);
-        Task<int> CreateUnit(UnitViewModel model);
-        Task UpdateUnit(UnitViewModel model);
+        Task<int> CreateUnit(UnitViewModel model, bool updateForm = false);
+        Task UpdateUnit(UnitViewModel model, bool updateForm = false);
     }
 }

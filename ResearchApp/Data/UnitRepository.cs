@@ -95,34 +95,34 @@ namespace ResearchApp.Data
             return new DataSourceResult();
         }
 
-        public async Task<int> CreateUnit(UnitViewModel model)
+        public async Task<int> CreateUnit(UnitViewModel model, bool updateForm = false)
         {
             var newUnit = new Unit
             {
                 UnitId = model.UnitID,
-                CategoryId = model.Category?.Id,
+                CategoryId = updateForm ? model.CategoryID : model.Category?.Id,
                 StartPage = model.StartPage,
                 Text = model.Text,
                 Title = model.Title,
                 LiteralTitle = model.LiteralTitle,
                 TitleEnglish = model.TitleEnglish,
-                WorkId = model.Work?.Id
+                WorkId = updateForm ? model.WorkID : model.Work?.Id
             };
             await Create(newUnit);
-            return newUnit.UnitId;
+            return newUnit.UnitId.Value;
         }
-        public async Task UpdateUnit(UnitViewModel model)
+        public async Task UpdateUnit(UnitViewModel model, bool updateForm = false)
         {
             var dbUnit = await GetAll().Where(x => x.UnitId == model.UnitID).FirstOrDefaultAsync();
             if (dbUnit != null)
             {
-                dbUnit.CategoryId = model.Category?.Id;
+                dbUnit.CategoryId = updateForm ? model.CategoryID : model.Category?.Id;
                 dbUnit.StartPage = model.StartPage;
                 dbUnit.Text = model.Text;
                 dbUnit.Title = model.Title;
                 dbUnit.LiteralTitle = model.LiteralTitle;
                 dbUnit.TitleEnglish = model.TitleEnglish;
-                dbUnit.WorkId = model.Work.Id;
+                dbUnit.WorkId = updateForm ? model.WorkID : model.Work?.Id;
                 await Update(dbUnit);
             }
         }

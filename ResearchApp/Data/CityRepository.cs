@@ -91,13 +91,13 @@ namespace ResearchApp.Data
             return list;
         }
 
-        public async Task<int> CreateCity(CityViewModel model)
+        public async Task<int> CreateCity(CityViewModel model, bool updateForm = false)
         {
             var newCity = new City
             {
                 Name = model.Name,
                 AlternateNames = model.AlternateNames,
-                CountryId = model.Country?.Id,
+                CountryId = updateForm ? model.CountryID : model.Country?.Id,
                 DisplayName = model.DisplayName,
                 FeatureCode = model.FeatureCode,
                 GeoNameId = model.GeoNameID,
@@ -106,21 +106,21 @@ namespace ResearchApp.Data
                 Longitude = model.Longitude,
                 NameAscii = model.NameAscii,
                 Population = model.Population,
-                RegionId = model.Region?.Id,
+                RegionId = updateForm ? model.RegionID : model.Region?.Id,
                 Slug = model.Slug,
                 TimeZone = model.TimeZone
             };
             await Create(newCity);
             return newCity.CityId;
         }
-        public async Task UpdateCity(CityViewModel model)
+        public async Task UpdateCity(CityViewModel model, bool updateForm = false)
         {
             var dbCity = await GetAll().Where(x => x.CityId == model.CityID).FirstOrDefaultAsync();
             if (dbCity != null)
             {
                 dbCity.Name = model.Name;
                 dbCity.AlternateNames = model.AlternateNames;
-                dbCity.CountryId = model.Country?.Id;
+                dbCity.CountryId = updateForm ? model.CountryID : model.Country?.Id;
                 dbCity.DisplayName = model.DisplayName;
                 dbCity.FeatureCode = model.FeatureCode;
                 dbCity.GeoNameId = model.GeoNameID;
@@ -129,7 +129,7 @@ namespace ResearchApp.Data
                 dbCity.Longitude = model.Longitude;
                 dbCity.NameAscii = model.NameAscii;
                 dbCity.Population = model.Population;
-                dbCity.RegionId = model.Region?.Id;
+                dbCity.RegionId = updateForm ? model.RegionID : model.Region?.Id;
                 dbCity.Slug = model.Slug;
                 dbCity.TimeZone = model.TimeZone;
                 await Update(dbCity);

@@ -9,7 +9,7 @@ namespace ResearchApp.ViewModel
             Work = new DropdownOptions();
             Author = new DropdownOptions();
         }
-        public int WorkAuthorID { get; set; }
+        public int? WorkAuthorID { get; set; }
         public int? WorkID { get; set; }
         public int? AuthorID { get; set; }
         public string Role { get; set; }

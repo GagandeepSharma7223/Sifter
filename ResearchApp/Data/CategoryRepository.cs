@@ -32,7 +32,7 @@ namespace ResearchApp.Data
             return list;
         }
 
-        public async Task<int> CreateCategory(CategoryViewModel model)
+        public async Task<int> CreateCategory(CategoryViewModel model, bool updateForm = false)
         {
             var newCategory = new Category
             {
@@ -41,7 +41,7 @@ namespace ResearchApp.Data
             await Create(newCategory);
             return newCategory.CategoryId;
         }
-        public async Task UpdateCategory(CategoryViewModel model)
+        public async Task UpdateCategory(CategoryViewModel model, bool updateForm = false)
         {
             var dbCategory = await GetAll().Where(x => x.CategoryId == model.CategoryID).FirstOrDefaultAsync();
             if (dbCategory != null)

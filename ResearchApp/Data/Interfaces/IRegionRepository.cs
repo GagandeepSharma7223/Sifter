@@ -8,7 +8,7 @@ namespace ResearchApp.Data
     public interface IRegionRepository : IGenericRepository<Region>
     {
         Task<DataSourceResult> GetRegions(DataSourceRequest request);
-        Task<int> CreateRegion(RegionViewModel model);
-        Task UpdateRegion(RegionViewModel model);
+        Task<int> CreateRegion(RegionViewModel model, bool updateForm = false);
+        Task UpdateRegion(RegionViewModel model, bool updateForm = false);
     }
 }

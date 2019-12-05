@@ -28,6 +28,7 @@
                   .Scrollable()
                   .Reorderable(x => x.Columns(true))
                   .ColumnMenu(col => col.Filterable(true).Enabled(true))
+                  .Selectable(config=> config.Mode(GridSelectionMode.Single))
                   .Resizable(resize => resize.Columns(true))
                   .Events(e => e.DataBound("onDataBound").ColumnMenuInit("columnMenuInit"))
                   .DataSource(dataSource => dataSource

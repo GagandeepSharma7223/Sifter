@@ -36,24 +36,20 @@ namespace ResearchApp.Data
             return list;
         }
 
-        public async Task<int> CreateLanguage(LanguageViewModel model)
+        public async Task<int> CreateLanguage(LanguageViewModel model, bool updateForm = false)
         {
-            //int newLanguageId = await GetAll().MaxAsync(x => x.LanguageId);
-            //newLanguageId++;
             var newLanguage = new Language
             {
-                //LanguageId = newLanguageId,
                 Name = model.Name
             };
             await Create(newLanguage);
             return newLanguage.LanguageId;
         }
-        public async Task UpdateLanguage(LanguageViewModel model)
+        public async Task UpdateLanguage(LanguageViewModel model, bool updateForm = false)
         {
             var dbLanguage = await GetAll().Where(x => x.LanguageId == model.LanguageID).FirstOrDefaultAsync();
             if (dbLanguage != null)
             {
-                //dbLanguage.LanguageId = model.LanguageId;
                 dbLanguage.Name = model.Name;
                 await Update(dbLanguage);
             }

@@ -145,6 +145,7 @@ function toggleEditable() {
         $('.chkbx').attr('disabled', 'disabled');
         grid.hideColumn(grid.columns[0]);
     }
+    toggleFormEnable();
 }
 
 function numericEditor(container, options) {
@@ -163,6 +164,7 @@ function checkIfGridEditable(e) {
 
 function loadData(e) {
     showLoading();
+    isFormWrap = false;
     $("#myModal").kendoSplitter();
     var splitter = $("#myModal").data("kendoSplitter");
     var view = $(e.node).attr("param");
@@ -1020,7 +1022,7 @@ $(document).on("click", '#prev-form-btn', function (e) {
     if (selectedItemIndex === 0) {
         $('#prev-form-btn').addClass('k-state-disabled');
     }
-    else if ($('#prev-form-btn').hasClass('k-state-disabled')){
+    else if ($('#prev-form-btn').hasClass('k-state-disabled')) {
         $('#prev-form-btn').removeClass('k-state-disabled');
     }
 });
@@ -1036,5 +1038,57 @@ $(document).on("click", '#next-form-btn', function (e) {
         $('#prev-form-btn').removeClass('k-state-disabled');
     }
 });
+
+$(document).on("click", '#add-form-btn', function (e) {
+    e.preventDefault();
+    var formName = '#edit-form';
+    $(formName + " input[data-role='dropdownlist']").each(function () {
+        var item = $(this).data("kendoDropDownList");
+        if (item) {
+            item.value("");
+            item.text("");
+        }
+    });
+
+    $(formName + " input[data-role='numerictextbox']").each(function () {
+        var item = $(this).data("kendoNumericTextBox");
+        if (item) {
+            item.value(null);
+        }
+    });
+
+    $(formName + " :input").each(function () {
+        this.value = '';
+    });
+    $(formName + ' input:checkbox').removeAttr('checked');
+});
+
+function toggleFormEnable() {
+    var formName = '#edit-form';
+    if ($(formName).length) {
+        $(formName + " input[data-role='dropdownlist']").each(function () {
+            var item = $(this).data("kendoDropDownList");
+            if (item) {
+                item.enable(isGridEditable);
+            }
+        });
+
+        $(formName + " input[data-role='numerictextbox']").each(function () {
+            var item = $(this).data("kendoNumericTextBox");
+            if (item) {
+                item.enable(isGridEditable);
+            }
+        });
+
+        if (!isGridEditable) {
+            $(formName + " :input").attr('disabled', 'disabled');
+            $(formName + ' input:checkbox').attr('disabled', 'disabled');;
+        }
+        else {
+            $(formName + " :input").removeAttr('disabled');
+            $(formName + ' input:checkbox').removeAttr('checked');
+        }
+    }
+}
 
 // End Form View Operations

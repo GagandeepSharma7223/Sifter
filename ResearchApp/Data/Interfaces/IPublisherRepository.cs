@@ -8,7 +8,7 @@ namespace ResearchApp.Data
     public interface IPublisherRepository : IGenericRepository<Publisher>
     {
         Task<DataSourceResult> GetPublishers(DataSourceRequest request);
-        Task<int> CreatePublisher(PublisherViewModel model);
-        Task UpdatePublisher(PublisherViewModel model);
+        Task<int> CreatePublisher(PublisherViewModel model, bool updateForm = false);
+        Task UpdatePublisher(PublisherViewModel model, bool updateForm = false);
     }
 }

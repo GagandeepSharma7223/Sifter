@@ -2,9 +2,9 @@
 @model FormViewModel
 <div class="grid-container">
     <div class="k-grid k-widget">
-        <div class="k-grid-content k-auto-scrollable">
-            <div class="col-md-12 mt-3">
-                <form id="edit-form">
+        <form id="edit-form">
+            <div class="k-grid-content k-auto-scrollable">
+                <div class="col-md-12 mt-3">
                     @foreach (var item in Model.TableColumns)
                     {
                         if (!item.IDColumn)
@@ -17,10 +17,10 @@
                                             @switch (item.Type)
                                             {
                                                 case "string":
-                                                    string value = Model.SelectedItem[item.ColumnName];
+                                                    string value = Model.SelectedItem != null ? Model.SelectedItem[item.ColumnName] : null;
                                                     if (item.ColumnName != "Gender")
                                                     {
-                                                        @(Html.TextArea(item.ColumnName, value, new { @class = "k-textbox" }))
+                                                        @(Html.TextArea(item.ColumnName, value, new { @class = "k-textbox", style = "width:60%", @cols = 80, @rows = 5 }))
                                                     }
                                                     else
                                                     {
@@ -30,6 +30,7 @@
                                                             .OptionLabel("Select")
                                                             .DataValueField("Id")
                                                             .DataTextField("Option")
+                                                            .HtmlAttributes(new { style = "width:60%" })
                                                             .BindTo(new List<TextDropdownOptions>
                                                                 {
                                                                     new TextDropdownOptions{
@@ -45,48 +46,54 @@
                                                     }
                                                     break;
                                                 case "int":
-                                                    @(Html.Kendo().NumericTextBox().Name(item.ColumnName).Value(Model.SelectedItem[item.ColumnName]))
+                                                    @(Html.Kendo().NumericTextBox()
+                                                        .Spinners(false)
+                                                        .Name(item.ColumnName)
+                                                        .Value(Model.SelectedItem != null ? Model.SelectedItem[item.ColumnName] : null))
+                                                    break;
+                                                case "decimal":
+                                                    @(Html.Kendo().NumericTextBox().Name(item.ColumnName).Value(Model.SelectedItem != null ? Model.SelectedItem[item.ColumnName] : null))
                                                     break;
                                                 case "boolean":
-                                                    bool chkValue = Model.SelectedItem[item.ColumnName] ?? false;
+                                                    bool chkValue = Model.SelectedItem != null ? Model.SelectedItem[item.ColumnName] ?? false : false;
                                                     @(Html.CheckBox(item.ColumnName, chkValue))
                                                     break;
                                                 case "dropdown":
-                                                    value = Convert.ToString(Model.SelectedItem[item.ColumnName] ?? "");
+                                                    value = Model.SelectedItem != null ? Convert.ToString(Model.SelectedItem[item.ColumnName] ?? null) : null;
                                                     @(Html.Kendo().DropDownList()
-                                                  .Name(item.DisplayName + "ID")
-                                                  .Value(value)
-                                                  .DataValueField("Id")
-                                                  .DataTextField("Option")
-                                                  .Filter(FilterType.Contains)
-                                                  .MinLength(3)
-                                                  .Height(200)
-                                                  .SelectedIndex(1)
-                                                  .OptionLabel("Select")
-                                                  .DataSource(source =>
-                                                  {
-                                                      source.Custom()
-                                                            .ServerFiltering(true)
-                                                            .ServerPaging(true)
-                                                            .PageSize(20)
-                                                            .Type("aspnetmvc-ajax")
-                                                            .Transport(transport =>
-                                                            {
-                                                                transport.Read("GetDropdownOptions", "Grid", new { treeTable = item.Fktable, optionCol = item.FkdisplayCol });
-                                                            })
-                                                            .Schema(schema =>
-                                                            {
-                                                                schema.Data("Data")
-                                                                      .Total("Total");
-                                                            });
-                                                  })
-                                                  .Virtual(v => v.ItemHeight(26).ValueMapper("valueMapper" + item.Fktable))
+                                                          .Name(item.DisplayName + "ID")
+                                                          .Value(value)
+                                                          .DataValueField("Id")
+                                                          .DataTextField("Option")
+                                                          .Filter(FilterType.Contains)
+                                                          .MinLength(3)
+                                                          .Height(200)
+                                                          .OptionLabel("Select")
+                                                          .HtmlAttributes(new { style = "width:60%" })
+                                                          .DataSource(source =>
+                                                          {
+                                                              source.Custom()
+                                                                    .ServerFiltering(true)
+                                                                    .ServerPaging(true)
+                                                                    .PageSize(20)
+                                                                    .Type("aspnetmvc-ajax")
+                                                                    .Transport(transport =>
+                                                                    {
+                                                                        transport.Read("GetDropdownOptions", "Grid", new { treeTable = item.Fktable, optionCol = item.FkdisplayCol });
+                                                                    })
+                                                                    .Schema(schema =>
+                                                                    {
+                                                                        schema.Data("Data")
+                                                                              .Total("Total");
+                                                                    });
+                                                          })
+                                                          .Virtual(v => v.ItemHeight(26).ValueMapper("valueMapper" + item.Fktable))
 
                                                     )
                                                     break;
                                                 default:
-                                                    value = Model.SelectedItem[item.ColumnName];
-                                                    Html.Kendo().TextBox().Name(item.ColumnName).Value(value);
+                                                    value = Model.SelectedItem != null ? Model.SelectedItem[item.ColumnName] : null;
+                                                    @(Html.TextArea(item.ColumnName, value, new { @class = "k-textbox", style = "width:60%", @cols = 80, @rows = 5 }))
                                                     break;
                                             }
                                         </div>
@@ -94,16 +101,16 @@
                                 </div>
                             </div>
                         }
-                        else
+                        else if (Model.SelectedItem != null)
                         {
-                            @(Html.Hidden(item.ColumnName, Model.SelectedItem[item.ColumnName] != null ? (int)Model.SelectedItem[item.ColumnName] : 0))
+                            @(Html.Hidden(item.ColumnName, (int)(Model.SelectedItem[item.ColumnName])))
                         }
                     }
-                </form>
+                </div>
             </div>
-        </div>
-        <div id="form-footer">
-        </div>
+            <div id="form-footer">
+            </div>
+        </form>
     </div>
 </div>
 
@@ -135,5 +142,10 @@
         if (selectedItemIndex === 0) {
             $('#prev-form-btn').addClass('k-state-disabled');
         }
+
+        var height = $(window)[0].innerHeight;
+        $('.k-grid-content').height(height - 90);
+
+        toggleFormEnable();
     });
 </script>

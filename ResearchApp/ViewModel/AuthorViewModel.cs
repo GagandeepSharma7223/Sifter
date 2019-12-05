@@ -3,7 +3,7 @@ namespace ResearchApp.ViewModel
 {
     public class AuthorViewModel
     {
-        public int AuthorID { get; set; }
+        public int? AuthorID { get; set; }
         public string FullName { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }

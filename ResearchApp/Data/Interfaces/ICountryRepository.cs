@@ -8,7 +8,7 @@ namespace ResearchApp.Data
     public interface ICountryRepository : IGenericRepository<Country>
     {
         Task<DataSourceResult> GetCountries(DataSourceRequest request);
-        Task<int> CreateCountry(CountryViewModel model);
-        Task UpdateCountry(CountryViewModel model);
+        Task<int> CreateCountry(CountryViewModel model, bool updateForm = false);
+        Task UpdateCountry(CountryViewModel model, bool updateForm = false);
     }
 }

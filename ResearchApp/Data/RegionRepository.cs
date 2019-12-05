@@ -82,13 +82,13 @@ namespace ResearchApp.Data
             return list;
         }
 
-        public async Task<int> CreateRegion(RegionViewModel model)
+        public async Task<int> CreateRegion(RegionViewModel model, bool updateForm = false)
         {
             var newRegion = new Region
             {
                 Name = model.Name,
                 AlternateNames = model.AlternateNames,
-                CountryId = model.Country?.Id,
+                CountryId = updateForm ? model.CountryID : model.Country?.Id,
                 NameAscii = model.NameAscii,
                 DisplayName = model.DisplayName,
                 GeoNameCode = model.GeoNameCode,
@@ -98,14 +98,14 @@ namespace ResearchApp.Data
             await Create(newRegion);
             return newRegion.RegionId;
         }
-        public async Task UpdateRegion(RegionViewModel model)
+        public async Task UpdateRegion(RegionViewModel model, bool updateForm = false)
         {
             var dbRegion = await GetAll().Where(x => x.RegionId == model.RegionID).FirstOrDefaultAsync();
             if (dbRegion != null)
             {
                 dbRegion.Name = model.Name;
                 dbRegion.AlternateNames = model.AlternateNames;
-                dbRegion.CountryId = model.Country?.Id;
+                dbRegion.CountryId = updateForm ? model.CountryID : model.Country?.Id;
                 dbRegion.NameAscii = model.NameAscii;
                 dbRegion.DisplayName = model.DisplayName;
                 dbRegion.GeoNameCode = model.GeoNameCode;

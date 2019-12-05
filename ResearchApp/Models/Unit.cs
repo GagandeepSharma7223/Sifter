@@ -5,7 +5,7 @@ namespace ResearchApp.Models
 {
     public partial class Unit
     {
-        public int UnitId { get; set; }
+        public int? UnitId { get; set; }
         public int? WorkId { get; set; }
         public int? StartPage { get; set; }
         public int? CategoryId { get; set; }

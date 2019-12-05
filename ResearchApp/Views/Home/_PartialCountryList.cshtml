@@ -13,7 +13,7 @@
                       columns.Bound(b => b.Code3).Editable("checkIfGridEditable");
                       columns.Bound(b => b.TLD).Editable("checkIfGridEditable");
                       columns.Bound(b => b.Phone).Editable("checkIfGridEditable");
-                      columns.Bound(b => b.GeoNameID).ClientTemplate("#=(GeoNameId == null) ? '' : GeoNameId#").Editable("checkIfGridEditable");
+                      columns.Bound(b => b.GeoNameID).ClientTemplate("#=(GeoNameID == null) ? '' : GeoNameID#").Editable("checkIfGridEditable");
                       columns.Bound(b => b.NameAscii).Editable("checkIfGridEditable");
                       columns.Bound(b => b.Slug).Editable("checkIfGridEditable");
                   })
@@ -28,6 +28,7 @@
                   .Sortable()
                   .Filterable()
                   .Reorderable(x => x.Columns(true))
+                  .Selectable(config=> config.Mode(GridSelectionMode.Single))
                   .Scrollable()
                   .ColumnMenu(col => col.Filterable(true).Enabled(true))
                   .Resizable(resize => resize.Columns(true))

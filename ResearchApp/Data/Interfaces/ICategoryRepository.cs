@@ -8,7 +8,7 @@ namespace ResearchApp.Data
     public interface ICategoryRepository : IGenericRepository<Category>
     {
         Task<DataSourceResult> GetCategories(DataSourceRequest request);
-        Task<int> CreateCategory(CategoryViewModel model);
-        Task UpdateCategory(CategoryViewModel model);
+        Task<int> CreateCategory(CategoryViewModel model, bool updateForm = false);
+        Task UpdateCategory(CategoryViewModel model, bool updateForm = false);
     }
 }

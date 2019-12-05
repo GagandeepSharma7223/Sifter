@@ -134,7 +134,7 @@ namespace ResearchApp.Controllers
             {
                 foreach (var author in authors)
                 {
-                    await _authorRepo.Delete(author.AuthorID);
+                    await _authorRepo.Delete(author.AuthorID.GetValueOrDefault());
 
                 }
             }
@@ -254,43 +254,113 @@ namespace ResearchApp.Controllers
             {
                 case GridTypes.Category:
                     var category = JsonConvert.DeserializeObject<CategoryViewModel>(selectedItem);
-                    await _categoryRepo.UpdateCategory(category);
+                    if (category.CategoryID.HasValue)
+                    {
+                        await _categoryRepo.UpdateCategory(category, true);
+                    }
+                    else
+                    {
+                        await _categoryRepo.CreateCategory(category, true);
+                    }
                     break;
                 case GridTypes.Language:
                     var language = JsonConvert.DeserializeObject<LanguageViewModel>(selectedItem);
-                    await _languageRepo.UpdateLanguage(language);
+                    if (language.LanguageID.HasValue)
+                    {
+                        await _languageRepo.UpdateLanguage(language, true);
+                    }
+                    else
+                    {
+                        await _languageRepo.CreateLanguage(language, true);
+                    }
                     break;
                 case GridTypes.City:
                     var city = JsonConvert.DeserializeObject<CityViewModel>(selectedItem);
-                    await _cityRepo.UpdateCity(city);
+                    if (city.CityID.HasValue)
+                    {
+                        await _cityRepo.UpdateCity(city, true);
+                    }
+                    else
+                    {
+                        await _cityRepo.CreateCity(city, true);
+                    }
                     break;
                 case GridTypes.Region:
                     var region = JsonConvert.DeserializeObject<RegionViewModel>(selectedItem);
-                    await _regionRepo.UpdateRegion(region);
+                    if (region.RegionID.HasValue)
+                    {
+                        await _regionRepo.UpdateRegion(region, true);
+                    }
+                    else
+                    {
+                        await _regionRepo.CreateRegion(region, true);
+                    }
                     break;
                 case GridTypes.Country:
                     var country = JsonConvert.DeserializeObject<CountryViewModel>(selectedItem);
-                    await _countryRepo.UpdateCountry(country);
+                    if (country.CountryID.HasValue)
+                    {
+                        await _countryRepo.UpdateCountry(country, true); 
+                    }
+                    else
+                    {
+                        await _countryRepo.CreateCountry(country, true);
+                    }
                     break;
                 case GridTypes.Publisher:
                     var publisher = JsonConvert.DeserializeObject<PublisherViewModel>(selectedItem);
-                    await _publisherRepo.UpdatePublisher(publisher);
+                    if (publisher.PublisherID.HasValue)
+                    {
+                        await _publisherRepo.UpdatePublisher(publisher, true); 
+                    }
+                    else
+                    {
+                        await _publisherRepo.CreatePublisher(publisher, true);
+                    }
                     break;
                 case GridTypes.Work:
                     var work = JsonConvert.DeserializeObject<WorkViewModel>(selectedItem);
-                    await _workRepo.UpdateWork(work);
+                    if (work.WorkID.HasValue)
+                    {
+                        await _workRepo.UpdateWork(work, true); 
+                    }
+                    else
+                    {
+                        await _workRepo.CreateWork(work, true);
+                    }
                     break;
                 case GridTypes.Author:
                     var author = JsonConvert.DeserializeObject<AuthorViewModel>(selectedItem);
-                    await _authorRepo.UpdateAuthor(author);
+                    if (author.AuthorID.HasValue)
+                    {
+                        await _authorRepo.UpdateAuthor(author, true); 
+                    }
+                    else
+                    {
+                        await _authorRepo.CreateAuthor(author, true);
+                    }
                     break;
                 case GridTypes.WorkAuthor:
                     var workAuthor = JsonConvert.DeserializeObject<WorkAuthorViewModel>(selectedItem);
-                    await _workAuthorRepo.UpdateWorkAuthor(workAuthor);
+                    if (workAuthor.WorkAuthorID.HasValue)
+                    {
+                        await _workAuthorRepo.UpdateWorkAuthor(workAuthor, true);
+                    }
+                    else
+                    {
+                        await _workAuthorRepo.CreateWorkAuthor(workAuthor, true);
+                    }
                     break;
                 case GridTypes.Unit:
                     var unit = JsonConvert.DeserializeObject<UnitViewModel>(selectedItem);
-                    await _unitRepo.UpdateUnit(unit);
+                    if (unit.UnitID.HasValue)
+                    {
+                        await _unitRepo.UpdateUnit(unit, true);
+                    }
+                    else
+                    {
+                        await _unitRepo.CreateUnit(unit, true);
+                    }
                     break;
             }
             return Ok();
@@ -770,7 +840,7 @@ namespace ResearchApp.Controllers
             {
                 foreach (var item in list)
                 {
-                    await _publisherRepo.Delete(item.WorkAuthorID);
+                    await _publisherRepo.Delete(item.WorkAuthorID.GetValueOrDefault());
                 }
             }
             return Json(list.ToDataSourceResult(request, ModelState));
@@ -815,7 +885,7 @@ namespace ResearchApp.Controllers
             {
                 foreach (var item in list)
                 {
-                    await _publisherRepo.Delete(item.UnitID);
+                    await _publisherRepo.Delete(item.UnitID.GetValueOrDefault());
                 }
             }
             return Json(list.ToDataSourceResult(request, ModelState));

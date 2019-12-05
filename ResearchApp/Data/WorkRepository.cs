@@ -118,7 +118,7 @@ namespace ResearchApp.Data
             return list;
         }
 
-        public async Task<int> CreateWork(WorkViewModel model)
+        public async Task<int> CreateWork(WorkViewModel model, bool updateForm = false)
         {
             var newWork = new Work
             {
@@ -126,17 +126,17 @@ namespace ResearchApp.Data
                 Title = model.Title,
                 TitleEnglish = model.TitleEnglish,
                 TitleLiteral = model.TitleLiteral,
-                AuthorId = model.Author?.Id,
-                CityId = model.City?.Id,
-                LanguageId = model.Language?.Id,
-                PublisherId = model.Publisher?.Id,
-                TranslatorId = model.Translator?.Id,
-                EditorId = model.Editor?.Id
-            };
+                AuthorId = updateForm ? model.AuthorID : model.Author?.Id,
+                CityId = updateForm ? model.CityID : model.City?.Id,
+                LanguageId = updateForm ? model.LanguageID : model.Language?.Id,
+                PublisherId = updateForm ? model.PublisherID : model.Publisher?.Id,
+                TranslatorId = updateForm ? model.TranslatorID : model.Translator?.Id,
+                EditorId = updateForm ? model.EditorID : model.Editor?.Id
+        };
             await Create(newWork);
             return newWork.WorkId;
         }
-        public async Task UpdateWork(WorkViewModel model)
+        public async Task UpdateWork(WorkViewModel model, bool updateForm = false)
         {
             var dbWork = await GetAll().Where(x => x.WorkId == model.WorkID).FirstOrDefaultAsync();
             if (dbWork != null)
@@ -145,12 +145,12 @@ namespace ResearchApp.Data
                 dbWork.Title = model.Title;
                 dbWork.TitleEnglish = model.TitleEnglish;
                 dbWork.TitleLiteral = model.TitleLiteral;
-                dbWork.AuthorId = model.Author == null ? model.AuthorID : model.Author.Id;
-                dbWork.CityId = model.City == null ? model.CityID : model.City.Id;
-                dbWork.LanguageId = model.Language == null ? model.LanguageID : model.Language.Id;
-                dbWork.PublisherId = model.Publisher == null ? model.PublisherID : model.Publisher.Id;
-                dbWork.TranslatorId = model.Translator == null ? model.TranslatorID : model.Translator.Id;
-                dbWork.EditorId = model.Editor == null ? model.EditorID : model.Editor.Id;
+                dbWork.AuthorId = updateForm ? model.AuthorID : model.Author?.Id;
+                dbWork.CityId = updateForm ? model.CityID : model.City?.Id;
+                dbWork.LanguageId = updateForm ? model.LanguageID : model.Language?.Id;
+                dbWork.PublisherId = updateForm ? model.PublisherID : model.Publisher?.Id;
+                dbWork.TranslatorId = updateForm ? model.TranslatorID : model.Translator?.Id;
+                dbWork.EditorId = updateForm ? model.EditorID : model.Editor?.Id;
                 await Update(dbWork);
             }
         }

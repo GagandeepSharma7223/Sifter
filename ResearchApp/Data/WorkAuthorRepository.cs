@@ -82,24 +82,24 @@ namespace ResearchApp.Data
             return list;
         }
 
-        public async Task<int> CreateWorkAuthor(WorkAuthorViewModel model)
+        public async Task<int> CreateWorkAuthor(WorkAuthorViewModel model, bool updateForm = false)
         {
             var newWorkAuthor = new WorkAuthor
             {
-                AuthorId = model.Author?.Id,
-                WorkId = model.Work?.Id,
+                AuthorId = updateForm ? model.AuthorID : model.Author?.Id,
+                WorkId = updateForm ? model.WorkID : model.Work?.Id,
                 Role = model.Role
             };
             await Create(newWorkAuthor);
             return newWorkAuthor.WorkAuthorId;
         }
-        public async Task UpdateWorkAuthor(WorkAuthorViewModel model)
+        public async Task UpdateWorkAuthor(WorkAuthorViewModel model, bool updateForm = false)
         {
             var dbWorkAuthor = await GetAll().Where(x => x.WorkAuthorId == model.WorkAuthorID).FirstOrDefaultAsync();
             if (dbWorkAuthor != null)
             {
-                dbWorkAuthor.WorkId = model.Work?.Id;
-                dbWorkAuthor.AuthorId = model.Author?.Id;
+                dbWorkAuthor.WorkId = updateForm ? model.WorkID : model.Work?.Id;
+                dbWorkAuthor.AuthorId = updateForm ? model.AuthorID : model.Author?.Id;
                 dbWorkAuthor.Role = model.Role;
                 await Update(dbWorkAuthor);
             }

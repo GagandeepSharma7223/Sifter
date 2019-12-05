@@ -40,7 +40,7 @@ namespace ResearchApp.Data
             return list;
         }
 
-        public async Task<int> CreateCountry(CountryViewModel model)
+        public async Task<int> CreateCountry(CountryViewModel model, bool updateForm = false)
         {
             var newCountry = new Country
             {
@@ -58,7 +58,7 @@ namespace ResearchApp.Data
             await Create(newCountry);
             return newCountry.CountryId;
         }
-        public async Task UpdateCountry(CountryViewModel model)
+        public async Task UpdateCountry(CountryViewModel model, bool updateForm = false)
         {
             var dbCountry = await GetAll().Where(x => x.CountryId == model.CountryID).FirstOrDefaultAsync();
             if (dbCountry != null)

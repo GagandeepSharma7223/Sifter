@@ -32,24 +32,20 @@ namespace ResearchApp.Data
             return list;
         }
 
-        public async Task<int> CreatePublisher(PublisherViewModel model)
+        public async Task<int> CreatePublisher(PublisherViewModel model, bool updateForm = false)
         {
-            //int newPublisherId = await GetAll().MaxAsync(x => x.PublisherID);
-            //newPublisherId++;
             var newPublisher = new Publisher
             {
-                //PublisherID = newPublisherId,
                 Name = model.Name
             };
             await Create(newPublisher);
             return newPublisher.PublisherId;
         }
-        public async Task UpdatePublisher(PublisherViewModel model)
+        public async Task UpdatePublisher(PublisherViewModel model, bool updateForm = false)
         {
             var dbPublisher = await GetAll().Where(x => x.PublisherId == model.PublisherID).FirstOrDefaultAsync();
             if (dbPublisher != null)
             {
-                //dbPublisher.PublisherID = model.PublisherID;
                 dbPublisher.Name = model.Name;
                 await Update(dbPublisher);
             }
