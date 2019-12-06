@@ -17,11 +17,29 @@
                                         {
                                             case "string":
                                                 string value = Model.SelectedItem != null ? Model.SelectedItem[item.ColumnName] : null;
-                                                if (item.ColumnName != "Gender")
+                                                if (item.ColumnName == "Gender")
                                                 {
-                                                    @(Html.TextArea(item.ColumnName, value, new { @class = "k-textbox", style = "width:60%", @cols = 80, @rows = 5 }))
+                                                    @(Html.Kendo().DropDownList()
+                                                       .Name(item.ColumnName)
+                                                       .Value(value)
+                                                       .OptionLabel("Select")
+                                                       .DataValueField("Id")
+                                                       .DataTextField("Option")
+                                                       .HtmlAttributes(new { style = "width:60%" })
+                                                       .BindTo(new List<TextDropdownOptions>
+                                                           {
+                                                               new TextDropdownOptions{
+                                                                   Id = "Male",
+                                                                   Option = "Male"
+                                                               },
+                                                               new TextDropdownOptions{
+                                                                   Id = "Female",
+                                                                   Option = "Female"
+                                                               }
+                                                           })
+                                                    )
                                                 }
-                                                else
+                                                else if (item.ColumnName == "Role")
                                                 {
                                                     @(Html.Kendo().DropDownList()
                                                         .Name(item.ColumnName)
@@ -33,15 +51,23 @@
                                                         .BindTo(new List<TextDropdownOptions>
                                                             {
                                                                 new TextDropdownOptions{
-                                                                    Id = "Male",
-                                                                    Option = "Male"
+                                                                    Id = "Author",
+                                                                    Option = "Author"
                                                                 },
                                                                 new TextDropdownOptions{
-                                                                    Id = "Female",
-                                                                    Option = "Female"
+                                                                    Id = "Editor",
+                                                                    Option = "Editor"
+                                                                },
+                                                                new TextDropdownOptions{
+                                                                    Id = "Translator",
+                                                                    Option = "Translator"
                                                                 }
                                                             })
                                                     )
+                                                }
+                                                                    else
+                                                {
+                                                    @(Html.TextBox(item.ColumnName, value, new { @class = "k-textbox", style = "width:60%" }))
                                                 }
                                                 break;
                                             case "int":
@@ -54,6 +80,8 @@
                                             case "decimal":
                                                 @(Html.Kendo().NumericTextBox()
                                                     .Spinners(false)
+                                                    .Format("#.########")
+                                                    .Decimals(8)
                                                     .Name(item.ColumnName)
                                                     .Value(Model.SelectedItem != null ? Model.SelectedItem[item.ColumnName] : null))
                                                 break;
@@ -107,6 +135,16 @@
                     else if (Model.SelectedItem != null)
                     {
                         @(Html.Hidden(item.ColumnName, (int)(Model.SelectedItem[item.ColumnName])))
+                        <div class="row" id="form-primary-key">
+                            <div class="col-md-10">
+                                <div class="row form-group">
+                                    <label class="col-md-2 col-form-label">@item.ColumnName</label>
+                                    <div class="col-md-9">
+                                        @Model.SelectedItem[item.ColumnName]
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     }
                 }
             </div>
@@ -138,6 +176,13 @@
 
         if (selectedItemIndex === 0) {
             $('#prev-form-btn').addClass('k-state-disabled');
+        }
+
+        if (grid.dataSource.page() == 1) {
+            $('#first-form-btn').addClass('k-state-disabled');
+        }
+        else if (grid.dataSource.totalPages() == grid.dataSource.page()) {
+            $('#last-form-btn').addClass('k-state-disabled');
         }
 
         var height = $(window)[0].innerHeight;

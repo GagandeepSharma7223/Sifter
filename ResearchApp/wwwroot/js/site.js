@@ -210,6 +210,15 @@ function onDataBound(e) {
     e.sender.select("tr:eq(0)");
     $('.k-grid-content').scrollTop(0);
     gridDataBoundConfig();
+
+    if (isFormWrap) {
+        formSwitchEvents();
+    }
+}
+
+function formSwitchEvents() {
+    formViewSelectedItem = grid.dataSource.data()[selectedItemIndex];
+    getFormView();
 }
 
 function toggleEdit() {
@@ -281,8 +290,8 @@ function getFormView() {
             resizeGrid();
             resizeSplitter();
             browserWindow.resize(resizeSplitter);
+            hideLoading();
         }).fail(function (xhr) {
-            console.log('error : ' + xhr.status + ' - ' + xhr.statusText + ' - ' + xhr.responseText);
         });
 
 }
@@ -480,7 +489,6 @@ function dropdownFilter(element) {
             $.each(values, function (i, v) {
                 filter.filters.push({ field: currentFilterColumn, operator: "eq", value: v });
             });
-            console.log(this.dataSource.data());
             var dataSource = $("#grid").data().kendoGrid.dataSource;
             dataSource.filter(filter);
         }
@@ -628,7 +636,6 @@ function initColumnMenuFilter(e) {
                     advancedMenu.bind("open", function (e) {
                         if (!inputFilterOne && !inputFilterTwo) {
                             var advancedOptionFrm = $('#advanced-menu-' + field).find('.k-filter-menu-container');
-                            console.log("advanced menu form ::" + advancedOptionFrm);
                             if (fieldType === 'object') {
                                 var inputFirst = advancedOptionFrm.find("input:eq(0)");
                                 var inputSecond = advancedOptionFrm.find("input:eq(1)");
@@ -640,7 +647,6 @@ function initColumnMenuFilter(e) {
                                     dataTextField: "Option",
                                     dataValueField: "Id",
                                     change: function (e) {
-                                        console.log('Dropdown filter selected:: ' + this.value());
                                         inputFilterOne = this.value();
                                     },
                                     height: 135,
@@ -738,12 +744,10 @@ function initColumnMenuFilter(e) {
                                 }
                                 if (inputFilters.length) {
                                     $(inputFilters[0]).on('keyup mouseup change', function (e) {
-                                        console.log("filter one input event::" + this.value);
                                         inputFilterOne = this.value;
                                     });
 
                                     $(inputFilters[1]).on('keyup mouseup change', function (e) {
-                                        console.log("filter two input event::" + this.value);
                                         inputFilterTwo = this.value;
                                     });
                                 }
@@ -752,28 +756,23 @@ function initColumnMenuFilter(e) {
 
                                 if (textareaFilters.length) {
                                     $(textareaFilters[0]).on('keyup mouseup change', function (e) {
-                                        console.log("filter one input event::" + this.value);
                                         inputFilterOne = this.value;
                                     });
 
                                     $(textareaFilters[1]).on('keyup mouseup change', function (e) {
-                                        console.log("filter two input event::" + this.value);
                                         inputFilterTwo = this.value;
                                     });
                                 }
 
                                 $(filterOne).change(function (e) {
-                                    console.log("filter one dropdown event::" + this.value);
                                     filterOneValue = this.value;
                                 });
 
                                 $(filterTwo).change(function (e) {
-                                    console.log("filter two dropdown event::" + this.value);
                                     filterTwoValue = this.value;
                                 });
 
                                 $(filterLogic).change(function (e) {
-                                    console.log("filter logic dropdown event::" + this.value);
                                     filterLogicValue = this.value;
                                 });
                             }
@@ -836,19 +835,14 @@ function initColumnMenuFilter(e) {
                                 logic: 'or',
                                 filters: fieldFilters
                             });
-                            console.log(fieldFilters);
-                            console.log(filterLogicValue);
-                            console.log(columnDataSource);
                             dataSource.filter(filter);
                         }
                         var popup = $(helpTextElement.children(":last").children(":first")).data("kendoPopup");
-                        console.log(popup);
                         popup.close();
                     }
                 });
 
                 $('#filter-search-' + field).on('keyup', function (e) {
-                    console.log('search items::' + this.value);
                     if (this.value) {
                         if (fieldType === 'object') {
                             var listView = $('#list-view-' + field).data('kendoListView');
@@ -873,8 +867,6 @@ function initColumnMenuFilter(e) {
                 if (processScroll && $(this).scrollTop() + $(this).innerHeight() >= $(this)[0].scrollHeight - 5) {
                     processScroll = false;
                     pageModel[field]++;
-                    console.log(pageModel);
-
                     var listView = $('#list-view-' + field).data('kendoListView');
                     dataSourceListViewScroll.query({
                         page: pageModel[field],
@@ -1014,13 +1006,12 @@ function objectifyForm(formArray) {//serialize data function
 
 // Form View Operations
 $(document).on("click", '#save-form-btn', function (e) {
+    e.preventDefault();
     var data = objectifyForm($('#edit-form').serializeArray());
     var treeTable = getSelectTable();
     $.post('/Grid/SaveForm', { type: treeTable, selectedItem: JSON.stringify(data) })
         .done(function (success) {
-            var treeView = $('#treeview').data('kendoTreeView');
-            var treeTable = treeView.dataItem(treeView.select()).text;
-            loadEditData(treeTable);
+            toggleFormView();
         })
         .fail(function () {
         });
@@ -1031,33 +1022,29 @@ $(document).on("click", '#cancel-form-btn', function (e) {
     toggleFormView();
 });
 
-function toggleFormView() {
-    isFormWrap = !isFormWrap;
-    if (!isFormWrap) {
-        $('#form-container').css('visibility', 'hidden');
-        $('#kendo-grid-container').css('visibility', 'visible');
-        resizeGrid();
-        resizeSplitter();
-        browserWindow.resize(resizeSplitter);
-        var formSwitch = $("#form-switch").data('kendoSwitch');
-        formSwitch.check(isFormWrap);
+$(document).on("click", '#first-form-btn', function (e) {
+    showLoading();
+    grid.dataSource.page(1);
+    selectedItemIndex = 0;
+    $('#first-form-btn').addClass('k-state-disabled');
+    if ($('#last-form-btn').hasClass('k-state-disabled')) {
+        $('#last-form-btn').removeClass('k-state-disabled');
     }
-}
+});
 
-function loadFormData() {
-    var splitter = $("#myModal").data("kendoSplitter");
-    var treeTable = getSelectTable();
-    splitter.ajaxRequest(".k-pane:last", "/Grid/GetFormView", { type: treeTable, selectedItem: JSON.stringify(formViewSelectedItem) });
-}
-
-function selectGridRow() {
-    grid.select(`tr:eq(${selectedItemIndex})`);
-    grid.element.find(".k-grid-content").animate({ 
-        scrollTop: grid.select().offset().top 
-    }, 400);
-}
+$(document).on("click", '#last-form-btn', function (e) {
+    showLoading();
+    var totalPage = grid.dataSource.totalPages();
+    grid.dataSource.page(totalPage);
+    selectedItemIndex = 0;
+    $('#last-form-btn').addClass('k-state-disabled');
+    if ($('#first-form-btn').hasClass('k-state-disabled')) {
+        $('#first-form-btn').removeClass('k-state-disabled');
+    }
+});
 
 $(document).on("click", '#prev-form-btn', function (e) {
+    showLoading();
     selectedItemIndex--;
     formViewSelectedItem = grid.dataSource.data()[selectedItemIndex];
     getFormView();
@@ -1071,6 +1058,7 @@ $(document).on("click", '#prev-form-btn', function (e) {
 });
 
 $(document).on("click", '#next-form-btn', function (e) {
+    showLoading();
     selectedItemIndex++;
     formViewSelectedItem = grid.dataSource.data()[selectedItemIndex];
     getFormView();
@@ -1105,7 +1093,34 @@ $(document).on("click", '#add-form-btn', function (e) {
         this.value = '';
     });
     $(formName + ' input:checkbox').removeAttr('checked');
+    $("#form-primary-key").hide();
 });
+
+function toggleFormView() {
+    isFormWrap = !isFormWrap;
+    if (!isFormWrap) {
+        $('#form-container').css('visibility', 'hidden');
+        $('#kendo-grid-container').css('visibility', 'visible');
+        resizeGrid();
+        resizeSplitter();
+        browserWindow.resize(resizeSplitter);
+        var formSwitch = $("#form-switch").data('kendoSwitch');
+        formSwitch.check(isFormWrap);
+    }
+}
+
+function loadFormData() {
+    var splitter = $("#myModal").data("kendoSplitter");
+    var treeTable = getSelectTable();
+    splitter.ajaxRequest(".k-pane:last", "/Grid/GetFormView", { type: treeTable, selectedItem: JSON.stringify(formViewSelectedItem) });
+}
+
+function selectGridRow() {
+    grid.select(`tr:eq(${selectedItemIndex})`);
+    grid.element.find(".k-grid-content").animate({
+        scrollTop: grid.select().offset().top
+    }, 400);
+}
 
 function toggleFormEnable() {
     var formName = '#edit-form';

@@ -225,6 +225,7 @@ namespace ResearchApp.Controllers
                     view = "~/Views/Home/_PartialAuthorList.cshtml";
                     break;
                 case GridTypes.WorkAuthor:
+                    PopulateRoles();
                     view = "~/Views/Home/_PartialWorkAuthorList.cshtml";
                     break;
                 case GridTypes.Unit:
@@ -525,6 +526,13 @@ namespace ResearchApp.Controllers
             ViewData["genders"] = genders;
         }
 
+
+        private void PopulateRoles()
+        {
+            List<TextDropdownOptions> roles = GetRoleOptions();
+            ViewData["roles"] = roles;
+        }
+
         private List<TextDropdownOptions> GetGenderOptions()
         {
             return new List<TextDropdownOptions>
@@ -540,6 +548,29 @@ namespace ResearchApp.Controllers
                 new TextDropdownOptions{
                     Id = "Female",
                     Option = "Female"
+                }
+            };
+        }
+
+        private List<TextDropdownOptions> GetRoleOptions()
+        {
+            return new List<TextDropdownOptions>
+            {
+                new TextDropdownOptions{
+                    Id = "",
+                    Option = ""
+                },
+                new TextDropdownOptions{
+                    Id = "Author",
+                    Option = "Author"
+                },
+                new TextDropdownOptions{
+                    Id = "Editor",
+                    Option = "Editor"
+                },
+                new TextDropdownOptions{
+                    Id = "Translator",
+                    Option = "Translator"
                 }
             };
         }

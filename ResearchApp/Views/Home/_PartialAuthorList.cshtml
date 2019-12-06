@@ -49,7 +49,6 @@
                           model.Id(p => p.AuthorID);
                           model.Field(p => p.AuthorID).Editable(false);
                           model.Field(field => field.BirthCountry).DefaultValue(new ResearchApp.ViewModel.DropdownOptions());
-                          //model.Field(field => field.Gender).DefaultValue(new ResearchApp.ViewModel.TextDropdownOptions());
                       })
                       .Create("Author_Create", "Grid")
                       .Read("List", "Grid", new { type = GridTypes.Author })

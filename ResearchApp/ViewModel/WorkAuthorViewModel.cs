@@ -12,6 +12,7 @@ namespace ResearchApp.ViewModel
         public int? WorkAuthorID { get; set; }
         public int? WorkID { get; set; }
         public int? AuthorID { get; set; }
+        [UIHint("ClientRole")]
         public string Role { get; set; }
 
         [UIHint("ClientAuthor")]
