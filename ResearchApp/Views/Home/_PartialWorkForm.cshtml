@@ -65,7 +65,7 @@
                                                             })
                                                     )
                                                 }
-                                                                    else
+                                                else
                                                 {
                                                     @(Html.TextBox(item.ColumnName, value, new { @class = "k-textbox", style = "width:60%" }))
                                                 }
@@ -177,7 +177,9 @@
         if (selectedItemIndex === 0) {
             $('#prev-form-btn').addClass('k-state-disabled');
         }
-
+        if (selectedItemIndex === grid.dataSource.data().length - 1) {
+            $('#next-form-btn').addClass('k-state-disabled');
+        }
         if (grid.dataSource.page() == 1) {
             $('#first-form-btn').addClass('k-state-disabled');
         }
@@ -189,5 +191,13 @@
         $('.k-grid-content').height(height - 90);
 
         toggleFormEnable();
+
+        $('#form-paging-info').text(getPagingInfo());
     });
+    var pageSize = 1000;
+    function getPagingInfo() {
+        var page = grid.dataSource.page();
+        var totalItems = grid.dataSource.total();
+        return `Item ${page > 1 ? ((page - 1) * pageSize) + (selectedItemIndex + 1) : selectedItemIndex + 1} of ${totalItems}`
+    }
 </script>

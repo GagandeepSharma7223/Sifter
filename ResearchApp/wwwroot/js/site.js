@@ -217,8 +217,12 @@ function onDataBound(e) {
 }
 
 function formSwitchEvents() {
+    if (grid.dataSource.page() === grid.dataSource.totalPages()) {
+        selectedItemIndex = grid.dataSource.data().length - 1;
+    }
     formViewSelectedItem = grid.dataSource.data()[selectedItemIndex];
     getFormView();
+    selectGridRow();
 }
 
 function toggleEdit() {
@@ -271,10 +275,11 @@ function customActions() {
 }
 
 function getFormView() {
+    showLoading();
     var treeTable = getSelectTable();
     var data = {
         type: treeTable,
-        selectedItem: JSON.stringify(formViewSelectedItem)
+        selectedItem: JSON.stringify(formViewSelectedItem, (k, v) => v === undefined ? null : v)
     };
     $.ajax({
         url: '/Grid/GetFormView',
@@ -284,6 +289,7 @@ function getFormView() {
         data: data
     })
         .done(function (result) {
+            hideLoading();
             $('#form-container').html(result);
             $('#form-container').css('visibility', 'visible');
             $('#kendo-grid-container').css('visibility', 'hidden');
@@ -292,6 +298,7 @@ function getFormView() {
             browserWindow.resize(resizeSplitter);
             hideLoading();
         }).fail(function (xhr) {
+            hideLoading();
         });
 
 }
@@ -985,7 +992,7 @@ function uniqueForField(data, field, fieldType) {
 
     if (fieldType === 'object') {
         result.sort(function (a, b) {
-            var optionA = a[field]['Option'].toLowerCase(), optionB = b[field]['Option'].toLowerCase()
+            var optionA = a[field]['Option'].toLowerCase(), optionB = b[field]['Option'].toLowerCase();
             if (optionA < optionB) //sort string ascending
                 return -1;
             if (optionA > optionB)
@@ -999,7 +1006,7 @@ function uniqueForField(data, field, fieldType) {
 function objectifyForm(formArray) {//serialize data function
     var returnArray = {};
     for (var i = 0; i < formArray.length; i++) {
-        returnArray[formArray[i]['name']] = formArray[i]['value'];
+        returnArray[formArray[i]['name']] = $.isNumeric(formArray[i]['value']) ? parseInt(formArray[i]['value']) : formArray[i]['value'];
     }
     return returnArray;
 }
@@ -1007,11 +1014,45 @@ function objectifyForm(formArray) {//serialize data function
 // Form View Operations
 $(document).on("click", '#save-form-btn', function (e) {
     e.preventDefault();
+    showLoading();
     var data = objectifyForm($('#edit-form').serializeArray());
+    var formDDs = $("#edit-form input[data-role='dropdownlist']");
+    formDDs.each(function (index, item) {
+        var value = $(item).data("kendoDropDownList").value();
+        var text = $(item).data("kendoDropDownList").text();
+        var ddPropName = item.name.slice(0, -2);
+        if (value > 0) {
+            data[ddPropName] = {
+                Id: parseInt(value),
+                Option: text
+            };
+        }
+        else {
+            data[ddPropName] = {};
+        }
+    });
     var treeTable = getSelectTable();
+    var idField = treeTable + "ID";
     $.post('/Grid/SaveForm', { type: treeTable, selectedItem: JSON.stringify(data) })
-        .done(function (success) {
-            toggleFormView();
+        .done(function (id) {
+            if (!data[idField]) {
+                data[idField] = id;
+                var item = $.extend({}, data, { Author: {}, Language: {}, City: {}, Publisher: {}, Editor: {}, Translator: {} });
+                grid.dataSource.add(item);
+                formViewSelectedItem = grid.dataSource.data().find(x => x[idField] === data[idField]);
+                selectedItemIndex = grid.dataSource.data().indexOf(formViewSelectedItem);
+                selectGridRow();
+                getFormView();
+            }
+            else {
+                $.each(formViewSelectedItem, function (name, value) {
+                    if (data.hasOwnProperty(name) && data[name] !== formViewSelectedItem[name]) {
+                        formViewSelectedItem.set(name, data[name]);
+                    }
+                });
+                $('.k-dirty').remove();
+                hideLoading();
+            }
         })
         .fail(function () {
         });
@@ -1036,7 +1077,6 @@ $(document).on("click", '#last-form-btn', function (e) {
     showLoading();
     var totalPage = grid.dataSource.totalPages();
     grid.dataSource.page(totalPage);
-    selectedItemIndex = 0;
     $('#last-form-btn').addClass('k-state-disabled');
     if ($('#first-form-btn').hasClass('k-state-disabled')) {
         $('#first-form-btn').removeClass('k-state-disabled');
@@ -1148,6 +1188,16 @@ function toggleFormEnable() {
             $(formName + ' input:checkbox').removeAttr('checked');
         }
     }
+}
+
+function displayLoading(target) {
+    var element = $(target);
+    kendo.ui.progress(element, true);
+}
+
+function endLoading(target) {
+    var element = $(target);
+    kendo.ui.progress(element, false);
 }
 
 // End Form View Operations

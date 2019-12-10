@@ -251,120 +251,131 @@ namespace ResearchApp.Controllers
         [AcceptVerbs("Post")]
         public async Task<IActionResult> SaveForm(GridTypes type, string selectedItem)
         {
+            int id = 0;
             switch (type)
             {
                 case GridTypes.Category:
                     var category = JsonConvert.DeserializeObject<CategoryViewModel>(selectedItem);
                     if (category.CategoryID.HasValue)
                     {
+                        id = category.CategoryID.Value;
                         await _categoryRepo.UpdateCategory(category, true);
                     }
                     else
                     {
-                        await _categoryRepo.CreateCategory(category, true);
+                        id = await _categoryRepo.CreateCategory(category, true);
                     }
                     break;
                 case GridTypes.Language:
                     var language = JsonConvert.DeserializeObject<LanguageViewModel>(selectedItem);
                     if (language.LanguageID.HasValue)
                     {
+                        id = language.LanguageID.Value;
                         await _languageRepo.UpdateLanguage(language, true);
                     }
                     else
                     {
-                        await _languageRepo.CreateLanguage(language, true);
+                        id = await _languageRepo.CreateLanguage(language, true);
                     }
                     break;
                 case GridTypes.City:
                     var city = JsonConvert.DeserializeObject<CityViewModel>(selectedItem);
                     if (city.CityID.HasValue)
                     {
+                        id = city.CityID.Value;
                         await _cityRepo.UpdateCity(city, true);
                     }
                     else
                     {
-                        await _cityRepo.CreateCity(city, true);
+                        id = await _cityRepo.CreateCity(city, true);
                     }
                     break;
                 case GridTypes.Region:
                     var region = JsonConvert.DeserializeObject<RegionViewModel>(selectedItem);
                     if (region.RegionID.HasValue)
                     {
+                        id = region.RegionID.Value;
                         await _regionRepo.UpdateRegion(region, true);
                     }
                     else
                     {
-                        await _regionRepo.CreateRegion(region, true);
+                        id = await _regionRepo.CreateRegion(region, true);
                     }
                     break;
                 case GridTypes.Country:
                     var country = JsonConvert.DeserializeObject<CountryViewModel>(selectedItem);
                     if (country.CountryID.HasValue)
                     {
-                        await _countryRepo.UpdateCountry(country, true); 
+                        id = country.CountryID.Value;
+                        await _countryRepo.UpdateCountry(country, true);
                     }
                     else
                     {
-                        await _countryRepo.CreateCountry(country, true);
+                        id = await _countryRepo.CreateCountry(country, true);
                     }
                     break;
                 case GridTypes.Publisher:
                     var publisher = JsonConvert.DeserializeObject<PublisherViewModel>(selectedItem);
                     if (publisher.PublisherID.HasValue)
                     {
-                        await _publisherRepo.UpdatePublisher(publisher, true); 
+                        id = publisher.PublisherID.Value;
+                        await _publisherRepo.UpdatePublisher(publisher, true);
                     }
                     else
                     {
-                        await _publisherRepo.CreatePublisher(publisher, true);
+                        id = await _publisherRepo.CreatePublisher(publisher, true);
                     }
                     break;
                 case GridTypes.Work:
                     var work = JsonConvert.DeserializeObject<WorkViewModel>(selectedItem);
                     if (work.WorkID.HasValue)
                     {
-                        await _workRepo.UpdateWork(work, true); 
+                        id = work.WorkID.Value;
+                        await _workRepo.UpdateWork(work, true);
                     }
                     else
                     {
-                        await _workRepo.CreateWork(work, true);
+                        id = await _workRepo.CreateWork(work, true);
                     }
                     break;
                 case GridTypes.Author:
                     var author = JsonConvert.DeserializeObject<AuthorViewModel>(selectedItem);
                     if (author.AuthorID.HasValue)
                     {
-                        await _authorRepo.UpdateAuthor(author, true); 
+                        id = author.AuthorID.Value;
+                        await _authorRepo.UpdateAuthor(author, true);
                     }
                     else
                     {
-                        await _authorRepo.CreateAuthor(author, true);
+                        id = await _authorRepo.CreateAuthor(author, true);
                     }
                     break;
                 case GridTypes.WorkAuthor:
                     var workAuthor = JsonConvert.DeserializeObject<WorkAuthorViewModel>(selectedItem);
                     if (workAuthor.WorkAuthorID.HasValue)
                     {
+                        id = workAuthor.WorkAuthorID.Value;
                         await _workAuthorRepo.UpdateWorkAuthor(workAuthor, true);
                     }
                     else
                     {
-                        await _workAuthorRepo.CreateWorkAuthor(workAuthor, true);
+                        id = await _workAuthorRepo.CreateWorkAuthor(workAuthor, true);
                     }
                     break;
                 case GridTypes.Unit:
                     var unit = JsonConvert.DeserializeObject<UnitViewModel>(selectedItem);
                     if (unit.UnitID.HasValue)
                     {
+                        id = unit.UnitID.Value;
                         await _unitRepo.UpdateUnit(unit, true);
                     }
                     else
                     {
-                        await _unitRepo.CreateUnit(unit, true);
+                        id = await _unitRepo.CreateUnit(unit, true);
                     }
                     break;
             }
-            return Ok();
+            return Ok(id);
         }
 
         public async Task<IActionResult> List([DataSourceRequest]DataSourceRequest request, GridTypes type)
