@@ -5,7 +5,8 @@
                       .Name("grid")
                       .Columns(columns =>
                       {
-                          columns.Command(command => command.Destroy()).Width(100);
+                          columns.Template("<div class='text-center'><input type='checkbox' id='#=WorkID#' class='grid-item'/></div>").ClientHeaderTemplate("<div class='k-grid-delete text-center'><span class='k-icon k-i-close'></span></div>");
+                          //columns.Command(command => command.Destroy()).Width(100);
                           columns.Bound(b => b.WorkID).Width(100);
                           columns.Bound(b => b.Title).Editable("checkIfGridEditable").Width(150);
                           columns.Bound(b => b.PublicationYear).Width(70).Format("#").ClientTemplate("#=(PublicationYear == null) ? '' : PublicationYear#").Editable("checkIfGridEditable");

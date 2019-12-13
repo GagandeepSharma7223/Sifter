@@ -325,3 +325,7 @@ input[type=number] {
     width: 100%;
     z-index: 2;
 }
+
+.dirty-marker {
+    padding: 1.3px 1.3px;
+}

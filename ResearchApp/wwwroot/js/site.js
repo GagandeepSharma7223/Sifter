@@ -1011,6 +1011,76 @@ function objectifyForm(formArray) {//serialize data function
     return returnArray;
 }
 
+$(document).on("click", '.k-grid-delete', function (e) {
+    var ids = [];
+    $('.grid-item:checked').each(function () {
+        ids.push($(this).attr("id"));
+    });
+    if (ids.length) {
+        // Show dialog before delete
+        var dialog = $('#dialog-confirm');
+        dialog.kendoDialog({
+            width: "300px",
+            title: "Confirmation",
+            closable: false,
+            modal: false,
+            content: "<p>Delete checked rows?<p>",
+            actions: [
+                {
+                    text: 'Yes',
+                    primary: true,
+                    action: function (e) {
+                        openDeleteDialog(ids);
+                        return true;
+                    }
+                },
+                { text: 'No' },
+                { text: 'Cancel' }
+            ]
+        });
+        dialog.data("kendoDialog").open();
+    }
+    e.preventDefault();
+});
+
+function openDeleteDialog(ids) {
+    var dialog = $('#dialog-confirm-delete');
+    dialog.kendoDialog({
+        width: "400px",
+        title: "Confirmation",
+        closable: false,
+        modal: false,
+        content: `<p>This will permanently delete ${ids.length} rows, and cannot be undone. Are you really sure?<p>`,
+        actions: [
+            {
+                text: 'Yes',
+                primary: true,
+                action: function (e) {
+                    removeItems(ids);
+                    return true;
+                }
+            },
+            { text: 'No' },
+            { text: 'Cancel' }
+        ]
+    });
+    dialog.data("kendoDialog").open();
+}
+
+function removeItems(ids) {
+    var uidArray = [];
+    $.each(ids, function (index, value) {
+        var uid = $('#' + value).closest('tr').attr("data-uid");
+        uidArray.push(uid);
+    });
+    ids = [];
+    $.each(uidArray, function (index, value) {
+        var dataItem = grid.dataItem($('tr[data-uid=' + value + ']'));
+        grid.dataSource.remove(dataItem);
+    });
+    grid.dataSource.sync();
+}
+
 // Form View Operations
 $(document).on("click", '#save-form-btn', function (e) {
     e.preventDefault();
@@ -1037,8 +1107,8 @@ $(document).on("click", '#save-form-btn', function (e) {
         .done(function (id) {
             if (!data[idField]) {
                 data[idField] = id;
-                var item = $.extend({}, data, { Author: {}, Language: {}, City: {}, Publisher: {}, Editor: {}, Translator: {} });
-                grid.dataSource.add(item);
+                //var item = $.extend({}, data, { Author: {}, Language: {}, City: {}, Publisher: {}, Editor: {}, Translator: {} });
+                grid.dataSource.add(data);
                 formViewSelectedItem = grid.dataSource.data().find(x => x[idField] === data[idField]);
                 selectedItemIndex = grid.dataSource.data().indexOf(formViewSelectedItem);
                 selectGridRow();

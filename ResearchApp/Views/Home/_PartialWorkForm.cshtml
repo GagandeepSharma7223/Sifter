@@ -12,7 +12,8 @@
                             <div class="col-md-10">
                                 <div class="row form-group">
                                     <label class="col-md-2 col-form-label">@(item.Type == "dropdown" ? item.DisplayName : item.ColumnName)</label>
-                                    <div class="col-md-9">
+                                    <div class="col-md-9 dirty-marker k-dirty-cell">
+                                        <span class=""></span>
                                         @switch (item.Type)
                                         {
                                             case "string":
@@ -139,8 +140,8 @@
                             <div class="col-md-10">
                                 <div class="row form-group">
                                     <label class="col-md-2 col-form-label">@item.ColumnName</label>
-                                    <div class="col-md-9">
-                                        @Model.SelectedItem[item.ColumnName]
+                                    <div>
+                                        <label class="col-md-2 col-form-label">@Model.SelectedItem[item.ColumnName]</label>
                                     </div>
                                 </div>
                             </div>
@@ -193,6 +194,31 @@
         toggleFormEnable();
 
         $('#form-paging-info').text(getPagingInfo());
+        var formName = '#edit-form';
+        $(formName + " :input").on("change paste", function (e) {
+            $(this).closest('.k-dirty-cell').children(":first").addClass('k-dirty');
+        });
+        $(formName + " :input:checkbox").on("change", function (e) {
+            $(this).closest('.k-dirty-cell').children(":first").addClass('k-dirty');
+        });
+        $(formName + " input[data-role='dropdownlist']").on("change", function (e) {
+            $(this).closest('.k-dirty-cell').children(":first").addClass('k-dirty');
+        });
+        var lastTabIndex = false;
+        $(document).on('keyup', function (event) {
+            if (event.which == 9) {
+                var selectedItem = $(event.target).closest('.row').parent().closest('.row');
+                if ($(selectedItem).is(':last-child')) {
+                    lastTabIndex = true;
+                }
+                if (lastTabIndex && !$(selectedItem).is(':last-child')) {
+                    $("form :input:visible:enabled:first").focus();
+                }
+                if (!$(selectedItem).is(':last-child')) {
+                    lastTabIndex = false;
+                }
+            }
+        });
     });
     var pageSize = 1000;
     function getPagingInfo() {
