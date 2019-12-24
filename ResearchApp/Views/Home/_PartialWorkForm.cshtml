@@ -76,7 +76,8 @@
                                                     .Spinners(false)
                                                     .Name(item.ColumnName)
                                                     .Format("#")
-                                                    .Value(Model.SelectedItem != null ? Model.SelectedItem[item.ColumnName] : null))
+                                                    .Value(Model.SelectedItem != null && Model.SelectedItem[item.ColumnName] != null && Model.SelectedItem[item.ColumnName].ToString() != "" ? 
+                                                        Model.SelectedItem[item.ColumnName] : null))
                                                 break;
                                             case "decimal":
                                                 @(Html.Kendo().NumericTextBox()
@@ -84,7 +85,8 @@
                                                     .Format("#.########")
                                                     .Decimals(8)
                                                     .Name(item.ColumnName)
-                                                    .Value(Model.SelectedItem != null ? Model.SelectedItem[item.ColumnName] : null))
+                                                    .Value(Model.SelectedItem != null && Model.SelectedItem[item.ColumnName] != null && Model.SelectedItem[item.ColumnName].ToString() != "" ? 
+                                                        Model.SelectedItem[item.ColumnName] : null))
                                                 break;
                                             case "boolean":
                                                 bool chkValue = Model.SelectedItem != null ? Model.SelectedItem[item.ColumnName] ?? false : false;
@@ -133,7 +135,7 @@
                             </div>
                         </div>
                     }
-                    else if (Model.SelectedItem != null)
+                    else if (Model.SelectedItem != null && Model.SelectedItem[item.ColumnName] != null)
                     {
                         @(Html.Hidden(item.ColumnName, (int)(Model.SelectedItem[item.ColumnName])))
                         <div class="row" id="form-primary-key">
@@ -169,10 +171,12 @@
         if (isGridEditable) {
             $('.stopEditable').removeClass("d-none");
             $('.startEditable').addClass("d-none");
+            $('.action-btns').removeClass('k-state-disabled');
         }
         else {
             $('.stopEditable').addClass("d-none");
             $('.startEditable').removeClass("d-none");
+            $('.action-btns').addClass('k-state-disabled');
         }
 
         if (selectedItemIndex === 0) {
@@ -195,8 +199,10 @@
 
         $('#form-paging-info').text(getPagingInfo());
         var formName = '#edit-form';
-        $(formName + " :input").on("change paste", function (e) {
-            $(this).closest('.k-dirty-cell').children(":first").addClass('k-dirty');
+        $(formName + " :input").on("keyup paste", function (e) {
+            if ($(this).val() && event.which != 9) {
+                $(this).closest('.k-dirty-cell').children(":first").addClass('k-dirty');
+            }
         });
         $(formName + " :input:checkbox").on("change", function (e) {
             $(this).closest('.k-dirty-cell').children(":first").addClass('k-dirty');
@@ -212,7 +218,19 @@
                     lastTabIndex = true;
                 }
                 if (lastTabIndex && !$(selectedItem).is(':last-child')) {
-                    $("form :input:visible:enabled:first").focus();
+                    $("form :input:enabled").each(function (index, ele) {
+                        if ($(ele).attr('type') !== 'hidden') {
+                            if ($(ele).attr('data-role') == 'dropdownlist') {
+                                var item = $(ele).data("kendoDropDownList");
+                                item.focus();
+                                return false;
+                            }
+                            else {
+                                $(ele).focus();
+                                return false;
+                            }
+                        }
+                    });
                 }
                 if (!$(selectedItem).is(':last-child')) {
                     lastTabIndex = false;

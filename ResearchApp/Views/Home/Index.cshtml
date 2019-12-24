@@ -73,9 +73,9 @@
         <a role="button" class="k-button k-button-icontext k-grid-StartEditing removeFilter" href="">Remove Filters</a>
         <a role="button" class="k-button k-button-icontext k-grid-StartEditing startEditable" href="">Start Editing</a>
         <a role="button" class="k-button k-button-icontext k-grid-StopEditing stopEditable" href="">Stop Editing</a>
-        <a role="button" id="custom-add-btn" class="k-button k-button-icontext" href=""><span class="k-icon k-i-plus"></span>Add new record</a>
-        <a role="button" id="custom-save-btn" class="k-button k-button-icontext" href=""><span class="k-icon k-i-check"></span>Save changes</a>
-        <a role="button" id="custom-cancel-btn" class="k-button k-button-icontext" href=""><span class="k-icon k-i-cancel"></span>Cancel changes</a>
+        <a role="button" id="custom-add-btn" class="k-button k-button-icontext action-btns" href=""><span class="k-icon k-i-plus"></span>Add new record</a>
+        <a role="button" id="custom-save-btn" class="k-button k-button-icontext action-btns" href=""><span class="k-icon k-i-check"></span>Save changes</a>
+        <a role="button" id="custom-cancel-btn" class="k-button k-button-icontext action-btns" href=""><span class="k-icon k-i-cancel"></span>Cancel changes</a>
     </div>
 </script>
 
@@ -98,11 +98,16 @@
             <span class="label">Form View</span> <input type="checkbox" id="form-view-switch" aria-label="Forms Switch" />
             <a role="button" class="k-button k-button-icontext k-grid-StartEditing startEditable" href="">Start Editing</a>
             <a role="button" class="k-button k-button-icontext k-grid-StopEditing stopEditable" href="">Stop Editing</a>
-            <a role="button" id="add-form-btn" class="k-button k-button-icontext" href=""><span class="k-icon k-i-plus"></span>Add new record</a>
-            <a role="button" id="save-form-btn" class="k-button k-button-icontext" href=""><span class="k-icon k-i-check"></span>Save changes</a>
-            <a role="button" id="cancel-form-btn" class="k-button k-button-icontext" href=""><span class="k-icon k-i-cancel"></span>Cancel changes</a>
+            <a role="button" id="add-form-btn" class="k-button k-button-icontext action-btns" href=""><span class="k-icon k-i-plus"></span>Add new record</a>
+            <a role="button" id="save-form-btn" class="k-button k-button-icontext action-btns" href=""><span class="k-icon k-i-check"></span>Save changes</a>
+            <a role="button" id="cancel-form-btn" class="k-button k-button-icontext action-btns" href=""><span class="k-icon k-i-cancel"></span>Cancel changes</a>
         </div>
     </div>
+</script>
+
+<script type="text/x-kendo-template" id="optionLabelTemplate">
+    <div class='cursor-pointer dd-clear'>Clear Entry</div>
+    <div class='cursor-pointer dd-new-item'> Add New... </div>
 </script>
 
 <script type="text/javascript">

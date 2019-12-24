@@ -2,7 +2,7 @@
 
 
 var isGridEditable = false, isWordWrap = false, isFormWrap = false, isLoggedIn = false,
-    editfield = "", formViewSelectedItem = null, currentFilterColumn, grid, selectedItemIndex, gridFooterEle;
+    editfield = "", formViewSelectedItem = null, currentFilterColumn, grid, selectedItemIndex, gridFooterEle, selectedDropdownEle, filterEnabled = false;
 var browserWindow = $(window);
 //register custom validation rules
 (function ($, kendo) {
@@ -71,10 +71,10 @@ $(window).resize(function () {
 });
 
 $(function () {
-    jQuery.fn.scrollTo = function (elem) {
-        $(this).scrollTop($(this).scrollTop() - $(this).offset().top + elem.offset().top);
-        return this;
-    };
+    //jQuery.fn.scrollTo = function (elem) {
+    //    $(this).scrollTop($(this).scrollTop() - $(this).offset().top + elem.offset().top);
+    //    return this;
+    //};
     populateDDSession('Author', 'FullName');
     populateDDSession('Category', 'Name');
     populateDDSession('City', 'Name');
@@ -137,14 +137,15 @@ function makeGridEditable() {
 
 function toggleEditable() {
     isGridEditable = !isGridEditable;
-    //var grid = $("#grid").data("kendoGrid");
     if (isGridEditable) {
         $('.chkbx').removeAttr('disabled');
         grid.showColumn(grid.columns[0]);
+        $('.action-btns').removeClass('k-state-disabled');
     }
     else {
         $('.chkbx').attr('disabled', 'disabled');
         grid.hideColumn(grid.columns[0]);
+        $('.action-btns').addClass('k-state-disabled');
     }
     toggleFormEnable();
 }
@@ -174,17 +175,22 @@ function loadData(e) {
 
 
 function loadEditData(obj) {
-    showLoading();
     var splitter = $("#myModal").data("kendoSplitter");
+    if (!splitter) {
+        $("#myModal").kendoSplitter();
+        splitter = $("#myModal").data("kendoSplitter");
+    }
     var treeview = $("#treeview").data("kendoTreeView");
     var bar = treeview.findByText(obj);
     treeview.select(bar);
+    showLoading();
     splitter.ajaxRequest(".k-pane:last", "/Grid/GetView", { type: obj });
 }
 
 function gridDataBoundConfig() {
     customActions();
     toggleEdit();
+    toggleFilterbutton();
     if (isWordWrap) {
         $('.k-grid td').removeClass('text-nowrap').addClass('text-wrap');
     }
@@ -231,12 +237,14 @@ function toggleEdit() {
         $('.startEditable').addClass("d-none");
         $('.chkbx').removeAttr('disabled');
         grid.showColumn(grid.columns[0]);
+        $('.action-btns').removeClass('k-state-disabled');
     }
     else {
         $('.stopEditable').addClass("d-none");
         $('.startEditable').removeClass("d-none");
         $('.chkbx').attr('disabled', 'disabled');
         grid.hideColumn(grid.columns[0]);
+        $('.action-btns').addClass('k-state-disabled');
     }
 }
 
@@ -383,6 +391,32 @@ function onSelect(e, field) {
     }
 }
 
+function onDropdownOpen(e, field) {
+    selectedDropdownEle = e.sender.element;
+    editfield = field;
+}
+
+function onDropdownDataBound(e) {
+    var ddElement = `#${e.sender.element.attr('id')}-list`;
+    if (!$(ddElement).hasClass('ui-resizable')) {
+        $(ddElement).resizable({
+            alsoResize: ddElement + ' .k-textbox'   //+ ddElement + ' .k-list-filter'
+        });
+    }
+}
+
+$(document).on("click", '.dd-new-item', function (e) {
+    console.log(e);
+    loadEditData(editfield);
+});
+
+$(document).on("click", '.dd-clear', function (e) {
+    console.log(e);
+    var dropdown = selectedDropdownEle.data("kendoDropDownList");
+    dropdown.value(0);
+});
+
+
 function valueMapperLanguage(options) {
     $.ajax({
         url: "/Grid/Dropdown_ValueMapper",
@@ -463,6 +497,15 @@ function valueMapperPublisher(options) {
     });
 }
 
+function toggleFilterbutton() {
+    if (grid.dataSource.filter() && grid.dataSource.filter().filters.length > 0) {
+        $('.removeFilter').removeClass('k-state-disabled');
+    }
+    else {
+        $('.removeFilter').addClass('k-state-disabled');
+    }
+}
+
 function convertValues(value, type) {
     var data = {};
     value = $.isArray(value) ? value : [value];
@@ -498,6 +541,7 @@ function dropdownFilter(element) {
             });
             var dataSource = $("#grid").data().kendoGrid.dataSource;
             dataSource.filter(filter);
+            toggleFilterbutton();
         }
     });
 }
@@ -510,6 +554,7 @@ function clearFilter() {
     var filter = { logic: "or", filters: [] };
     var dataSource = $("#grid").data().kendoGrid.dataSource;
     dataSource.filter(filter);
+    toggleFilterbutton();
 }
 
 function initColumnMenuFilter(e) {
@@ -846,6 +891,7 @@ function initColumnMenuFilter(e) {
                         }
                         var popup = $(helpTextElement.children(":last").children(":first")).data("kendoPopup");
                         popup.close();
+                        toggleFilterbutton();
                     }
                 });
 
@@ -860,6 +906,7 @@ function initColumnMenuFilter(e) {
                             listView.dataSource.filter({ operator: "contains", value: this.value });
                         }
                     }
+                    toggleFilterbutton();
                 });
 
                 var resizableAdvanceSearchEle = $('#advanced-menu-' + field).children(":first").children(":last");
@@ -1004,6 +1051,15 @@ function uniqueForField(data, field, fieldType) {
 }
 
 function objectifyForm(formArray) {//serialize data function
+    formArray = formArray.concat(
+        $('form input[type=checkbox]').map(
+            function () {
+                if (this.checked)
+                    return { "name": this.name, "value": true };
+                else {
+                    return { "name": this.name, "value": false };
+                }
+            }).get());
     var returnArray = {};
     for (var i = 0; i < formArray.length; i++) {
         returnArray[formArray[i]['name']] = $.isNumeric(formArray[i]['value']) ? parseInt(formArray[i]['value']) : formArray[i]['value'];
@@ -1081,6 +1137,11 @@ function removeItems(ids) {
     grid.dataSource.sync();
 }
 
+function optionLabelTemplate() {
+    return `
+        <div class='cursor-pointer dd-new-item' > Add New... </div > <div class='cursor-pointer dd-clear'>Clear Entry</div>`;
+}
+
 // Form View Operations
 $(document).on("click", '#save-form-btn', function (e) {
     e.preventDefault();
@@ -1107,7 +1168,6 @@ $(document).on("click", '#save-form-btn', function (e) {
         .done(function (id) {
             if (!data[idField]) {
                 data[idField] = id;
-                //var item = $.extend({}, data, { Author: {}, Language: {}, City: {}, Publisher: {}, Editor: {}, Translator: {} });
                 grid.dataSource.add(data);
                 formViewSelectedItem = grid.dataSource.data().find(x => x[idField] === data[idField]);
                 selectedItemIndex = grid.dataSource.data().indexOf(formViewSelectedItem);
@@ -1120,7 +1180,7 @@ $(document).on("click", '#save-form-btn', function (e) {
                         formViewSelectedItem.set(name, data[name]);
                     }
                 });
-                $('.k-dirty').remove();
+                $('.k-dirty').removeClass('k-dirty');
                 hideLoading();
             }
         })
@@ -1130,7 +1190,13 @@ $(document).on("click", '#save-form-btn', function (e) {
 
 $(document).on("click", '#cancel-form-btn', function (e) {
     e.preventDefault();
-    toggleFormView();
+    $('.k-dirty').removeClass('k-dirty');
+    if ($('input[type=hidden]').val()) {
+        $("form").trigger("reset");
+    }
+    else {
+        addNewRecord();
+    }
 });
 
 $(document).on("click", '#first-form-btn', function (e) {
@@ -1183,6 +1249,11 @@ $(document).on("click", '#next-form-btn', function (e) {
 
 $(document).on("click", '#add-form-btn', function (e) {
     e.preventDefault();
+    addNewRecord();
+});
+
+function addNewRecord() {
+    $('.k-dirty').removeClass('k-dirty');
     var formName = '#edit-form';
     $(formName + " input[data-role='dropdownlist']").each(function () {
         var item = $(this).data("kendoDropDownList");
@@ -1191,20 +1262,18 @@ $(document).on("click", '#add-form-btn', function (e) {
             item.text("");
         }
     });
-
     $(formName + " input[data-role='numerictextbox']").each(function () {
         var item = $(this).data("kendoNumericTextBox");
         if (item) {
             item.value(null);
         }
     });
-
     $(formName + " :input").each(function () {
         this.value = '';
     });
     $(formName + ' input:checkbox').removeAttr('checked');
     $("#form-primary-key").hide();
-});
+}
 
 function toggleFormView() {
     isFormWrap = !isFormWrap;
@@ -1216,6 +1285,7 @@ function toggleFormView() {
         browserWindow.resize(resizeSplitter);
         var formSwitch = $("#form-switch").data('kendoSwitch');
         formSwitch.check(isFormWrap);
+        selectGridRow();
     }
 }
 
@@ -1227,9 +1297,7 @@ function loadFormData() {
 
 function selectGridRow() {
     grid.select(`tr:eq(${selectedItemIndex})`);
-    grid.element.find(".k-grid-content").animate({
-        scrollTop: grid.select().offset().top
-    }, 400);
+    grid.content.animate({ scrollTop: grid.select().position().top }, 400);
 }
 
 function toggleFormEnable() {
@@ -1251,14 +1319,16 @@ function toggleFormEnable() {
 
         if (!isGridEditable) {
             $(formName + " :input").attr('disabled', 'disabled');
-            $(formName + ' input:checkbox').attr('disabled', 'disabled');;
+            $(formName + ' input:checkbox').attr('disabled', 'disabled');
         }
         else {
             $(formName + " :input").removeAttr('disabled');
-            $(formName + ' input:checkbox').removeAttr('checked');
+            $(formName + ' input:checkbox').removeAttr('disabled');
         }
     }
 }
+
+//$('.k-popup').resizable();
 
 function displayLoading(target) {
     var element = $(target);

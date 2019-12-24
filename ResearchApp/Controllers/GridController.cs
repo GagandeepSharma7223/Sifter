@@ -485,7 +485,12 @@ namespace ResearchApp.Controllers
             if (!_cache.TryGetValue($"{treeTable}Options", out List<DropdownOptions> cachedDetails))
             {
                 cachedDetails = _workRepo.GetOptions(treeTable, optionCol);
+                cachedDetails.Insert(0, new DropdownOptions { Id = 0, Option = "" });
                 _cache.Set($"{treeTable}Options", cachedDetails, CacheEntryOptions);
+            }
+            if(!cachedDetails.Any(x=> x.Id == 0))
+            {
+                cachedDetails.Insert(0, new DropdownOptions { Id = 0, Option = "" });
             }
             return Json(cachedDetails.ToDataSourceResult(request));
         }

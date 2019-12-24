@@ -5,7 +5,8 @@
                   .Name("grid")
                   .Columns(columns =>
                   {
-                      columns.Command(command => command.Destroy()).Width(100);
+                      columns.Template("<div class='text-center'><input type='checkbox' id='#=CountryID#' class='grid-item'/></div>")
+                      .ClientHeaderTemplate("<div class='k-grid-delete text-center'><a role='button' class='k-button k-button-icontext' href=''>Delete</a></div>").Width(100);
                       columns.Bound(b => b.CountryID).Width(100);
                       columns.Bound(b => b.Name).Editable("checkIfGridEditable");
                       columns.Bound(b => b.Continent).Editable("checkIfGridEditable");

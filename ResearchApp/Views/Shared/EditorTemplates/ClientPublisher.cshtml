@@ -23,7 +23,9 @@
                                         schema.Data("Data")
                                               .Total("Total");
                                     });
-                          }).OptionLabel("Add New").Events(e => e.Select("function(e){ onSelect(e, 'Publisher') }"))
+                          })
+                          .Events(e => e.Open("function(e){ onDropdownOpen(e, 'Publisher') }").DataBound("onDropdownDataBound"))
+                          .HeaderTemplateId("optionLabelTemplate")
                           .Virtual(v => v.ItemHeight(26).ValueMapper("valueMapperPublisher"))
 
 )
