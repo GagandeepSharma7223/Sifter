@@ -52,7 +52,8 @@
                               model.Field(field => field.Language).DefaultValue(new ResearchApp.ViewModel.DropdownOptions());
                           })
                           .Create("Work_Create", "Grid")
-                          .Read("List", "Grid", new { type = GridTypes.Work })
+                          //.Read("List", "Grid", new { type = GridTypes.Work })
+                          .Read(read=> read.Action("List", "Grid").Data("getGridParams"))
                           .Update("Work_Update", "Grid")
                           .Destroy("Work_Destroy", "Grid")
                       )

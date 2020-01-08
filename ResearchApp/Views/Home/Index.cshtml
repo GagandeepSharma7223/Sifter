@@ -58,58 +58,6 @@
 <div id="dialog-confirm"></div>
 <div id="dialog-confirm-delete"></div>
 
-<script type="text/x-kendo-template" id="message">
-    <span class="k-widget k-tooltip k-tooltip-validation k-invalid-msg field-validation-error" data-for="#=field#"
-          data-valmsg-for="#=field#" id="#=field#_validationMessage" role="alert">
-        <span class="k-icon k-i-warning">
-        </span> #=message#
-    </span>
-</script>
-
-<script type="text/x-kendo-template" id="custom-toolbar">
-    <div class="toolbar-btns text-right" style="flex:1;">
-        <span class="label">Form View</span> <input type="checkbox" id="form-switch" aria-label="Forms Switch" />
-        <span class="label">Word Wrap</span> <input type="checkbox" id="wrap-switch" aria-label="Notifications Switch" />
-        <a role="button" class="k-button k-button-icontext k-grid-StartEditing removeFilter" href="">Remove Filters</a>
-        <a role="button" class="k-button k-button-icontext k-grid-StartEditing startEditable" href="">Start Editing</a>
-        <a role="button" class="k-button k-button-icontext k-grid-StopEditing stopEditable" href="">Stop Editing</a>
-        <a role="button" id="custom-add-btn" class="k-button k-button-icontext action-btns" href=""><span class="k-icon k-i-plus"></span>Add new record</a>
-        <a role="button" id="custom-save-btn" class="k-button k-button-icontext action-btns" href=""><span class="k-icon k-i-check"></span>Save changes</a>
-        <a role="button" id="custom-cancel-btn" class="k-button k-button-icontext action-btns" href=""><span class="k-icon k-i-cancel"></span>Cancel changes</a>
-    </div>
-</script>
-
-<script type="text/x-kendo-template" id="form-view-custom-toolbar">
-    <div class="k-pager-wrap k-grid-pager k-widget k-floatwrap pager-info">
-        <a id="first-form-btn" aria-label="Go to the first page" title="Go to the first page" class="k-link k-pager-nav k-pager-first" data-page="1" tabindex="-1">
-            <span class="k-icon k-i-arrow-end-left"></span>
-        </a>
-        <a id="prev-form-btn" aria-label="Go to the previous page" title="Go to the previous page" class="k-link k-pager-nav" data-page="1" tabindex="-1">
-            <span class="k-icon k-i-arrow-60-left"></span>
-        </a>
-        <span id="form-paging-info" class="k-pager-info k-label pager-info"></span>
-        <a id="next-form-btn" aria-label="Go to the next page" title="Go to the next page" class="k-link k-pager-nav" data-page="2" tabindex="-1">
-            <span class="k-icon k-i-arrow-60-right"></span>
-        </a>
-        <a id="last-form-btn" aria-label="Go to the last page" title="Go to the last page" class="k-link k-pager-nav k-pager-last" data-page="17" tabindex="-1">
-            <span class="k-icon k-i-arrow-end-right"></span>
-        </a>
-        <div class="text-right" style="flex:1;">
-            <span class="label">Form View</span> <input type="checkbox" id="form-view-switch" aria-label="Forms Switch" />
-            <a role="button" class="k-button k-button-icontext k-grid-StartEditing startEditable" href="">Start Editing</a>
-            <a role="button" class="k-button k-button-icontext k-grid-StopEditing stopEditable" href="">Stop Editing</a>
-            <a role="button" id="add-form-btn" class="k-button k-button-icontext action-btns" href=""><span class="k-icon k-i-plus"></span>Add new record</a>
-            <a role="button" id="save-form-btn" class="k-button k-button-icontext action-btns" href=""><span class="k-icon k-i-check"></span>Save changes</a>
-            <a role="button" id="cancel-form-btn" class="k-button k-button-icontext action-btns" href=""><span class="k-icon k-i-cancel"></span>Cancel changes</a>
-        </div>
-    </div>
-</script>
-
-<script type="text/x-kendo-template" id="optionLabelTemplate">
-    <div class='cursor-pointer dd-clear'>Clear Entry</div>
-    <div class='cursor-pointer dd-new-item'> Add New... </div>
-</script>
-
 <script type="text/javascript">
     $(function () {
         var container = $("#loginForm");

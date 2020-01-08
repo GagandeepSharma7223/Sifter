@@ -1,4 +1,5 @@
-﻿using Kendo.Mvc.Extensions;
+﻿using Kendo.Mvc;
+using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -248,6 +249,16 @@ namespace ResearchApp.Controllers
             return PartialView(view, formViewModel);
         }
 
+        public async Task<IActionResult> GetSearchForm(GridTypes type)
+        {
+            var controls = await _workRepo.GetTreeColumnsForTable(type.ToString());
+            var formViewModel = new FormViewModel
+            {
+                TableColumns = controls
+            };
+            return PartialView("~/Views/Home/_PartialSearchForm.cshtml", formViewModel);
+        }
+
         [AcceptVerbs("Post")]
         public async Task<IActionResult> SaveForm(GridTypes type, string selectedItem)
         {
@@ -378,6 +389,47 @@ namespace ResearchApp.Controllers
             return Ok(id);
         }
 
+        [AcceptVerbs("Post")]
+        public async Task<IActionResult> SearchForm([DataSourceRequest] DataSourceRequest request, GridTypes type)
+        {
+            DataSourceResult response = new DataSourceResult();
+            switch (type)
+            {
+                case GridTypes.Category:
+                    response = await _categoryRepo.GetCategories(request);
+                    break;
+                case GridTypes.Language:
+                    response = await _languageRepo.GetLanguages(request);
+                    break;
+                case GridTypes.City:
+                    response = await _cityRepo.GetCities(request);
+                    break;
+                case GridTypes.Region:
+                    response = await _regionRepo.GetRegions(request);
+                    break;
+                case GridTypes.Country:
+                    response = await _countryRepo.GetCountries(request);
+                    break;
+                case GridTypes.Publisher:
+                    response = await _publisherRepo.GetPublishers(request);
+                    break;
+                case GridTypes.Work:
+                    response = await _workRepo.GetWorks(request);
+                    break;
+                case GridTypes.Author:
+                    response = await _authorRepo.GetAuthors(request);
+                    break;
+                case GridTypes.WorkAuthor:
+                    response = await _workAuthorRepo.GetWorkAuthors(request);
+                    break;
+                case GridTypes.Unit:
+                    response = await _workRepo.GetWorks(request);
+                    break;
+            }
+            return Json(response);
+        }
+
+
         public async Task<IActionResult> List([DataSourceRequest]DataSourceRequest request, GridTypes type)
         {
             DataSourceResult list = new DataSourceResult();
@@ -488,7 +540,7 @@ namespace ResearchApp.Controllers
                 cachedDetails.Insert(0, new DropdownOptions { Id = 0, Option = "" });
                 _cache.Set($"{treeTable}Options", cachedDetails, CacheEntryOptions);
             }
-            if(!cachedDetails.Any(x=> x.Id == 0))
+            if (!cachedDetails.Any(x => x.Id == 0))
             {
                 cachedDetails.Insert(0, new DropdownOptions { Id = 0, Option = "" });
             }

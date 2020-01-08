@@ -39,7 +39,10 @@ var browserWindow = $(window);
 
 function getSelectTable() {
     var treeView = $('#treeview').data('kendoTreeView');
-    return treeView.dataItem(treeView.select()).text;
+    if (treeView)
+        return treeView.dataItem(treeView.select()).text;
+    else
+        return selectedSearchOption;
 }
 
 function showLoading() {
@@ -54,9 +57,10 @@ function hideLoading() {
 
 function resizeSplitter() {
     var outerSplitter = $("#vertical").data("kendoSplitter");
-    outerSplitter.wrapper.height($('.grid-container').height());
-    outerSplitter.resize();
-    //outerSplitter.trigger("resize");
+    if (outerSplitter) {
+        outerSplitter.wrapper.height($('.grid-container').height());
+        outerSplitter.resize();
+    }
 }
 
 function resizeGrid() {
@@ -67,7 +71,9 @@ function resizeGrid() {
 }
 
 $(window).resize(function () {
-    resizeGrid();
+    if (grid) {
+        resizeGrid();
+    }
 });
 
 $(function () {
@@ -1341,3 +1347,236 @@ function endLoading(target) {
 }
 
 // End Form View Operations
+
+
+//Searh Form operations
+function getSearchResults() {
+    showLoading();
+    var data = objectifyForm($('#search-form').serializeArray());
+    var multiselectArr = $("#search-form [data-role='multiselect']");
+    multiselectArr.each(function (index, item) {
+        var value = $(item).data("kendoMultiSelect").value();
+        var ddPropName = item.name;
+        data[ddPropName] = value;
+    });
+    console.log(data);
+    var filters = [];
+    $.each(data, function (name, value) {
+        if (name.indexOf("Filter") >= 0) {
+            var member = name.split('.')[1];
+            var operator = value;  // Operator Value
+            var memberValue = data[member];
+            if (member && memberValue) {
+                if (Array.isArray(memberValue)) {
+                    if (memberValue.length)
+                        memberValue = memberValue.join(',');
+                    else
+                        memberValue = '';
+                }
+                if (memberValue)
+                    filters.push({
+                        'field': member,
+                        'operator': operator,
+                        'value': memberValue
+                    });
+            }
+        }
+        else if (name.indexOf("Start") >= 0) {
+            member = name.split('.')[1];
+            if (member && value) {
+                filters.push({
+                    'field': member,
+                    'operator': "gte",
+                    'value': value
+                });
+            }
+        }
+        else if (name.indexOf("End") >= 0) {
+            member = name.split('.')[1];
+            if (member && value) {
+                filters.push({
+                    'field': member,
+                    'operator': "lte",
+                    'value': value
+                });
+            }
+        }
+    });
+
+    var filterArr = { logic: "and", filters: [] };
+    filterArr.filters.push(filters[0]);
+    searchParams = { type: selectedSearchOption, filter: filterArr };
+    $.post('/Grid/GetView', { type: selectedSearchOption })
+        .done(function (result) {
+            hideLoading();
+            $('#search-results').html(result);
+            var tabStrip = $("#search-tab-strip").data("kendoTabStrip");
+            tabStrip.select(1);
+        })
+        .fail(function () {
+            hideLoading();
+        });
+}
+
+function getFilterForSearch(value) {
+    switch (typeof (value)) {
+        case 'string':
+            return `'${value}'`;
+        default:
+            return value;
+    }
+}
+
+function generateGrid(response) {
+    var model = generateModel(response);
+    var columns = generateColumns(response);
+    var searchResultGrid = $("#search-results").kendoGrid({
+        dataSource: {
+            transport: {
+                read: function (options) {
+                    options.success(response.Data);
+                }
+            },
+            pageSize: 5,
+            schema: {
+                model: model
+            }
+        },
+        columns: columns,
+        pageable: true,
+        editable: true
+    });
+}
+
+function generateColumns(response) {
+    var dataItem = response["Data"][0];
+    var columnNames = Object.keys(dataItem);
+    return columnNames.map(function (name) {
+        //var isIdColumn = name.indexOf("ID") > -1 || name.indexOf("Id") > -1;
+        return {
+            field: name,
+            width: 180,
+            title: name
+        };
+    });
+}
+
+function generateModel(response) {
+    if (response["Data"]) {
+        var sampleDataItem = response["Data"][0];
+        var model = {};
+        var fields = {};
+        for (var property in sampleDataItem) {
+            if (property.indexOf("ID") !== -1) {
+                model["id"] = property;
+            }
+            var propType = typeof sampleDataItem[property];
+
+            if (propType === "number") {
+                fields[property] = {
+                    type: "number",
+                    validation: {
+                        required: true
+                    }
+                };
+                if (model.id === property) {
+                    fields[property].editable = false;
+                    fields[property].validation.required = false;
+                }
+            } else if (propType === "boolean") {
+                fields[property] = {
+                    type: "boolean"
+                };
+            } else if (propType === "string") {
+                var parsedDate = kendo.parseDate(sampleDataItem[property]);
+                if (parsedDate) {
+                    fields[property] = {
+                        type: "date",
+                        validation: {
+                            required: true
+                        }
+                    };
+                    isDateField[property] = true;
+                } else {
+                    fields[property] = {
+                        validation: {
+                            required: true
+                        }
+                    };
+                }
+            } else {
+                fields[property] = {
+                    validation: {
+                        required: true
+                    }
+                };
+            }
+        }
+        model.fields = fields;
+        return model;
+    }
+}
+var selectedSearchOption = 'Author';
+
+$(document).on("click", '.search-Opt', function (e) {
+    showLoading();
+    var tabStrip = $("#search-tab-strip").data("kendoTabStrip");
+    selectedSearchOption = this.value;
+    var item = tabStrip.contentElement(0);
+    $.ajax({
+        url: "/Grid/GetSearchForm",
+        type: 'Post',
+        cache: false,
+        data: { type: selectedSearchOption }
+    }).done(function (result) {
+        $(item).html(result);
+        hideLoading();
+    });
+});
+
+var searchParams;
+function getGridParams(e) {
+    if (!searchParams) {
+        var treeTable = getSelectTable();
+        return {
+            type: treeTable
+        };
+    }
+    else {
+        e.filter = searchParams.filter;
+        return searchParams;
+    }
+}
+
+function resizeTabStrip() {
+    //grid.resize();
+    var tabStrip = $('#search-tab-strip').data("kendoTabStrip");
+    var height = $(window)[0].innerHeight;
+    var wrapperHeight = height - 50;
+    $('.k-tabstrip-wrapper').height(wrapperHeight);
+    var headerHeight = $('.k-tabstrip-wrapper').find('ul').height();
+    $('.k-tabstrip-wrapper').find('.k-content').height(wrapperHeight - headerHeight - 35);
+    //$('#grid .k-grid-content').height(height - 120);
+}
+
+function resizeSearchSplitter() {
+    var outerSplitter = $("#vertical").data("kendoSplitter");
+    if (outerSplitter) {
+        outerSplitter.wrapper.height($('.k-tabstrip-wrapper').height());
+        outerSplitter.resize();
+    }
+}
+
+function clearSearchForm() {
+    $("#search-form").trigger("reset");
+    $('#search-results').empty();
+    setTimeout(function () {
+        $("#search-form input[data-role='dropdownlist']").each(function () {
+            var item = $(this).data("kendoDropDownList");
+            if (item) {
+                item.select(0);
+            }
+        });
+    }, 50);
+}
+//End Search Form operations

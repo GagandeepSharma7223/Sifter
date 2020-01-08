@@ -85,7 +85,7 @@ namespace ResearchApp.Data
 
         public static void ApplyFilter(this DataSourceRequest request)
         {
-            if (request.Sorts.Any())
+            if (request.Sorts != null && request.Sorts.Any())
             {
                 foreach (SortDescriptor sortDescriptor in request.Sorts)
                 {

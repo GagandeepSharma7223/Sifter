@@ -52,7 +52,8 @@
                           model.Field(field => field.BirthCountry).DefaultValue(new ResearchApp.ViewModel.DropdownOptions());
                       })
                       .Create("Author_Create", "Grid")
-                      .Read("List", "Grid", new { type = GridTypes.Author })
+                      //.Read("List", "Grid", new { type = GridTypes.Author })
+                      .Read(read=> read.Action("List", "Grid").Data("getGridParams"))
                       .Update("Author_Update", "Grid")
                       .Destroy("Author_Destroy", "Grid")
                   )

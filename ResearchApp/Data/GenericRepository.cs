@@ -117,19 +117,22 @@ namespace ResearchApp.Data
                         {
                             int value = Convert.ToInt32(descriptor.Value);
                             var fkColumn = await GetTreeColumns().Where(x => x.TableName == repoTable && x.DisplayName == descriptor.Member).Select(x => x.FkdisplayCol).FirstOrDefaultAsync();
-                            // Get String Value From Integer Value
-                            var dropdownText = _dbContext.DynamicListFromSql($"SELECT {fkColumn}  FROM {descriptor.Member} WHERE {descriptor.Member}Id=@0", new Dictionary<string, object> { { "0", value } }).FirstOrDefault();
-                            if (!string.IsNullOrEmpty(dropdownText))
+                            if (!string.IsNullOrEmpty(fkColumn))
                             {
-                                listOfStringCompare.Add(new StringCompareRequest
+                                // Get String Value From Integer Value
+                                var dropdownText = _dbContext.DynamicListFromSql($"SELECT {fkColumn}  FROM {descriptor.Member} WHERE {descriptor.Member}Id=@0", new Dictionary<string, object> { { "0", value } }).FirstOrDefault();
+                                if (!string.IsNullOrEmpty(dropdownText))
                                 {
-                                    Entity = descriptor.Member,
-                                    Value = dropdownText,
-                                    Operator = descriptor.Operator,
-                                    FKColumn = fkColumn
-                                });
+                                    listOfStringCompare.Add(new StringCompareRequest
+                                    {
+                                        Entity = descriptor.Member,
+                                        Value = dropdownText,
+                                        Operator = descriptor.Operator,
+                                        FKColumn = fkColumn
+                                    });
+                                }
+                                filters.RemoveAt(i); 
                             }
-                            filters.RemoveAt(i);
                         }
                         else
                         {
@@ -152,6 +155,61 @@ namespace ResearchApp.Data
             }
             return listOfStringCompare;
         }
+
+        public async Task<List<StringCompareRequest>> ModifyFilters(TEntity entity, IList<FilterDescriptor> filters, string repoTable)
+        {
+            var listOfStringCompare = new List<StringCompareRequest>();
+            if (filters.Any())
+            {
+                for (int i = filters.Count() - 1; i > -1; i--)
+                {
+                    var descriptor = filters.ElementAt(i) as FilterDescriptor;
+                    if (descriptor != null)
+                    {
+                        // Filter For Greater Than and less than 
+                        if (descriptor.Operator == FilterOperator.IsGreaterThanOrEqualTo ||
+                            descriptor.Operator == FilterOperator.IsLessThanOrEqualTo ||
+                            descriptor.Operator == FilterOperator.IsGreaterThan ||
+                            descriptor.Operator == FilterOperator.IsLessThan)
+                        {
+                            int value = Convert.ToInt32(descriptor.Value);
+                            //var fkColumn = await GetTreeColumns().Where(x => x.TableName == repoTable && x.DisplayName == descriptor.Member).Select(x => x.FkdisplayCol).FirstOrDefaultAsync();
+                            // Get String Value From Integer Value
+                            //var dropdownText = _dbContext.DynamicListFromSql($"SELECT {fkColumn}  FROM {descriptor.Member} WHERE {descriptor.Member}Id=@0", new Dictionary<string, object> { { "0", value } }).FirstOrDefault();
+                            //if (!string.IsNullOrEmpty(dropdownText))
+                            //{
+                            //    listOfStringCompare.Add(new StringCompareRequest
+                            //    {
+                            //        Entity = descriptor.Member,
+                            //        Value = dropdownText,
+                            //        Operator = descriptor.Operator,
+                            //        FKColumn = fkColumn
+                            //    });
+                            //}
+                            filters.RemoveAt(i);
+                        }
+                        //else
+                        //{
+                        //    PropertyInfo propInfo = GetPropertyType(entity, descriptor.Member);
+                        //    if (propInfo.PropertyType == typeof(DropdownOptions))
+                        //    {
+                        //        descriptor.Member = descriptor.Member + "Id";
+                        //    }
+                        //}
+                    }
+                    //else if (filters.ElementAt(i) is CompositeFilterDescriptor)
+                    //{
+                    //    var list = await ModifyFilters(entity, ((CompositeFilterDescriptor)filters.ElementAt(i)).FilterDescriptors, repoTable);
+                    //    if (list.Any())
+                    //    {
+                    //        listOfStringCompare.AddRange(list);
+                    //    }
+                    //}
+                }
+            }
+            return listOfStringCompare;
+        }
+
 
         private static PropertyInfo GetPropertyType(TEntity entity, string propName)
         {

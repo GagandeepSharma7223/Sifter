@@ -24,6 +24,11 @@ namespace ResearchApp.Controllers
             return View();
         }
 
+        public IActionResult Search()
+        {
+            return View();
+        }
+
         public IActionResult About()
         {
             ViewData["Message"] = "Your application description page.";
@@ -59,5 +64,13 @@ namespace ResearchApp.Controllers
             return Json(false);
         }
 
+        public IActionResult LoadSearchLeftPanel()
+        {
+            return PartialView("_PartialSearchLeftPanel");
+        }
+        public IActionResult LoadSearchRightPanel()
+        {
+            return PartialView("_PartialSearchRightPanel");
+        }
     }
 }

@@ -1,0 +1,227 @@
+﻿@using ResearchApp.ViewModel
+@using Kendo.Mvc
+@model FormViewModel
+<form id="search-form">
+    <div class="col-11 mt-3">
+        @foreach (var item in Model.TableColumns)
+        {
+            if (!item.IDColumn)
+            {
+                <div class="row form-group">
+                    <label class="col-md-2 col-form-label">@(item.Type == "dropdown" ? item.DisplayName : item.ColumnName)</label>
+                    @switch (item.Type)
+                    {
+                        case "string":
+                            string value = Model.SelectedItem != null ? Model.SelectedItem[item.ColumnName] : null;
+                            if (item.ColumnName == "Gender")
+                            {
+                                <div class="col-md-3">
+                                    @(Html.Hidden("Filter." + item.ColumnName, "eq"))
+                                </div>
+                                <div class="col-md-5">
+                                    @(Html.Kendo().DropDownList()
+                                          .Name(item.ColumnName)
+                                          .Value(value)
+                                          .DataValueField("Id")
+                                          .DataTextField("Option")
+                                          .HtmlAttributes(new { style = "width:60%" })
+                                          .BindTo(new List<TextDropdownOptions>
+                                          {
+                                              new TextDropdownOptions{
+                                                  Id = "",
+                                                  Option = "Any"
+                                              },
+                                              new TextDropdownOptions{
+                                                  Id = "Male",
+                                                  Option = "Male"
+                                              },
+                                              new TextDropdownOptions{
+                                                  Id = "Female",
+                                                  Option = "Female"
+                                              }
+                                          })
+                                    )
+                                </div>
+                            }
+                            else if (item.ColumnName == "Role")
+                            {
+                                <div class="col-md-3">
+                                    @(Html.Hidden("Filter." + item.ColumnName, "eq"))
+                                </div>
+                                <div class="col-md-5">
+                                    @(Html.Kendo().DropDownList()
+                                      .Name(item.ColumnName)
+                                      .Value(value)
+                                      .DataValueField("Id")
+                                      .DataTextField("Option")
+                                      .HtmlAttributes(new { style = "width:60%" })
+                                      .BindTo(new List<TextDropdownOptions>
+                                          {
+                                              new TextDropdownOptions{
+                                                  Id = "",
+                                                  Option = "Any"
+                                              },
+                                              new TextDropdownOptions{
+                                                  Id = "Author",
+                                                  Option = "Author"
+                                              },
+                                              new TextDropdownOptions{
+                                                  Id = "Editor",
+                                                  Option = "Editor"
+                                              },
+                                              new TextDropdownOptions{
+                                                  Id = "Translator",
+                                                  Option = "Translator"
+                                              }
+                                          })
+                                    )
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="col-md-3">
+                                    @(Html.Kendo().DropDownList()
+                                          .Name("Filter." + item.ColumnName)
+                                          .DataValueField("Id")
+                                          .DataTextField("Option")
+                                          .HtmlAttributes(new { style = "width:60%" })
+                                          .BindTo(new List<TextDropdownOptions>
+                                              {
+                                              new TextDropdownOptions{
+                                                  Id = "contains",
+                                                  Option = "Contains"
+                                              },
+                                              new TextDropdownOptions{
+                                                  Id = "startswith",
+                                                  Option = "Starts With"
+                                              },
+                                              new TextDropdownOptions{
+                                                  Id = "eq",
+                                                  Option = "Equals"
+                                              }
+                                          })
+                                    )
+                                </div>
+                                <div class="col-md-5">
+                                    @(Html.TextBox(item.ColumnName, value, new { @class = "k-textbox", style = "width:60%" }))
+                                </div>
+                            }
+                            break;
+                        case "int":
+                            <div class="col-md-3">
+                                <label for="email" class="mr-sm-2">Start:</label>
+                                @(Html.Kendo().NumericTextBox()
+                                    .Spinners(false)
+                                    .Name("Start." + item.ColumnName)
+                                    .HtmlAttributes(new { style = "width:45%" })
+                                    .Format("#"))
+                            </div>
+                            <div class="col-md-3">
+                                <label for="email" class="mr-sm-2">End:</label>
+                                @(Html.Kendo().NumericTextBox()
+                                    .Spinners(false)
+                                    .Name("End." + item.ColumnName)
+                                    .HtmlAttributes(new { style = "width:45%" })
+                                    .Format("#"))
+                            </div>
+                            break;
+                        case "decimal":
+                            <div class="col-md-3">
+                                <label for="email" class="mr-sm-2">Start:</label>
+                                @(Html.Kendo().NumericTextBox()
+                                    .Spinners(false)
+                                    .Name("Start." + item.ColumnName)
+                                    .HtmlAttributes(new { style = "width:45%" })
+                                    .Format("#"))
+                            </div>
+                            <div class="col-md-3">
+                                <label for="email" class="mr-sm-2">End:</label>
+                                @(Html.Kendo().NumericTextBox()
+                                    .Spinners(false)
+                                    .Name("End." + item.ColumnName)
+                                    .HtmlAttributes(new { style = "width:45%" })
+                                    .Format("#"))
+                            </div>
+                            break;
+                        case "boolean":
+                            <div class="col-md-3">
+                                @(Html.CheckBox("Filter." + item.ColumnName))
+                            </div>
+                            break;
+                        case "dropdown":
+                            <div class="col-md-3">
+                                @(Html.Hidden("Filter." + item.ColumnName, "eq"))
+                            </div>
+                            <div class="col-md-5">
+                                @(Html.Kendo().MultiSelect()
+                                      .Name(item.DisplayName + "ID")
+                                      .DataValueField("Id")
+                                      .DataTextField("Option")
+                                      .Filter(FilterType.Contains)
+                                      .MinLength(2)
+                                      .Height(200)
+                                      .HtmlAttributes(new { style = "width:60%" })
+                                      .DataSource(source =>
+                                      {
+                                          source.Custom()
+                                        .ServerFiltering(true)
+                                        .ServerPaging(true)
+                                        .PageSize(20)
+                                        .Type("aspnetmvc-ajax")
+                                        .Transport(transport =>
+                                      {
+                                          transport.Read("GetDropdownOptions", "Grid", new { treeTable = item.Fktable, optionCol = item.FkdisplayCol });
+                                      })
+                                      .Schema(schema =>
+                                      {
+                                          schema.Data("Data")
+                                          .Total("Total");
+                                      });
+                                      })
+                                      .Virtual(v => v.ItemHeight(26).ValueMapper("valueMapper" + item.Fktable)))
+                            </div>
+                            break;
+                        default:
+                            <div class="col-md-3">
+                                @(Html.Kendo().DropDownList()
+                                      .Name("Filter." + item.ColumnName)
+                                      .DataValueField("Id")
+                                      .DataTextField("Option")
+                                      .HtmlAttributes(new { style = "width:60%" })
+                                      .BindTo(new List<TextDropdownOptions>
+                                          {
+                                              new TextDropdownOptions{
+                                                  Id = "contains",
+                                                  Option = "Contains"
+                                              },
+                                              new TextDropdownOptions{
+                                                  Id = "startswith",
+                                                  Option = "Starts With"
+                                              },
+                                              new TextDropdownOptions{
+                                                  Id = "eq",
+                                                  Option = "Equals"
+                                              }
+                                          })
+                                )
+                            </div>
+                            <div class="col-md-5">
+                                @(Html.TextArea(item.ColumnName, new { @class = "k-textbox", style = "width:60%", @cols = 80, @rows = 5 }))
+                            </div>
+                            break;
+                    }
+                </div>
+            }
+        }
+    </div>
+</form>
+
+
+<script>
+    $(":radio[value=" + selectedSearchOption + "]").attr('checked', 'checked');
+    $(function () {
+        hideLoading();
+        resizeTabStrip();
+        resizeSearchSplitter();
+    });
+</script>
