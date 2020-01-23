@@ -4,7 +4,7 @@
     <form id="edit-form">
         <div class="k-grid-content k-auto-scrollable">
             <div class="col-md-12 mt-3">
-                @foreach (var item in Model.TableColumns)
+                @foreach (var item in Model.TableColumns.Where(x => x.Display == true))
                 {
                     if (!item.IDColumn)
                     {
@@ -17,7 +17,7 @@
                                         @switch (item.Type)
                                         {
                                             case "string":
-                                                string value = Model.SelectedItem != null ? Model.SelectedItem[item.ColumnName] : null;
+                                                string value = Model.SelectedItem != null ? Convert.ToString(Model.SelectedItem[item.ColumnName]) : null;
                                                 if (item.ColumnName == "Gender")
                                                 {
                                                     @(Html.Kendo().DropDownList()
@@ -76,7 +76,7 @@
                                                     .Spinners(false)
                                                     .Name(item.ColumnName)
                                                     .Format("#")
-                                                    .Value(Model.SelectedItem != null && Model.SelectedItem[item.ColumnName] != null && Model.SelectedItem[item.ColumnName].ToString() != "" ? 
+                                                    .Value(Model.SelectedItem != null && Model.SelectedItem[item.ColumnName] != null && Model.SelectedItem[item.ColumnName].ToString() != "" ?
                                                         Model.SelectedItem[item.ColumnName] : null))
                                                 break;
                                             case "decimal":
@@ -85,7 +85,7 @@
                                                     .Format("#.########")
                                                     .Decimals(8)
                                                     .Name(item.ColumnName)
-                                                    .Value(Model.SelectedItem != null && Model.SelectedItem[item.ColumnName] != null && Model.SelectedItem[item.ColumnName].ToString() != "" ? 
+                                                    .Value(Model.SelectedItem != null && Model.SelectedItem[item.ColumnName] != null && Model.SelectedItem[item.ColumnName].ToString() != "" ?
                                                         Model.SelectedItem[item.ColumnName] : null))
                                                 break;
                                             case "boolean":
@@ -164,6 +164,7 @@
         $("#form-view-switch").kendoSwitch({
             checked: isFormWrap,
             change: function (e) {
+                resetAddNewProps();
                 toggleFormView();
             }
         });

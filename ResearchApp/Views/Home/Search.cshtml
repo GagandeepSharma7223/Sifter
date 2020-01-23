@@ -3,31 +3,6 @@
     ViewData["Title"] = "Home Page";
 }
 
-@*<div class="placeholders mb-2">
-        <div class="row d-flex justify-content-start">
-            <div class="col-md-12">
-                @(Html.Kendo().TabStrip()
-                  .Name("search-tab-strip")
-                  .Animation(animation =>
-                      animation.Open(effect =>
-                      effect.Fade(FadeDirection.In)))
-                  .Items(tabstrip =>
-                  {
-                      tabstrip.Add().Text("Search Criteria")
-                          .Selected(true)
-                          .LoadContentFrom("GetSearchForm", "Grid", new { type = GridTypes.Author });
-
-                      tabstrip.Add().Text("Results")
-                      .Content("<div id='search-results'></div>");
-                  }
-                ))
-            </div>
-            <div class="col-md-12 mt-sm-3 mb-5 text-right">
-                <button type="button" onclick="clearSearchForm()" class="btn k-button mr-sm-3">Clear All</button>
-                <button type="button" onclick="getSearchResults()" class="btn k-primary">Get Results</button>
-            </div>
-        </div>
-    </div>*@
 <div class="placeholders mb-2">
     <div class="row d-flex justify-content-start">
         <div class="col-md-12">

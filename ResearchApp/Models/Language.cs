@@ -7,5 +7,8 @@ namespace ResearchApp.Models
     {
         public int LanguageId { get; set; }
         public string Name { get; set; }
+        public string UserName { get; set; }
+        public DateTime ValidFromUtc { get; set; }
+        public DateTime ValidToUtc { get; set; }
     }
 }

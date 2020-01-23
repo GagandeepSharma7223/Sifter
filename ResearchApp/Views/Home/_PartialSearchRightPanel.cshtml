@@ -9,17 +9,17 @@
       {
           tabstrip.Add().Text("Authors")
               .Selected(true)
-              .LoadContentFrom("GetSearchForm", "Grid", new { type = GridTypes.Author });
+              .LoadContentFrom("GetSearchForm", "Grid", new { type = GridTypes.VAuthor });
           tabstrip.Add().Text("Works")
-              .LoadContentFrom("GetSearchForm", "Grid", new { type = GridTypes.Work });
+              .LoadContentFrom("GetSearchForm", "Grid", new { type = GridTypes.VWork });
           tabstrip.Add().Text("Elements")
-              .LoadContentFrom("GetSearchForm", "Grid", new { type = GridTypes.Unit });
+              .LoadContentFrom("GetSearchForm", "Grid", new { type = GridTypes.VUnit });
           tabstrip.Add().Text("Author Results")
-              .Content("<div id='author-search-results'></div>");
+              .Content("<div class='search-results' id='author-search-results'></div>");
           tabstrip.Add().Text("Work Results")
-              .Content("<div id='work-search-results'></div>");
+              .Content("<div class='search-results' id='work-search-results'></div>");
           tabstrip.Add().Text("Element Results")
-              .Content("<div id='search-results'></div>");
+              .Content("<div class='search-results' id='unit-search-results'></div>");
       }
     ))
 </div>

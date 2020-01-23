@@ -2,7 +2,7 @@
 
 
 var isGridEditable = false, isWordWrap = false, isFormWrap = false, isLoggedIn = false,
-    editfield = "", formViewSelectedItem = null, currentFilterColumn, grid, selectedItemIndex, gridFooterEle, selectedDropdownEle, filterEnabled = false;
+    editfield = "", columnNameAddItemDD = "", tableNameAddItemDD = "", addedItemDD = "", selectedAddItemDD = null, isAddNewItemDD = false, formViewSelectedItem = null, currentFilterColumn, grid, selectedItemIndex, gridFooterEle, selectedDropdownEle, filterEnabled = false;
 var browserWindow = $(window);
 //register custom validation rules
 (function ($, kendo) {
@@ -190,7 +190,14 @@ function loadEditData(obj) {
     var bar = treeview.findByText(obj);
     treeview.select(bar);
     showLoading();
+
     splitter.ajaxRequest(".k-pane:last", "/Grid/GetView", { type: obj });
+
+    //formViewSelectedItem = grid.dataItem(grid.select());
+    //selectedItemIndex = grid.dataSource.data().indexOf(formViewSelectedItem);
+    //$("#myModal").kendoSplitter();
+    //gridFooterEle = $('.k-pager-wrap').clone(true);
+    //getFormView(obj, true);
 }
 
 function gridDataBoundConfig() {
@@ -209,10 +216,25 @@ function gridDataBoundConfig() {
     browserWindow.resize(resizeSplitter);
 
     if (editfield) {
+        showLoading();
         editfield = '';
         setTimeout(function () {
             $('#custom-add-btn').click();
+            triggerFormView();
         }, 500);
+    }
+
+    if (isAddNewItemDD && getSelectTable() === tableNameAddItemDD) {
+        var selectedRow = grid.dataSource.data().find(x => x[tableNameAddItemDD + 'ID'] === selectedAddItemDD[tableNameAddItemDD + 'ID']);
+        var row = grid.element.find("tr[data-uid='" + selectedRow.uid + "']");
+        if (row.length) {
+            grid.select(row);
+            // Scroll to the item to ensure it is visible
+            grid.content.scrollTop(grid.select().position().top);
+            var columnIndex = grid.options.columns.findIndex(x => x.title === columnNameAddItemDD);
+            if (columnIndex)
+                grid.editCell(row.find(`td:eq(${columnIndex})`));
+        }
     }
 }
 
@@ -275,25 +297,35 @@ function customActions() {
         $("#form-switch").kendoSwitch({
             checked: isFormWrap,
             change: function (e) {
+                resetAddNewProps();
                 isFormWrap = !isFormWrap;
                 if (isFormWrap) {
-                    formViewSelectedItem = grid.dataItem(grid.select());
-                    selectedItemIndex = grid.dataSource.data().indexOf(formViewSelectedItem);
-                    $("#myModal").kendoSplitter();
-                    gridFooterEle = $('.k-pager-wrap').clone(true);
-                    getFormView();
+                    triggerFormView();
                 }
             }
         });
     }
 }
 
-function getFormView() {
+function resetAddNewProps() {
+    isAddNewItemDD = false, columnNameAddItemDD = "", tableNameAddItemDD = "", addedItemDD = "", selectedAddItemDD = null;
+}
+
+function triggerFormView() {
+    isFormWrap = true;
+    formViewSelectedItem = grid.dataItem(grid.select());
+    selectedItemIndex = grid.dataSource.data().indexOf(formViewSelectedItem);
+    $("#myModal").kendoSplitter();
+    gridFooterEle = $('.k-pager-wrap').clone(true);
+    getFormView();
+}
+
+function getFormView(tableName, addNewItem) {
     showLoading();
     var treeTable = getSelectTable();
     var data = {
-        type: treeTable,
-        selectedItem: JSON.stringify(formViewSelectedItem, (k, v) => v === undefined ? null : v)
+        type: addNewItem ? tableName : treeTable,
+        selectedItem: addNewItem ? null : JSON.stringify(formViewSelectedItem, (k, v) => v === undefined ? null : v)
     };
     $.ajax({
         url: '/Grid/GetFormView',
@@ -351,12 +383,14 @@ $(document).on("click", '#custom-add-btn', function (e) {
 });
 
 $(document).on("click", '#custom-save-btn', function (e) {
+    editfield = '';
     $('.k-grid-save-changes').click();
     e.preventDefault();
     e.stopPropagation();
 });
 
 $(document).on("click", '#custom-cancel-btn', function (e) {
+    editfield = '';
     $('.k-grid-cancel-changes').click();
     e.preventDefault();
     e.stopPropagation();
@@ -391,7 +425,7 @@ function populateGridSession(type) {
 }
 
 function onSelect(e, field) {
-    if (e.dataItem.Option == 'Add New' && !editfield) {
+    if (e.dataItem.Option === 'Add New' && !editfield) {
         editfield = field;
         loadEditData(editfield);
     }
@@ -405,23 +439,88 @@ function onDropdownOpen(e, field) {
 function onDropdownDataBound(e) {
     var ddElement = `#${e.sender.element.attr('id')}-list`;
     if (!$(ddElement).hasClass('ui-resizable')) {
-        $(ddElement).resizable({
-            alsoResize: ddElement + ' .k-textbox'   //+ ddElement + ' .k-list-filter'
-        });
+        $(ddElement).resizable();
     }
 }
 
 $(document).on("click", '.dd-new-item', function (e) {
-    console.log(e);
+    var dropdownlist = selectedDropdownEle.data("kendoDropDownList");
+    dropdownlist.close();
+    isAddNewItemDD = true;
+    columnNameAddItemDD = selectedDropdownEle.attr('id');
+    tableNameAddItemDD = getSelectTable();
+    selectedAddItemDD = grid.dataItem(grid.select());
     loadEditData(editfield);
 });
 
 $(document).on("click", '.dd-clear', function (e) {
-    console.log(e);
-    var dropdown = selectedDropdownEle.data("kendoDropDownList");
-    dropdown.value(0);
+    var dropdownlist = selectedDropdownEle.data("kendoDropDownList");
+    dropdownlist.value(0);
+    dropdownlist.close();
+    var selectedProperty = dropdownlist.element.attr('id');
+    var td = dropdownlist.element.closest('td'), tdIndex = td.index();
+    var selectedRow = $('tr[data-uid=' + dropdownlist.element.closest('tr').attr("data-uid") + ']');
+    var dataItem = grid.dataItem(selectedRow);
+    dataItem[selectedProperty + 'ID'] = 0;
+    dataItem[selectedProperty].Id = 0;
+    dataItem[selectedProperty].Option = "";
+    dataItem.dirty = true;
+    kendoFastReDrawRow(grid, selectedRow);
+    setTimeout(function () {
+        var row = grid.tbody
+            .find("tr[data-uid='" + dataItem.uid + "']");
+        //var cell = dropdownlist.element.closest('td');
+        var cell = row.find("td").eq(tdIndex);
+        cell.removeClass('k-edit-cell').addClass("k-dirty-cell").prepend("<span class='k-dirty' />");
+    });
 });
 
+function cellChangeEvent(e) {
+    //debugger
+    //var data = this.data();
+}
+
+function kendoFastReDrawRow(grid, row) {
+    var dataItem = grid.dataItem(row);
+
+    var rowChildren = $(row).children('td[role="gridcell"]');
+
+    for (var i = 0; i < grid.columns.length; i++) {
+
+        var column = grid.columns[i];
+        var template = column.template;
+        var cell = rowChildren.eq(i);
+
+        if (template !== undefined) {
+            var kendoTemplate = kendo.template(template);
+
+            // Render using template
+            cell.html(kendoTemplate(dataItem));
+        } else {
+            var fieldValue = dataItem[column.field];
+
+            var format = column.format;
+            var values = column.values;
+
+            if (values !== undefined && values != null) {
+                // use the text value mappings (for enums)
+                for (var j = 0; j < values.length; j++) {
+                    var value = values[j];
+                    if (value.value == fieldValue) {
+                        cell.html(value.text);
+                        break;
+                    }
+                }
+            } else if (format !== undefined) {
+                // use the format
+                cell.html(kendo.format(format, fieldValue));
+            } else {
+                // Just dump the plain old value
+                cell.html(fieldValue);
+            }
+        }
+    }
+}
 
 function valueMapperLanguage(options) {
     $.ajax({
@@ -1143,11 +1242,6 @@ function removeItems(ids) {
     grid.dataSource.sync();
 }
 
-function optionLabelTemplate() {
-    return `
-        <div class='cursor-pointer dd-new-item' > Add New... </div > <div class='cursor-pointer dd-clear'>Clear Entry</div>`;
-}
-
 // Form View Operations
 $(document).on("click", '#save-form-btn', function (e) {
     e.preventDefault();
@@ -1173,12 +1267,21 @@ $(document).on("click", '#save-form-btn', function (e) {
     $.post('/Grid/SaveForm', { type: treeTable, selectedItem: JSON.stringify(data) })
         .done(function (id) {
             if (!data[idField]) {
-                data[idField] = id;
-                grid.dataSource.add(data);
-                formViewSelectedItem = grid.dataSource.data().find(x => x[idField] === data[idField]);
-                selectedItemIndex = grid.dataSource.data().indexOf(formViewSelectedItem);
-                selectGridRow();
-                getFormView();
+                // If add form comes from adding new option to dropdown
+                if (isAddNewItemDD) {
+                    // Show up admin grid where add new item get triggered
+                    // Select that perticular item
+                    // Select that perticular cell
+                    backToGridDD();
+                }
+                else {
+                    data[idField] = id;
+                    grid.dataSource.add(data);
+                    formViewSelectedItem = grid.dataSource.data().find(x => x[idField] === data[idField]);
+                    selectedItemIndex = grid.dataSource.data().indexOf(formViewSelectedItem);
+                    selectGridRow();
+                    getFormView();
+                }
             }
             else {
                 $.each(formViewSelectedItem, function (name, value) {
@@ -1194,14 +1297,28 @@ $(document).on("click", '#save-form-btn', function (e) {
         });
 });
 
+function backToGridDD() {
+    isFormWrap = false;
+    var treeview = $("#treeview").data("kendoTreeView");
+    var bar = treeview.findByText(tableNameAddItemDD);
+    treeview.select(bar);
+    var splitter = $("#myModal").data("kendoSplitter");
+    splitter.ajaxRequest(".k-pane:last", "/Grid/GetView", { type: tableNameAddItemDD });
+}
+
 $(document).on("click", '#cancel-form-btn', function (e) {
     e.preventDefault();
     $('.k-dirty').removeClass('k-dirty');
-    if ($('input[type=hidden]').val()) {
-        $("form").trigger("reset");
+    if (isAddNewItemDD) {
+        backToGridDD();
     }
     else {
-        addNewRecord();
+        if ($('input[type=hidden]').val()) {
+            $("form").trigger("reset");
+        }
+        else {
+            addNewRecord();
+        }
     }
 });
 
@@ -1352,70 +1469,109 @@ function endLoading(target) {
 //Searh Form operations
 function getSearchResults() {
     showLoading();
-    var data = objectifyForm($('#search-form').serializeArray());
-    var multiselectArr = $("#search-form [data-role='multiselect']");
-    multiselectArr.each(function (index, item) {
-        var value = $(item).data("kendoMultiSelect").value();
-        var ddPropName = item.name;
-        data[ddPropName] = value;
-    });
-    console.log(data);
     var filters = [];
-    $.each(data, function (name, value) {
-        if (name.indexOf("Filter") >= 0) {
-            var member = name.split('.')[1];
-            var operator = value;  // Operator Value
-            var memberValue = data[member];
-            if (member && memberValue) {
+    var searchForms = $('form');
+    $.each(searchForms, function (index, value) {
+        var data = objectifyForm($(this).serializeArray());
+        $.each(data, function (name, value) {
+            var propArr = name.split('.');
+            var member = propArr[2];
+            var tableName = propArr[0];
+            if (name.indexOf("Filter") >= 0) {
+                var operator = value;  // Operator Value
+                switch (operator) {
+                    case 'in list':
+                        var memberValue = data[`${tableName}.${member}ID.hdn`];
+                        break;
+                    default:
+                        memberValue = data[`${tableName}.${member}`];
+                        break;
+                }
                 if (Array.isArray(memberValue)) {
                     if (memberValue.length)
-                        memberValue = memberValue.join(',');
+                        memberValue = memberValue.join('|');
                     else
                         memberValue = '';
                 }
-                if (memberValue)
+                if (memberValue) {
                     filters.push({
                         'field': member,
                         'operator': operator,
-                        'value': memberValue
+                        'value': memberValue,
+                        'tableName': tableName,
+                        'columnType': 'text'
                     });
+                }
             }
-        }
-        else if (name.indexOf("Start") >= 0) {
-            member = name.split('.')[1];
-            if (member && value) {
-                filters.push({
-                    'field': member,
-                    'operator': "gte",
-                    'value': value
-                });
+            else if (propArr[1] === "Start") {
+                if (member && value) {
+                    filters.push({
+                        'field': member,
+                        'operator': "",
+                        'number1': value,
+                        'tableName': tableName,
+                        'columnType': 'number'
+                    });
+                }
             }
-        }
-        else if (name.indexOf("End") >= 0) {
-            member = name.split('.')[1];
-            if (member && value) {
-                filters.push({
-                    'field': member,
-                    'operator': "lte",
-                    'value': value
-                });
+            else if (propArr[1] === "End") {
+                if (member && value) {
+                    filters.push({
+                        'field': member,
+                        'operator': "",
+                        'number2': value,
+                        'tableName': tableName,
+                        'columnType': 'number'
+                    });
+                }
             }
-        }
+        });
     });
-
     var filterArr = { logic: "and", filters: [] };
-    filterArr.filters.push(filters[0]);
+    filterArr.filters = filters;
+    var params = [];
+    filters.forEach(function (item, index) {
+        params.push({
+            tableName: item.tableName,
+            columnName: item.field,
+            columnType: item.columnType,
+            comparisonType: item.operator,
+            textValue: item.value,
+            number1: item.number1,
+            number2: item.number2
+        });
+    });
     searchParams = { type: selectedSearchOption, filter: filterArr };
-    $.post('/Grid/GetView', { type: selectedSearchOption })
-        .done(function (result) {
+    $.post('/Grid/SearchForm', { searchParams: params })
+        .done(function (response) {
             hideLoading();
-            $('#search-results').html(result);
+            if (response.Authors && response.Authors.length) {
+                generateGrid(response.Authors, '#author-search-results');
+            }
+            else
+                noRecordFound('#author-search-results');
+            if (response.Works && response.Works.length) {
+                generateGrid(response.Works, '#work-search-results');
+            }
+            else
+                noRecordFound('#work-search-results');
+            if (response.Units && response.Units.length) {
+                generateGrid(response.Units, '#unit-search-results');
+            }
+            else
+                noRecordFound('#unit-search-results');
             var tabStrip = $("#search-tab-strip").data("kendoTabStrip");
-            tabStrip.select(1);
+            tabStrip.select(3);
         })
         .fail(function () {
             hideLoading();
         });
+}
+
+function noRecordFound(ele) {
+    $(ele).empty().html(`<div class="alert alert-primary" role="alert">
+                          No Record to display.
+                        </div>`);
 }
 
 function getFilterForSearch(value) {
@@ -1427,43 +1583,51 @@ function getFilterForSearch(value) {
     }
 }
 
-function generateGrid(response) {
+function generateGrid(response, container) {
+    $(container).empty();
     var model = generateModel(response);
     var columns = generateColumns(response);
-    var searchResultGrid = $("#search-results").kendoGrid({
+    var searchResultGrid = $(container).kendoGrid({
         dataSource: {
             transport: {
                 read: function (options) {
-                    options.success(response.Data);
+                    options.success(response);
                 }
             },
-            pageSize: 5,
+            pageSize: 1000,
             schema: {
                 model: model
             }
         },
         columns: columns,
+        sortable: true,
+        reorderable: true,
+        resizable: true,
         pageable: true,
-        editable: true
-    });
+        columnMenu: true,   
+        dataBound: function (e) {
+            $(e.sender.element).find('.k-grid-content').height($('.k-tabstrip-wrapper').height() - 125);
+            $(e.sender.element).find('td').addClass('text-nowrap');
+        }
+    }).addClass("custom-dynamic-grid");
 }
 
 function generateColumns(response) {
-    var dataItem = response["Data"][0];
+    var dataItem = response[0];
     var columnNames = Object.keys(dataItem);
     return columnNames.map(function (name) {
-        //var isIdColumn = name.indexOf("ID") > -1 || name.indexOf("Id") > -1;
+        var isIdColumn = name.indexOf("ID") > -1 || name.indexOf("Id") > -1;
         return {
             field: name,
-            width: 180,
+            width: isIdColumn ? 50 : 180,
             title: name
         };
     });
 }
 
 function generateModel(response) {
-    if (response["Data"]) {
-        var sampleDataItem = response["Data"][0];
+    if (response && response.length) {
+        var sampleDataItem = response[0];
         var model = {};
         var fields = {};
         for (var property in sampleDataItem) {
@@ -1539,7 +1703,7 @@ function getGridParams(e) {
     if (!searchParams) {
         var treeTable = getSelectTable();
         return {
-            type: treeTable
+            type: isAddNewItemDD ? tableNameAddItemDD : treeTable
         };
     }
     else {
@@ -1555,7 +1719,7 @@ function resizeTabStrip() {
     var wrapperHeight = height - 50;
     $('.k-tabstrip-wrapper').height(wrapperHeight);
     var headerHeight = $('.k-tabstrip-wrapper').find('ul').height();
-    $('.k-tabstrip-wrapper').find('.k-content').height(wrapperHeight - headerHeight - 35);
+    $('.k-tabstrip-wrapper').find('.k-content').height(wrapperHeight - headerHeight - 42);
     //$('#grid .k-grid-content').height(height - 120);
 }
 
@@ -1568,15 +1732,49 @@ function resizeSearchSplitter() {
 }
 
 function clearSearchForm() {
-    $("#search-form").trigger("reset");
-    $('#search-results').empty();
-    setTimeout(function () {
-        $("#search-form input[data-role='dropdownlist']").each(function () {
-            var item = $(this).data("kendoDropDownList");
-            if (item) {
-                item.select(0);
-            }
-        });
-    }, 50);
+    $("form").each(function (index, form) {
+        $(form).trigger("reset");
+        $(form).find('input[type=hidden]').val("");
+        setTimeout(function () {
+            $(form).find("input[data-role='dropdownlist']").each(function () {
+                var item = $(this).data("kendoDropDownList");
+                if (item) {
+                    item.select(0);
+                }
+            });
+            $(form).find("select[data-role='multiselect']").each(function () {
+                var multiSelect = $(this).data("kendoMultiSelect");
+                if (multiSelect) {
+                    multiSelect.value([]);
+                }
+            });
+        }, 50);
+    });
+    $('.search-results').empty();
+    var tabStrip = $("#search-tab-strip").data("kendoTabStrip");
+    tabStrip.select(0);
 }
+
+function onSearchDropdownChange(e, elementToShow) {
+    var elementId = '#' + elementToShow.replace('.', '_');
+    if (e.sender.value() !== 'in list') {
+        // show textboxes
+        $(elementId).removeClass('d-none');
+        var multiselect = $(elementId + 'ID').data("kendoMultiSelect");
+        multiselect.wrapper.hide();
+    }
+    else {
+        // show dropdown
+        $(elementId).addClass('d-none');
+        multiselect = $(elementId + 'ID').data("kendoMultiSelect");
+        multiselect.wrapper.show();
+    }
+}
+
+function onChangeMutliSelect(e) {
+    var hiddenField = $(`#${e.sender.element.attr('id')}_hdn`);
+    hiddenField.val(e.sender.dataItems().map(x => x.Option).join('|'));
+    console.log(e.sender.dataItems());
+}
+
 //End Search Form operations

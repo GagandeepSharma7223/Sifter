@@ -239,7 +239,7 @@ namespace ResearchApp.Controllers
         public async Task<IActionResult> GetFormView(GridTypes type, string selectedItem)
         {
             string view = "~/Views/Home/_PartialWorkForm.cshtml";
-            dynamic item = JsonConvert.DeserializeObject<Dictionary<string, object>>(selectedItem);
+            dynamic item = selectedItem != null ? JsonConvert.DeserializeObject<Dictionary<string, object>>(selectedItem) : null;
             var controls = await _workRepo.GetTreeColumnsForTable(type.ToString());
             var formViewModel = new FormViewModel
             {
@@ -254,7 +254,8 @@ namespace ResearchApp.Controllers
             var controls = await _workRepo.GetTreeColumnsForTable(type.ToString());
             var formViewModel = new FormViewModel
             {
-                TableColumns = controls
+                TableColumns = controls,
+                FormName = type.ToString()
             };
             return PartialView("~/Views/Home/_PartialSearchForm.cshtml", formViewModel);
         }
@@ -390,41 +391,15 @@ namespace ResearchApp.Controllers
         }
 
         [AcceptVerbs("Post")]
-        public async Task<IActionResult> SearchForm([DataSourceRequest] DataSourceRequest request, GridTypes type)
+        public IActionResult SearchForm(List<SearchParams> searchParams)
         {
-            DataSourceResult response = new DataSourceResult();
-            switch (type)
+            AdvanceSearchViewModel response = new AdvanceSearchViewModel();
+            try
             {
-                case GridTypes.Category:
-                    response = await _categoryRepo.GetCategories(request);
-                    break;
-                case GridTypes.Language:
-                    response = await _languageRepo.GetLanguages(request);
-                    break;
-                case GridTypes.City:
-                    response = await _cityRepo.GetCities(request);
-                    break;
-                case GridTypes.Region:
-                    response = await _regionRepo.GetRegions(request);
-                    break;
-                case GridTypes.Country:
-                    response = await _countryRepo.GetCountries(request);
-                    break;
-                case GridTypes.Publisher:
-                    response = await _publisherRepo.GetPublishers(request);
-                    break;
-                case GridTypes.Work:
-                    response = await _workRepo.GetWorks(request);
-                    break;
-                case GridTypes.Author:
-                    response = await _authorRepo.GetAuthors(request);
-                    break;
-                case GridTypes.WorkAuthor:
-                    response = await _workAuthorRepo.GetWorkAuthors(request);
-                    break;
-                case GridTypes.Unit:
-                    response = await _workRepo.GetWorks(request);
-                    break;
+                response = _authorRepo.SearchRecords(searchParams);
+            }
+            catch (Exception e)
+            {
             }
             return Json(response);
         }
@@ -433,7 +408,6 @@ namespace ResearchApp.Controllers
         public async Task<IActionResult> List([DataSourceRequest]DataSourceRequest request, GridTypes type)
         {
             DataSourceResult list = new DataSourceResult();
-
             // Filter Data
             if (request.Page > 0 && request.PageSize == 0)
             {

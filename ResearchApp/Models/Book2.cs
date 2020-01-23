@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 namespace ResearchApp.Models
 {
-    public partial class Book
+    public partial class Book2
     {
-        public int BookId { get; set; }
+        public int Book2Id { get; set; }
         public string Title { get; set; }
         public string Authors { get; set; }
         public string Publisher { get; set; }

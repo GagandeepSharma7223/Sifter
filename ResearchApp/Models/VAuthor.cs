@@ -6,10 +6,10 @@ namespace ResearchApp.Models
     public partial class VAuthor
     {
         public int AuthorId { get; set; }
-        public string FullName { get; set; }
+        public string Author { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
-        public string IsOrganization { get; set; }
+        public bool? IsOrganization { get; set; }
         public string Gender { get; set; }
         public int? BirthYear { get; set; }
         public string BirthCountry { get; set; }

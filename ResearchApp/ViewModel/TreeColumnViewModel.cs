@@ -6,6 +6,7 @@ namespace ResearchApp.ViewModel
     {
         public dynamic SelectedItem { get; set; }
         public IList<TreeColumnViewModel> TableColumns { get; set; }
+        public string FormName { get; set; }
     }
     public class TreeColumnViewModel
     {

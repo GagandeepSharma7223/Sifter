@@ -39,7 +39,7 @@
                           .Ajax()
                           .Batch(true)
                           .PageSize(1000)
-                          .Events(events => events.Error("error_handler"))
+                          .Events(events => events.Error("error_handler").Change("cellChangeEvent"))
                           .Model(model =>
                           {
                               model.Id(p => p.WorkID);

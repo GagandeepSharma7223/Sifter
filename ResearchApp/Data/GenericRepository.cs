@@ -1,19 +1,19 @@
-﻿//using Kendo.Mvc.Extensions;
+﻿using Kendo.Mvc;
 using Kendo.Mvc.UI;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using ResearchApp.Data.Enum;
 using ResearchApp.Models;
 using ResearchApp.ViewModel;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Linq.Dynamic.Core;
-using System.Threading.Tasks;
-using ResearchApp.Data;
-using Kendo.Mvc;
-using Microsoft.Extensions.Caching.Memory;
-using ResearchApp.Data.Enum;
 using System.Reflection;
-
+using System.Threading.Tasks;
+using ResearchApp.Extension;
 namespace ResearchApp.Data
 {
     public class GenericRepository<TEntity> : IGenericRepository<TEntity>, IDisposable
@@ -131,7 +131,7 @@ namespace ResearchApp.Data
                                         FKColumn = fkColumn
                                     });
                                 }
-                                filters.RemoveAt(i); 
+                                filters.RemoveAt(i);
                             }
                         }
                         else
@@ -315,6 +315,44 @@ namespace ResearchApp.Data
         public void Dispose()
         {
             _dbContext.Dispose();
+        }
+
+        public AdvanceSearchViewModel SearchRecords(List<SearchParams> paramList)
+        {
+            var table = paramList.ToDataTable();
+            return ExecuteProcedure(table);
+        }
+
+        private AdvanceSearchViewModel ExecuteProcedure(DataTable table)
+        {
+            var result = new AdvanceSearchViewModel();
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(_dbContext.Database.GetDbConnection().ConnectionString))
+                {
+                    connection.Open();
+                    using (SqlCommand command = connection.CreateCommand())
+                    {
+                        command.CommandText = "dbo.advancedSearch";
+                        command.CommandType = System.Data.CommandType.StoredProcedure;
+
+                        SqlParameter parameter = command.Parameters
+                                          .AddWithValue("@params", table);
+                        parameter.SqlDbType = SqlDbType.Structured;
+                        parameter.TypeName = "dbo.SearchParams";
+                        SqlDataAdapter adapter = new SqlDataAdapter(command);
+                        DataSet ds = new DataSet();
+                        adapter.Fill(ds);
+                        result.Authors = ds.Tables[0].ToList<VAuthor>();
+                        result.Works = ds.Tables[1].ToList<VWork>();
+                        result.Units = ds.Tables[2].ToList<VUnit>();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+            }
+            return result;
         }
     }
 }

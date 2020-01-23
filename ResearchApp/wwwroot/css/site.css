@@ -237,6 +237,7 @@ input[type=number] {
     height: 100px;
     margin-top: -50px;
     margin-left: -50px;
+    z-index: 9999999;
     background-image: url(/images/blueloading.gif);
 }
 
@@ -334,7 +335,15 @@ input[type=number] {
     position: relative;
 }
 
-.k-filter-row > th:first-child, .k-grid tbody td:first-child, .k-grid tfoot td:first-child, .k-grid-header th.k-header:first-child {
+.k-filter-row > th:first-child, .k-grid tfoot td:first-child {
+    padding: 0px;
+}
+
+.custom-dynamic-grid .k-grid-header th.k-header:first-child {
+    padding: .5em .6em .4em .6em;
+}
+
+.k-grid-header th.k-header:first-child{
     padding: 0px;
 }
 
@@ -353,3 +362,24 @@ input[type=number] {
     #horizontal blockquote {
         font-size: 16px;
     }
+
+.custom-dynamic-grid .k-grid-pager .k-pager-info {
+    display: inline;
+    text-align: left;
+}
+
+.k-multiselect:after {
+    content: "\25BC";
+    position: absolute;
+    top: 30%;
+    right: 15px;
+    font-size: 10px;
+}
+
+.k-multiselect.opened:after {
+    content: "\25C0";
+}
+
+.k-button.k-state-disabled {
+    opacity: 0.3;
+}

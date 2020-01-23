@@ -11,6 +11,9 @@
         Work = 7,
         Author = 8,
         WorkAuthor = 9,
-        Unit = 10
+        Unit = 10,
+        VAuthor = 11,
+        VWork = 12,
+        VUnit = 13
     }
 }
