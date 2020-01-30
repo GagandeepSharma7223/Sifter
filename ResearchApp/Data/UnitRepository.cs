@@ -66,22 +66,22 @@ namespace ResearchApp.Data
                 var data = (IEnumerable<Unit>)list.Data;
                 var result = data.Select(x => new UnitViewModel
                 {
-                    UnitID = x.UnitId,
-                    CategoryID = x.CategoryId,
+                    UnitID = x.UnitID,
+                    CategoryID = x.CategoryID,
                     StartPage = x.StartPage,
                     Text = x.Text,
                     Title = x.Title,
                     LiteralTitle = x.LiteralTitle,
                     TitleEnglish = x.TitleEnglish,
-                    WorkID = x.WorkId,
+                    WorkID = x.WorkID,
                     Work = new DropdownOptions
                     {
-                        Id = x.Work?.WorkId,
+                        Id = x.Work?.WorkID,
                         Option = x.Work?.Title
                     },
                     Category = new DropdownOptions
                     {
-                        Id = x.CategoryId,
+                        Id = x.CategoryID,
                         Option = x.Category?.Name
                     }
                 }).AsEnumerable();
@@ -99,30 +99,30 @@ namespace ResearchApp.Data
         {
             var newUnit = new Unit
             {
-                UnitId = model.UnitID,
-                CategoryId = updateForm ? model.CategoryID : model.Category?.Id,
+                UnitID = model.UnitID,
+                CategoryID = updateForm ? model.CategoryID : model.Category?.Id,
                 StartPage = model.StartPage,
                 Text = model.Text,
                 Title = model.Title,
                 LiteralTitle = model.LiteralTitle,
                 TitleEnglish = model.TitleEnglish,
-                WorkId = updateForm ? model.WorkID : model.Work?.Id
+                WorkID = updateForm ? model.WorkID : model.Work?.Id
             };
             await Create(newUnit);
-            return newUnit.UnitId.Value;
+            return newUnit.UnitID.Value;
         }
         public async Task UpdateUnit(UnitViewModel model, bool updateForm = false)
         {
-            var dbUnit = await GetAll().Where(x => x.UnitId == model.UnitID).FirstOrDefaultAsync();
+            var dbUnit = await GetAll().Where(x => x.UnitID == model.UnitID).FirstOrDefaultAsync();
             if (dbUnit != null)
             {
-                dbUnit.CategoryId = updateForm ? model.CategoryID : model.Category?.Id;
+                dbUnit.CategoryID = updateForm ? model.CategoryID : model.Category?.Id;
                 dbUnit.StartPage = model.StartPage;
                 dbUnit.Text = model.Text;
                 dbUnit.Title = model.Title;
                 dbUnit.LiteralTitle = model.LiteralTitle;
                 dbUnit.TitleEnglish = model.TitleEnglish;
-                dbUnit.WorkId = updateForm ? model.WorkID : model.Work?.Id;
+                dbUnit.WorkID = updateForm ? model.WorkID : model.Work?.Id;
                 await Update(dbUnit);
             }
         }

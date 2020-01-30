@@ -25,7 +25,7 @@ namespace ResearchApp.Data
             var data = (IEnumerable<Category>)list.Data;
             var result = data.Select(x => new CategoryViewModel
             {
-                CategoryID = x.CategoryId,
+                CategoryID = x.CategoryID,
                 Name = x.Name
             }).AsEnumerable();
             list.Data = result;
@@ -39,11 +39,11 @@ namespace ResearchApp.Data
                 Name = model.Name
             };
             await Create(newCategory);
-            return newCategory.CategoryId;
+            return newCategory.CategoryID;
         }
         public async Task UpdateCategory(CategoryViewModel model, bool updateForm = false)
         {
-            var dbCategory = await GetAll().Where(x => x.CategoryId == model.CategoryID).FirstOrDefaultAsync();
+            var dbCategory = await GetAll().Where(x => x.CategoryID == model.CategoryID).FirstOrDefaultAsync();
             if (dbCategory != null)
             {
                 dbCategory.Name = model.Name;

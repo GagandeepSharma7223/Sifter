@@ -25,7 +25,7 @@ namespace ResearchApp.Data
             var publishers = (IEnumerable<Publisher>)list.Data;
             var result = publishers.Select(x => new PublisherViewModel
             {
-                PublisherID = x.PublisherId,
+                PublisherID = x.PublisherID,
                 Name = x.Name
             }).AsEnumerable();
             list.Data = result;
@@ -39,11 +39,11 @@ namespace ResearchApp.Data
                 Name = model.Name
             };
             await Create(newPublisher);
-            return newPublisher.PublisherId;
+            return newPublisher.PublisherID;
         }
         public async Task UpdatePublisher(PublisherViewModel model, bool updateForm = false)
         {
-            var dbPublisher = await GetAll().Where(x => x.PublisherId == model.PublisherID).FirstOrDefaultAsync();
+            var dbPublisher = await GetAll().Where(x => x.PublisherID == model.PublisherID).FirstOrDefaultAsync();
             if (dbPublisher != null)
             {
                 dbPublisher.Name = model.Name;

@@ -5,10 +5,10 @@
       .Animation(animation =>
           animation.Open(effect =>
           effect.Fade(FadeDirection.In)))
+      .Events(eve => eve.Select("tabStripOnSelect"))
       .Items(tabstrip =>
       {
           tabstrip.Add().Text("Authors")
-              .Selected(true)
               .LoadContentFrom("GetSearchForm", "Grid", new { type = GridTypes.VAuthor });
           tabstrip.Add().Text("Works")
               .LoadContentFrom("GetSearchForm", "Grid", new { type = GridTypes.VWork });
@@ -23,3 +23,27 @@
       }
     ))
 </div>
+
+<script>
+    $(function () {
+        hideLoading();
+        resizeTabStrip();
+        resizeSearchSplitter();
+        var searchParam = $('#searchParam').val();
+        var tabStrip = $("#search-tab-strip").kendoTabStrip().data("kendoTabStrip");
+        if (searchParam === 'BrowseAll') {
+            tabStrip.select(3);
+            tabStrip.remove(tabStrip.tabGroup.children().eq(0));
+            tabStrip.remove(tabStrip.tabGroup.children().eq(0));
+            tabStrip.remove(tabStrip.tabGroup.children().eq(0));
+            $(tabStrip.items()[0]).children()[1].innerText = "Authors";
+            $(tabStrip.items()[1]).children()[1].innerText = "Works";
+            $(tabStrip.items()[2]).children()[1].innerText = "Elements";
+            getSearchResults();
+        }
+        else {
+            tabStrip.select(0);
+        }
+
+    });
+</script>

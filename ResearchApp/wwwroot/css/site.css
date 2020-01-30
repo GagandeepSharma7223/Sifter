@@ -187,7 +187,7 @@ ul.k-reset.k-multicheck-wrap {
 }
 
 .k-pager-wrap {
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 500;
 }
 
@@ -372,7 +372,7 @@ input[type=number] {
     content: "\25BC";
     position: absolute;
     top: 30%;
-    right: 15px;
+    right: 8px;
     font-size: 10px;
 }
 
@@ -382,4 +382,14 @@ input[type=number] {
 
 .k-button.k-state-disabled {
     opacity: 0.3;
+}
+
+
+.kendo-grid-filter .k-grid-content{
+    height: 130px !important;
+}
+
+.menu-item-container {
+    font-size: 9px;
+    font-weight: 500;
 }

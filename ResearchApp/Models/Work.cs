@@ -5,15 +5,15 @@ namespace ResearchApp.Models
 {
     public partial class Work
     {
-        public int WorkId { get; set; }
+        public int WorkID { get; set; }
         public string Title { get; set; }
         public int? PublicationYear { get; set; }
-        public int? AuthorId { get; set; }
-        public int? LanguageId { get; set; }
-        public int? CityId { get; set; }
-        public int? PublisherId { get; set; }
-        public int? EditorId { get; set; }
-        public int? TranslatorId { get; set; }
+        public int? AuthorID { get; set; }
+        public int? LanguageID { get; set; }
+        public int? CityID { get; set; }
+        public int? PublisherID { get; set; }
+        public int? EditorID { get; set; }
+        public int? TranslatorID { get; set; }
         public string TitleEnglish { get; set; }
         public string TitleLiteral { get; set; }
 

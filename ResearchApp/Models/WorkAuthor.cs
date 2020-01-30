@@ -5,9 +5,9 @@ namespace ResearchApp.Models
 {
     public partial class WorkAuthor
     {
-        public int WorkAuthorId { get; set; }
-        public int? WorkId { get; set; }
-        public int? AuthorId { get; set; }
+        public int WorkAuthorID { get; set; }
+        public int? WorkID { get; set; }
+        public int? AuthorID { get; set; }
         public string Role { get; set; }
 
         public virtual Work Work { get; set; }

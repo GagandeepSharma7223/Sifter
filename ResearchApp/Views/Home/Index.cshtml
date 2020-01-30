@@ -84,5 +84,9 @@
                 e.preventDefault();
             }
         });
+
+        if (!localStorage.getItem('menuItem')) {
+            localStorage.setItem('menuItem', 'page1');
+        }
     });
 </script>

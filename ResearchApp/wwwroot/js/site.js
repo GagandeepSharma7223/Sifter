@@ -2,36 +2,38 @@
 
 
 var isGridEditable = false, isWordWrap = false, isFormWrap = false, isLoggedIn = false,
-    editfield = "", columnNameAddItemDD = "", tableNameAddItemDD = "", addedItemDD = "", selectedAddItemDD = null, isAddNewItemDD = false, formViewSelectedItem = null, currentFilterColumn, grid, selectedItemIndex, gridFooterEle, selectedDropdownEle, filterEnabled = false;
+    editfield = "", displayFieldSelectedDD = "", columnNameAddItemDD = "", tableNameAddItemDD = "", addedItemDD = {}, selectedAddItemDD = null,
+    isAddNewItemDD = false, isAddNewItemRequestCompletedDD = false, formViewSelectedItem = null, currentFilterColumn, grid, selectedItemIndex,
+    gridFooterEle, selectedDropdownEle, filterEnabled = false, gridSelectionIndex;
 var browserWindow = $(window);
 //register custom validation rules
 (function ($, kendo) {
     $.extend(true, kendo.ui.validator, {
         rules: { // custom rules
-            titlevalidation: function (input, params) {
-                if (input.is("[name='Title']") && input.val() == "") {
-                    input.attr("data-titlevalidation-msg", "Title is required field");
-                    return false;
-                }
-                return true;
-            },
-            namevalidation: function (input, params) {
-                if (input.is("[name='Name']") && input.val() == "") {
-                    input.attr("data-namevalidation-msg", "Name is required field");
-                    return false;
-                }
-                return true;
-            }
+            //titlevalidation: function (input, params) {
+            //    if (input.is("[name='Title']") && input.val() == "") {
+            //        input.attr("data-titlevalidation-msg", "Title is required field");
+            //        return false;
+            //    }
+            //    return true;
+            //},
+            //namevalidation: function (input, params) {
+            //    if (input.is("[name='Name']") && input.val() == "") {
+            //        input.attr("data-namevalidation-msg", "Name is required field");
+            //        return false;
+            //    }
+            //    return true;
+            //}
         },
         messages: { //custom rules messages
-            titlevalidation: function (input) {
-                // return the message text
-                return input.attr("data-val-titlevalidation");
-            },
-            namevalidation: function (input) {
-                // return the message text
-                return input.attr("data-val-namevalidation");
-            }
+            //titlevalidation: function (input) {
+            //    // return the message text
+            //    return input.attr("data-val-titlevalidation");
+            //},
+            //namevalidation: function (input) {
+            //    // return the message text
+            //    return input.attr("data-val-namevalidation");
+            //}
 
         }
     });
@@ -39,10 +41,15 @@ var browserWindow = $(window);
 
 function getSelectTable() {
     var treeView = $('#treeview').data('kendoTreeView');
-    if (treeView)
-        return treeView.dataItem(treeView.select()).text;
+    if (treeView && treeView.select().length)
+        return treeView.dataItem(treeView.select()).tableName;
+    //else if (treeView && treeView.select().length === 0) {
+    //    return "Work";
+    //}
+    //else if (selectedSearchOption)
+    //    return selectedSearchOption;
     else
-        return selectedSearchOption;
+        return "Work";
 }
 
 function showLoading() {
@@ -64,16 +71,34 @@ function resizeSplitter() {
 }
 
 function resizeGrid() {
-    grid.resize();
-    var height = $(window)[0].innerHeight;
-    $('.grid-container').height(height - 50);
-    $('#grid .k-grid-content').height(height - 120);
+    if (grid) {
+        grid.resize();
+        var height = $(window)[0].innerHeight, gridHeaderFooterHeight;
+        gridHeaderFooterHeight = $('.k-grid-header').height() + $('.k-grid-pager').height();
+        $('.grid-container').height(height - 50);
+        $('.k-grid-content').height(height - (65 + gridHeaderFooterHeight));
+        if (isFormWrap) {
+            gridHeaderFooterHeight = $('#edit-form .k-grid-pager').height();
+            $('#edit-form .k-grid-content').height(height - (60 + gridHeaderFooterHeight));
+        }
+    }
+}
+
+function resizeSearchGrid() {
+    if ($('.search-results').length) {
+        var height = $(window)[0].innerHeight;
+        $('.k-grid-content').height(height - 195);
+    }
 }
 
 $(window).resize(function () {
-    if (grid) {
+    setTimeout(function () {
         resizeGrid();
-    }
+        resizeSplitter();
+        resizeTabStrip();
+        resizeSearchSplitter();
+        resizeSearchGrid();
+    });
 });
 
 $(function () {
@@ -171,12 +196,18 @@ function checkIfGridEditable(e) {
 }
 
 function loadData(e) {
-    showLoading();
     isFormWrap = false;
+    resetAddNewProps();
     $("#myModal").kendoSplitter();
     var splitter = $("#myModal").data("kendoSplitter");
-    var view = $(e.node).attr("param");
-    splitter.ajaxRequest(".k-pane:last", "/Grid/GetView", { type: view.charAt(0).toUpperCase() + view.slice(1) });
+    var treeView = $('#treeview').data('kendoTreeView');
+    if (treeView) {
+        var tableName = treeView.dataItem(e.node).tableName;
+        if (tableName) {
+            showLoading();
+            splitter.ajaxRequest(".k-pane:last", "/Grid/GetView", { type: tableName });
+        }
+    }
 }
 
 
@@ -187,17 +218,15 @@ function loadEditData(obj) {
         splitter = $("#myModal").data("kendoSplitter");
     }
     var treeview = $("#treeview").data("kendoTreeView");
-    var bar = treeview.findByText(obj);
-    treeview.select(bar);
+    treeview.dataSource.data().forEach(function (item, index) {
+        var foundItem = item.items.find(x => x.tableName === obj);
+        if (foundItem) {
+            var searchedItem = treeview.findByText(foundItem.Text);
+            treeview.select(searchedItem);
+        }
+    });
     showLoading();
-
     splitter.ajaxRequest(".k-pane:last", "/Grid/GetView", { type: obj });
-
-    //formViewSelectedItem = grid.dataItem(grid.select());
-    //selectedItemIndex = grid.dataSource.data().indexOf(formViewSelectedItem);
-    //$("#myModal").kendoSplitter();
-    //gridFooterEle = $('.k-pager-wrap').clone(true);
-    //getFormView(obj, true);
 }
 
 function gridDataBoundConfig() {
@@ -211,9 +240,10 @@ function gridDataBoundConfig() {
         $('.k-grid td').removeClass('text-wrap').addClass('text-nowrap');
     }
     hideLoading();
-    resizeGrid();
-    resizeSplitter();
-    browserWindow.resize(resizeSplitter);
+    setTimeout(function () {
+        resizeGrid();
+        resizeSplitter();
+    }, 500);
 
     if (editfield) {
         showLoading();
@@ -224,29 +254,63 @@ function gridDataBoundConfig() {
         }, 500);
     }
 
-    if (isAddNewItemDD && getSelectTable() === tableNameAddItemDD) {
+    if (getSelectTable() === tableNameAddItemDD) {
         var selectedRow = grid.dataSource.data().find(x => x[tableNameAddItemDD + 'ID'] === selectedAddItemDD[tableNameAddItemDD + 'ID']);
         var row = grid.element.find("tr[data-uid='" + selectedRow.uid + "']");
         if (row.length) {
             grid.select(row);
             // Scroll to the item to ensure it is visible
             grid.content.scrollTop(grid.select().position().top);
-            var columnIndex = grid.options.columns.findIndex(x => x.title === columnNameAddItemDD);
-            if (columnIndex)
-                grid.editCell(row.find(`td:eq(${columnIndex})`));
+            var columnIndex = grid.options.columns.findIndex(x => x.field === columnNameAddItemDD);
+            if (columnIndex) {
+                var td = row.find(`td:eq(${columnIndex})`);
+                grid.editCell(td);
+                // select added item in dropdown
+                setTimeout(function () {
+                    //row = grid.tbody
+                    //    .find("tr[data-uid='" + dataItem.uid + "']");
+                    var dropdown = td.find("input[data-role='dropdownlist']");
+                    var dropdownList = $(dropdown).data("kendoDropDownList");
+                    dropdownList.value(addedItemDD.Id);
+                    var dataItem = grid.dataItem(row);
+                    dataItem[columnNameAddItemDD + 'ID'] = addedItemDD.Id;
+                    dataItem[columnNameAddItemDD].Id = addedItemDD.Id;
+                    dataItem[columnNameAddItemDD].Option = addedItemDD.Option;
+                    dataItem.dirty = true;
+                });
+            }
         }
+        resetAddNewProps();
     }
 }
 
 function onDataBound(e) {
     console.log("event data bound");
     grid = $("#grid").data("kendoGrid");
-    e.sender.select("tr:eq(0)");
-    $('.k-grid-content').scrollTop(0);
+    if (gridSelectionIndex) {
+        if (grid.dataSource.data().length - 1 > gridSelectionIndex)
+            gridSelectionIndex++;
+        e.sender.select(`tr:eq(${gridSelectionIndex})`);
+    } else {
+        e.sender.select("tr:eq(0)");
+    }
     gridDataBoundConfig();
-
     if (isFormWrap) {
         formSwitchEvents();
+    }
+}
+
+function treeViewDataBound() {
+    selectTreeViewItem("Works");
+}
+
+function selectTreeViewItem(itemText) {
+    var treeview = $("#treeview").data("kendoTreeView");
+    if (treeview.select().length === 0) {
+        var text = treeview.findByText(itemText);
+        var itemroot1 = treeview.dataItem(text);
+        treeview.select(text);
+        treeview.expandTo(itemroot1);
     }
 }
 
@@ -308,7 +372,7 @@ function customActions() {
 }
 
 function resetAddNewProps() {
-    isAddNewItemDD = false, columnNameAddItemDD = "", tableNameAddItemDD = "", addedItemDD = "", selectedAddItemDD = null;
+    isAddNewItemDD = false, tableNameAddItemDD = "", selectedAddItemDD = null, editfield = '';
 }
 
 function triggerFormView() {
@@ -341,7 +405,7 @@ function getFormView(tableName, addNewItem) {
             $('#kendo-grid-container').css('visibility', 'hidden');
             resizeGrid();
             resizeSplitter();
-            browserWindow.resize(resizeSplitter);
+            //browserWindow.resize(resizeSplitter);
             hideLoading();
         }).fail(function (xhr) {
             hideLoading();
@@ -383,14 +447,16 @@ $(document).on("click", '#custom-add-btn', function (e) {
 });
 
 $(document).on("click", '#custom-save-btn', function (e) {
-    editfield = '';
+    editfield = '', displayFieldSelectedDD = '';
+    var dataItem = grid.dataItem(grid.select());
+    gridSelectionIndex = grid.dataSource.data().indexOf(dataItem);
     $('.k-grid-save-changes').click();
     e.preventDefault();
     e.stopPropagation();
 });
 
 $(document).on("click", '#custom-cancel-btn', function (e) {
-    editfield = '';
+    editfield = '', displayFieldSelectedDD = '';
     $('.k-grid-cancel-changes').click();
     e.preventDefault();
     e.stopPropagation();
@@ -431,15 +497,22 @@ function onSelect(e, field) {
     }
 }
 
-function onDropdownOpen(e, field) {
+function onDropdownOpen(e, field, displayCol) {
     selectedDropdownEle = e.sender.element;
     editfield = field;
+    displayFieldSelectedDD = displayCol;
+    var ddElement = `#${e.sender.element.attr('id')}-list`;
+    setTimeout(function () {
+        $(ddElement + ' .k-textbox').width('78%');
+    });
 }
 
 function onDropdownDataBound(e) {
     var ddElement = `#${e.sender.element.attr('id')}-list`;
     if (!$(ddElement).hasClass('ui-resizable')) {
-        $(ddElement).resizable();
+        $(ddElement).resizable({
+            handles: 'e, w'
+        });
     }
 }
 
@@ -667,18 +740,23 @@ function initColumnMenuFilter(e) {
     var filterMenu = e.container.find("[data-role='filtermenu']").getKendoFilterMenu();
     var grid = e.sender;
     var field = e.field;
-
+    var treeTable = getSelectTable();
     var helpTextElement = e.container.children(":first").children(":last");
-    var fieldType = 'string';
-    var filterOneValue, filterLogicValue, filterTwoValue, inputFilterOne, inputFilterTwo, ddFilterOne, ddFilterTwo;
+    var filterOneValue, filterLogicValue, filterTwoValue, inputFilterOne,
+        inputFilterTwo, ddFilterOne, ddFilterTwo, fieldType = 'string', fkDisplayColumn, columnFilterOptions = { listViewPageSize: 500 };
 
     // Get Column type
     var fieldInfo = grid.dataSource.options.schema.model.fields[field];
     if (fieldInfo) {
         fieldType = fieldInfo.type;
     }
+
+    // Fetch FKDisplay Column from db
+    $.get("/Grid/GetFKDisplayColumn", { tableName: treeTable, displayName: field }, function (response) {
+        fkDisplayColumn = response;
+    });
+
     var dataSource = this.dataSource;
-    var treeTable = getSelectTable();
     var dataSourceListView = new kendo.data.DataSource({
         type: "aspnetmvc-ajax",
         transport: {
@@ -692,51 +770,51 @@ function initColumnMenuFilter(e) {
                 }
             }
         },
-        pageSize: 150,
-        serverPaging: true
-    });
-
-    var dataSourceListViewScroll = new kendo.data.DataSource({
-        type: "aspnetmvc-ajax",
-        transport: {
-            read: {
-                type: "POST",
-                url: "/Grid/BindFilterListView",
-                data: {
-                    treeTable: treeTable,
-                    optionCol: field,
-                    fieldType: fieldType
-                }
+        schema: {
+            data: function (response) {
+                return response.Data;
+            },
+            total: function (response) {
+                return response.Total;
             }
         },
-        pageSize: 150,
+        pageSize: columnFilterOptions.listViewPageSize,
         serverPaging: true,
-        serverSorting: true
+        serverFiltering: true
     });
+
+    //var dataSourceListViewScroll = new kendo.data.DataSource({
+    //    type: "aspnetmvc-ajax",
+    //    transport: {
+    //        read: {
+    //            type: "POST",
+    //            url: "/Grid/BindFilterListView",
+    //            data: {
+    //                treeTable: treeTable,
+    //                optionCol: field,
+    //                fieldType: fieldType
+    //            }
+    //        }
+    //    },
+    //    pageSize: columnFilterOptions.listViewPageSize,
+    //    serverPaging: true,
+    //    serverSorting: true
+    //});
+
     var pageModel = {};
     pageModel[field] = 1;
 
-    var columnDataSource = new kendo.data.DataSource({
-        data: uniqueForField(dataSource.data(), field, fieldType),
-        sort: { field: field, dir: "asc" }
-    });
-
     menu.bind("open", function (e) {
-        if ($(e.item).find('.k-link').first().text() == "Filter") {
+        if ($(e.item).find('.k-link').first().text() === "Filter") {
             var filterContainer = helpTextElement.children(":last");
             var parentEle = filterContainer.children(":first");
             var elementToInsertAfter = parentEle.find('.k-filter-help-text');
             var container = parentEle.find('form');
 
-            if (!dataSource.filter()) {
-                var gridDataSource = $("#grid").data().kendoGrid.dataSource;
-                columnDataSource.data(uniqueForField(gridDataSource.data(), field, fieldType));
-                columnDataSource.sort({ field: field, dir: "asc" });
-            }
-
             if (parentEle.find('#list-view-' + field).length === 0) {
                 $(helpTextElement.children(":last")).resizable({
-                    alsoResize: "#list-view-" + field
+                    alsoResize: "#list-view-" + field,
+                    handles: 'e, w'
                 });
                 elementToInsertAfter.addClass('d-none');  //hide text above search box
                 var advancedOption = $(container).clone();
@@ -744,11 +822,18 @@ function initColumnMenuFilter(e) {
 
                 switch (fieldType) {
                     case 'object':
-                        ele = $("<div class='k-textbox k-space-right'><input id='filter-search-" + field + "' placeholder='Search'><span class='k-icon k-i-zoom'></span></div>").insertAfter(elementToInsertAfter);
-                        element = $("<div id='list-view-" + field + "' class='checkbox-ontainer'></div>").insertAfter(ele).kendoListView({
+                        ele = $("<div class='k-textbox k-space-right'><input type='text' id='filter-search-" + field + "' placeholder='Search'><span class='k-icon k-i-zoom'></span></div>").insertAfter(elementToInsertAfter);
+                        element = $("<div id='list-view-" + field + "' class='checkbox-ontainer kendo-grid-filter'></div>").insertAfter(ele).kendoGrid({
                             dataSource: dataSourceListView,
                             height: 135,
-                            template: "<div class='list-Item'><input type='checkbox' value='#:Id#'/>#:Option#</div>"
+                            scrollable: {
+                                virtual: true
+                            },
+                            columns: [
+                                {
+                                    field: '', template: "<div class='list-Item'><input type='checkbox' value='#:Id#'/>#:Option#</div>"
+                                }
+                            ]
                         });
                         break;
                     case 'boolean':
@@ -760,17 +845,25 @@ function initColumnMenuFilter(e) {
                                         </div>`).insertAfter(ele);
                         break;
                     default:
-                        ele = $("<div class='k-textbox k-space-right'><input id='filter-search-" + field + "' placeholder='Search'><span class='k-icon k-i-zoom'></span></div>").insertAfter(elementToInsertAfter);
-                        element = $("<div id='list-view-" + field + "' class='checkbox-ontainer'></div>").insertAfter(ele).kendoListView({
+                        ele = $("<div class='k-textbox k-space-right'><input type='text' id='filter-search-" + field + "' placeholder='Search'><span class='k-icon k-i-zoom'></span></div>").insertAfter(elementToInsertAfter);
+                        element = $("<div id='list-view-" + field + "' class='checkbox-ontainer kendo-grid-filter'></div>").insertAfter(ele).kendoGrid({
                             dataSource: dataSourceListView,
                             height: 135,
-                            template: "<div class='list-Item'><input type='checkbox' value='#:data#'/>#:data#</div>"
+                            resizable: true,
+                            scrollable: {
+                                virtual: true
+                            },
+                            columns: [
+                                {
+                                    field: '', template: "<div class='list-Item'><input type='checkbox' value='#:data#'/>#:data#</div>"
+                                }
+                            ]
                         });
                         break;
                 }
-                $("#list-view-" + field).resizable({
-                    alsoResize: filterContainer
-                });
+                //$("#list-view-" + field).resizable({
+                //    alsoResize: filterContainer
+                //});
                 var advancedMenu = $("<ul id='advanced-menu-" + field + "'></ul>").insertAfter($("#list-view-" + field)).kendoMenu({
                     orientation: 'vertical'
                 }).data("kendoMenu");
@@ -790,6 +883,7 @@ function initColumnMenuFilter(e) {
                 }
 
                 if (fieldType !== 'boolean') {
+                    // Bind advance search options
                     advancedMenu.bind("open", function (e) {
                         if (!inputFilterOne && !inputFilterTwo) {
                             var advancedOptionFrm = $('#advanced-menu-' + field).find('.k-filter-menu-container');
@@ -800,13 +894,48 @@ function initColumnMenuFilter(e) {
                                 inputSecond.removeClass('k-textbox').removeAttr("data-bind");
 
                                 ddFilterOne = $(inputFirst).kendoDropDownList({
-                                    dataSource: dataSourceListView,
+                                    dataSource: {
+                                        type: "aspnetmvc-ajax",
+                                        transport: {
+                                            read: `/Grid/GetDropdownOptions?treeTable=${field}&optionCol=${fkDisplayColumn}`
+                                        },
+                                        schema: {
+                                            model: {
+                                                fields: {
+                                                    Id: { type: "number" },
+                                                    Option: { type: "string" }
+                                                }
+                                            },
+                                            data: function (response) {
+                                                return response.Data;
+                                            },
+                                            total: function (response) {
+                                                return response.Total;
+                                            }
+                                        },
+                                        pageSize: 80,
+                                        serverPaging: true,
+                                        serverFiltering: true
+                                    },
                                     dataTextField: "Option",
                                     dataValueField: "Id",
+                                    filter: "contains",
+                                    virtual: {
+                                        itemHeight: 26,
+                                        valueMapper: function (options) {
+                                            $.ajax({
+                                                url: "/Grid/Dropdown_ValueMapper",
+                                                data: convertValues(options.value, field),
+                                                success: function (data) {
+                                                    options.success(data);
+                                                }
+                                            });
+                                        }
+                                    },
                                     change: function (e) {
                                         inputFilterOne = this.value();
                                     },
-                                    height: 135,
+                                    height: 135
                                 }).data("kendoDropDownList");
 
                                 ddFilterOne.setOptions({ optionLabel: "Select" });
@@ -814,23 +943,60 @@ function initColumnMenuFilter(e) {
                                 ddFilterOne.select(0);
 
                                 ddFilterTwo = $(inputSecond).kendoDropDownList({
-                                    dataSource: dataSourceListView,
+                                    dataSource: {
+                                        type: "aspnetmvc-ajax",
+                                        transport: {
+                                            read: `/Grid/GetDropdownOptions?treeTable=${field}&optionCol=${fkDisplayColumn}`
+                                        },
+                                        schema: {
+                                            model: {
+                                                fields: {
+                                                    Id: { type: "number" },
+                                                    Option: { type: "string" }
+                                                }
+                                            },
+                                            data: function (response) {
+                                                return response.Data;
+                                            },
+                                            total: function (response) {
+                                                return response.Total;
+                                            }
+                                        },
+                                        pageSize: 80,
+                                        serverPaging: true,
+                                        serverFiltering: true
+                                    },
                                     dataTextField: "Option",
                                     dataValueField: "Id",
+                                    filter: "contains",
+                                    virtual: {
+                                        itemHeight: 26,
+                                        valueMapper: function (options) {
+                                            $.ajax({
+                                                url: "/Grid/Dropdown_ValueMapper",
+                                                data: convertValues(options.value, field),
+                                                success: function (data) {
+                                                    options.success(data);
+                                                }
+                                            });
+                                        }
+                                    },
                                     change: function (e) {
                                         inputFilterTwo = this.value();
                                     },
-                                    height: 135,
+                                    height: 135
                                 }).data("kendoDropDownList");
 
                                 ddFilterTwo.setOptions({ optionLabel: "Select" });
                                 ddFilterTwo.refresh();
                                 ddFilterTwo.select(0);
-
+                                // operation and logic dropdowns
                                 var firstValueDropDown = advancedOptionFrm.find("select:eq(0)");
                                 var logicDropDown = advancedOptionFrm.find("select:eq(1)");
                                 var secondValueDropDown = advancedOptionFrm.find("select:eq(2)");
                                 logicDropDown.kendoDropDownList();
+
+                                // operation dropdowns
                                 var data = [
                                     { text: "Is equal to", value: "eq" },
                                     { text: "Is not equal to", value: "neq" },
@@ -945,16 +1111,17 @@ function initColumnMenuFilter(e) {
                 $(container).find("ul").nextAll('input').remove();
                 $(container).find("#list-view-" + field).nextAll('label').remove();
 
+                // Filter Submit click Callback
                 container.find("[type='submit']").click(function (e) {
                     e.preventDefault();
                     e.stopPropagation();
                     if (element) {
                         var filter = dataSource.filter() || { logic: "and", filters: [] };
                         var fieldFilters = [];
-                        if (fieldType != 'boolean') {
+                        if (fieldType !== 'boolean') {
                             fieldFilters = $.map(element.find(":checkbox:checked"), function (input, index) {
                                 return {
-                                    field: fieldType == 'object' ? field : field,
+                                    field: fieldType === 'object' ? field + 'ID' : field,
                                     operator: 'eq',
                                     value: parseValue(fieldType, input.value)
                                 };
@@ -962,14 +1129,14 @@ function initColumnMenuFilter(e) {
                             // Get Field Filters
                             if (inputFilterOne || chkNullableFilter(filterOneValue)) {
                                 fieldFilters.push({
-                                    field: fieldType == 'object' ? field : field,
+                                    field: fieldType === 'object' ? field + 'ID' : field,
                                     operator: filterOneValue,
                                     value: parseValue(fieldType, inputFilterOne)
                                 });
                             }
                             if (inputFilterTwo) {
                                 fieldFilters.push({
-                                    field: fieldType == 'object' ? field : field,
+                                    field: fieldType === 'object' ? field + 'ID' : field,
                                     operator: filterTwoValue,
                                     value: parseValue(fieldType, inputFilterTwo)
                                 });
@@ -999,17 +1166,33 @@ function initColumnMenuFilter(e) {
                         toggleFilterbutton();
                     }
                 });
+                // Filter reset click callback
+                container.find("[type='reset']").click(function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    container.find("input[type=text], textarea").val('');
+                    container.find('input:checkbox').removeAttr('checked');
+                    container.find("input[data-role='dropdownlist']").each(function () {
+                        var item = $(this).data("kendoDropDownList");
+                        if (item) {
+                            item.select(0);
+                        }
+                    });
 
+                    var filter = { logic: "and", filters: [] };
+                    dataSource.filter(filter);
+                    var gridView = $('#list-view-' + field).data('kendoGrid');
+                    gridView.dataSource.filter(filter);
+                });
+                // Filter search text event
                 $('#filter-search-' + field).on('keyup', function (e) {
-                    if (this.value) {
-                        if (fieldType === 'object') {
-                            var listView = $('#list-view-' + field).data('kendoListView');
-                            listView.dataSource.filter({ field: "Option", operator: "contains", value: this.value });
-                        }
-                        else {
-                            listView = $('#list-view-' + field).data('kendoListView');
-                            listView.dataSource.filter({ operator: "contains", value: this.value });
-                        }
+                    if (fieldType === 'object') {
+                        var gridView = $('#list-view-' + field).data('kendoGrid');
+                        gridView.dataSource.filter({ field: "Option", operator: "contains", value: this.value });
+                    }
+                    else {
+                        gridView = $('#list-view-' + field).data('kendoGrid');
+                        gridView.dataSource.filter({ field: field, operator: "contains", value: this.value });
                     }
                     toggleFilterbutton();
                 });
@@ -1017,36 +1200,6 @@ function initColumnMenuFilter(e) {
                 var resizableAdvanceSearchEle = $('#advanced-menu-' + field).children(":first").children(":last");
                 $(resizableAdvanceSearchEle).resizable();
             }
-
-
-            var processScroll = true;
-
-
-            $('#list-view-' + field).on('scroll', function (e) {
-                if (processScroll && $(this).scrollTop() + $(this).innerHeight() >= $(this)[0].scrollHeight - 5) {
-                    processScroll = false;
-                    pageModel[field]++;
-                    var listView = $('#list-view-' + field).data('kendoListView');
-                    dataSourceListViewScroll.query({
-                        page: pageModel[field],
-                        pageSize: 150,
-                        sort: { field: field, dir: "asc" }
-                    }).then(function () {
-                        if (dataSourceListViewScroll.data().length) {
-                            dataSourceListViewScroll.data().forEach(x => {
-                                listView.dataSource.data().push(x);
-                            });
-                            listView.dataSource.sync();
-                            listView.refresh();
-                            processScroll = true;
-                        }
-                        else {
-                            processScroll = false;
-                        }
-
-                    });
-                }
-            });
 
             setTimeout(function () {
                 $('#filter-search-' + field).focus();
@@ -1272,6 +1425,10 @@ $(document).on("click", '#save-form-btn', function (e) {
                     // Show up admin grid where add new item get triggered
                     // Select that perticular item
                     // Select that perticular cell
+                    addedItemDD = {
+                        Id: id,
+                        Option: data[displayFieldSelectedDD]
+                    };
                     backToGridDD();
                 }
                 else {
@@ -1300,10 +1457,16 @@ $(document).on("click", '#save-form-btn', function (e) {
 function backToGridDD() {
     isFormWrap = false;
     var treeview = $("#treeview").data("kendoTreeView");
-    var bar = treeview.findByText(tableNameAddItemDD);
-    treeview.select(bar);
+    treeview.dataSource.data().forEach(function (item, index) {
+        var foundItem = item.items.find(x => x.tableName === tableNameAddItemDD);
+        if (foundItem) {
+            var searchedItem = treeview.findByText(foundItem.Text);
+            treeview.select(searchedItem);
+        }
+    });
     var splitter = $("#myModal").data("kendoSplitter");
     splitter.ajaxRequest(".k-pane:last", "/Grid/GetView", { type: tableNameAddItemDD });
+    isAddNewItemDD = false;
 }
 
 $(document).on("click", '#cancel-form-btn', function (e) {
@@ -1546,17 +1709,17 @@ function getSearchResults() {
         .done(function (response) {
             hideLoading();
             if (response.Authors && response.Authors.length) {
-                generateGrid(response.Authors, '#author-search-results');
+                generateGrid(response.Authors, '#author-search-results', response.AuthorColumns);
             }
             else
                 noRecordFound('#author-search-results');
             if (response.Works && response.Works.length) {
-                generateGrid(response.Works, '#work-search-results');
+                generateGrid(response.Works, '#work-search-results', response.WorkColumns);
             }
             else
                 noRecordFound('#work-search-results');
             if (response.Units && response.Units.length) {
-                generateGrid(response.Units, '#unit-search-results');
+                generateGrid(response.Units, '#unit-search-results', response.UnitColumns);
             }
             else
                 noRecordFound('#unit-search-results');
@@ -1583,10 +1746,10 @@ function getFilterForSearch(value) {
     }
 }
 
-function generateGrid(response, container) {
+function generateGrid(response, container, columnsDef) {
     $(container).empty();
     var model = generateModel(response);
-    var columns = generateColumns(response);
+    var columns = generateColumns(columnsDef);
     var searchResultGrid = $(container).kendoGrid({
         dataSource: {
             transport: {
@@ -1604,7 +1767,7 @@ function generateGrid(response, container) {
         reorderable: true,
         resizable: true,
         pageable: true,
-        columnMenu: true,   
+        columnMenu: true,
         dataBound: function (e) {
             $(e.sender.element).find('.k-grid-content').height($('.k-tabstrip-wrapper').height() - 125);
             $(e.sender.element).find('td').addClass('text-nowrap');
@@ -1612,15 +1775,12 @@ function generateGrid(response, container) {
     }).addClass("custom-dynamic-grid");
 }
 
-function generateColumns(response) {
-    var dataItem = response[0];
-    var columnNames = Object.keys(dataItem);
-    return columnNames.map(function (name) {
-        var isIdColumn = name.indexOf("ID") > -1 || name.indexOf("Id") > -1;
+function generateColumns(columnsDef) {
+    return columnsDef.map(function (item) {
         return {
-            field: name,
-            width: isIdColumn ? 50 : 180,
-            title: name
+            field: item.ColumnName,
+            width: item.IDColumn ? 50 : 180,
+            title: item.DisplayName
         };
     });
 }
@@ -1703,7 +1863,7 @@ function getGridParams(e) {
     if (!searchParams) {
         var treeTable = getSelectTable();
         return {
-            type: isAddNewItemDD ? tableNameAddItemDD : treeTable
+            type: isAddNewItemDD ? columnNameAddItemDD : treeTable
         };
     }
     else {
@@ -1713,20 +1873,20 @@ function getGridParams(e) {
 }
 
 function resizeTabStrip() {
-    //grid.resize();
-    var tabStrip = $('#search-tab-strip').data("kendoTabStrip");
-    var height = $(window)[0].innerHeight;
-    var wrapperHeight = height - 50;
-    $('.k-tabstrip-wrapper').height(wrapperHeight);
-    var headerHeight = $('.k-tabstrip-wrapper').find('ul').height();
-    $('.k-tabstrip-wrapper').find('.k-content').height(wrapperHeight - headerHeight - 42);
-    //$('#grid .k-grid-content').height(height - 120);
+    if ($('.k-tabstrip-wrapper').length) {
+        var tabStrip = $('#search-tab-strip').data("kendoTabStrip");
+        var height = $(window)[0].innerHeight;
+        var wrapperHeight = height - 50;
+        var headerHeight = $('.k-tabstrip-wrapper').find('ul').height();
+        $('.k-tabstrip-wrapper').find('.k-content').height(wrapperHeight - headerHeight - 42);
+    }
 }
 
 function resizeSearchSplitter() {
     var outerSplitter = $("#vertical").data("kendoSplitter");
     if (outerSplitter) {
-        outerSplitter.wrapper.height($('.k-tabstrip-wrapper').height());
+        var height = $(window)[0].innerHeight;
+        outerSplitter.wrapper.height(height - 50);
         outerSplitter.resize();
     }
 }
@@ -1777,4 +1937,34 @@ function onChangeMutliSelect(e) {
     console.log(e.sender.dataItems());
 }
 
+function redirectPage(page, ele) {
+    localStorage.setItem('menuItem', ele);
+    switch (page) {
+        case 'home':
+            location.replace('/');
+            break;
+        case 'search':
+            location.replace('/Home/Search');
+            break;
+        case 'browseAll':
+            location.replace('/Home/BrowseAll');
+            break;
+        default:
+            location.replace('/');
+    }
+}
 //End Search Form operations
+
+function tabStripOnSelect(e) {
+    var tabStrip = $("#search-tab-strip").kendoTabStrip().data("kendoTabStrip");
+    tabStrip.activateTab(e.item);
+
+    setTimeout(function () {
+        resizeTabStrip();
+        resizeSearchSplitter();
+    }, 400);
+}
+
+function gridOnChange(e) {
+    console.log('test');
+}

@@ -24,17 +24,17 @@ namespace ResearchApp.Data
             var data = (IEnumerable<Country>)list.Data;
             var result = data.Select(x => new CountryViewModel
             {
-                CountryID = x.CountryId,
+                CountryID = x.CountryID,
                 Name = x.Name,
                 AlternateNames = x.AlternateNames,
                 NameAscii = x.NameAscii,
                 Code2 = x.Code2,
                 Code3 = x.Code3,
                 Continent = x.Continent,
-                GeoNameID = x.GeoNameId,
+                GeoNameID = x.GeoNameID,
                 Phone = x.Phone,
                 Slug = x.Slug,
-                TLD = x.Tld
+                TLD = x.TlD
             }).AsEnumerable();
             list.Data = result;
             return list;
@@ -50,17 +50,17 @@ namespace ResearchApp.Data
                 Code2 = model.Code2,
                 Code3 = model.Code3,
                 Continent = model.Continent,
-                GeoNameId = model.GeoNameID,
+                GeoNameID = model.GeoNameID,
                 Phone = model.Phone,
                 Slug = model.Slug,
-                Tld = model.TLD
+                TlD = model.TLD
             };
             await Create(newCountry);
-            return newCountry.CountryId;
+            return newCountry.CountryID;
         }
         public async Task UpdateCountry(CountryViewModel model, bool updateForm = false)
         {
-            var dbCountry = await GetAll().Where(x => x.CountryId == model.CountryID).FirstOrDefaultAsync();
+            var dbCountry = await GetAll().Where(x => x.CountryID == model.CountryID).FirstOrDefaultAsync();
             if (dbCountry != null)
             {
                 dbCountry.Name = model.Name;
@@ -69,10 +69,10 @@ namespace ResearchApp.Data
                 dbCountry.Code2 = model.Code2;
                 dbCountry.Code3 = model.Code3;
                 dbCountry.Continent = model.Continent;
-                dbCountry.GeoNameId = model.GeoNameID;
+                dbCountry.GeoNameID = model.GeoNameID;
                 dbCountry.Phone = model.Phone;
                 dbCountry.Slug = model.Slug;
-                dbCountry.Tld = model.TLD;
+                dbCountry.TlD = model.TLD;
                 await Update(dbCountry);
             }
         }

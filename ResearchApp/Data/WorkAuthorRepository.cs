@@ -63,18 +63,18 @@ namespace ResearchApp.Data
             var data = (IEnumerable<WorkAuthor>)list.Data;
             var result = data.Select(x => new WorkAuthorViewModel
             {
-                WorkAuthorID = x.WorkAuthorId,
-                AuthorID = x.AuthorId,
-                WorkID = x.WorkId,
+                WorkAuthorID = x.WorkAuthorID,
+                AuthorID = x.AuthorID,
+                WorkID = x.WorkID,
                 Role = x.Role,
                 Work = new DropdownOptions
                 {
-                    Id = x.WorkId,
+                    Id = x.WorkID,
                     Option = x.Work?.Title
                 },
                 Author = new DropdownOptions
                 {
-                    Id = x.AuthorId,
+                    Id = x.AuthorID,
                     Option = x.Author?.FullName
                 }
             }).AsEnumerable();
@@ -86,20 +86,20 @@ namespace ResearchApp.Data
         {
             var newWorkAuthor = new WorkAuthor
             {
-                AuthorId = updateForm ? model.AuthorID : model.Author?.Id,
-                WorkId = updateForm ? model.WorkID : model.Work?.Id,
+                AuthorID = updateForm ? model.AuthorID : model.Author?.Id,
+                WorkID = updateForm ? model.WorkID : model.Work?.Id,
                 Role = model.Role
             };
             await Create(newWorkAuthor);
-            return newWorkAuthor.WorkAuthorId;
+            return newWorkAuthor.WorkAuthorID;
         }
         public async Task UpdateWorkAuthor(WorkAuthorViewModel model, bool updateForm = false)
         {
-            var dbWorkAuthor = await GetAll().Where(x => x.WorkAuthorId == model.WorkAuthorID).FirstOrDefaultAsync();
+            var dbWorkAuthor = await GetAll().Where(x => x.WorkAuthorID == model.WorkAuthorID).FirstOrDefaultAsync();
             if (dbWorkAuthor != null)
             {
-                dbWorkAuthor.WorkId = updateForm ? model.WorkID : model.Work?.Id;
-                dbWorkAuthor.AuthorId = updateForm ? model.AuthorID : model.Author?.Id;
+                dbWorkAuthor.WorkID = updateForm ? model.WorkID : model.Work?.Id;
+                dbWorkAuthor.AuthorID = updateForm ? model.AuthorID : model.Author?.Id;
                 dbWorkAuthor.Role = model.Role;
                 await Update(dbWorkAuthor);
             }

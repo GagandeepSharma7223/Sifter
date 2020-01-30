@@ -5,7 +5,7 @@ namespace ResearchApp.Models
 {
     public partial class Language
     {
-        public int LanguageId { get; set; }
+        public int LanguageID { get; set; }
         public string Name { get; set; }
         public string UserName { get; set; }
         public DateTime ValidFromUtc { get; set; }

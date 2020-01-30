@@ -16,8 +16,8 @@
                           columns.Bound(b => b.Publisher).ClientTemplate("#=(Publisher.Option == null) ? '' : Publisher.Option#").Editable("checkIfGridEditable").Width(100);
                           columns.Bound(b => b.Editor).ClientTemplate("#=(Editor.Option == null) ? '' : Editor.Option#").Editable("checkIfGridEditable").Width(100);
                           columns.Bound(b => b.Translator).ClientTemplate("#=(Translator.Option == null) ? '' : Translator.Option#").Editable("checkIfGridEditable").Width(100);
-                          columns.Bound(b => b.TitleEnglish).Editable("checkIfGridEditable");
-                          columns.Bound(b => b.TitleLiteral).Editable("checkIfGridEditable");
+                          columns.Bound(b => b.TitleEnglish).Editable("checkIfGridEditable").Width(150);
+                          columns.Bound(b => b.TitleLiteral).Editable("checkIfGridEditable").Width(150);
                       })
                       .ToolBar(toolbar =>
                       {
@@ -34,7 +34,7 @@
                       .Selectable(config => config.Mode(GridSelectionMode.Single))
                       .ColumnMenu(col => col.Filterable(true).Enabled(true))
                       .Resizable(resize => resize.Columns(true))
-                      .Events(e => e.DataBound("onDataBound").ColumnMenuInit("columnMenuInit"))
+                      .Events(e => e.DataBound("onDataBound").ColumnMenuInit("columnMenuInit").Change("gridOnChange"))
                       .DataSource(dataSource => dataSource
                           .Ajax()
                           .Batch(true)
@@ -52,7 +52,6 @@
                               model.Field(field => field.Language).DefaultValue(new ResearchApp.ViewModel.DropdownOptions());
                           })
                           .Create("Work_Create", "Grid")
-                          //.Read("List", "Grid", new { type = GridTypes.Work })
                           .Read(read=> read.Action("List", "Grid").Data("getGridParams"))
                           .Update("Work_Update", "Grid")
                           .Destroy("Work_Destroy", "Grid")

@@ -62,9 +62,9 @@ namespace ResearchApp.Data
             var authors = (IEnumerable<Author>)list.Data;
             var result = authors.Select(x => new AuthorViewModel
             {
-                AuthorID = x.AuthorId,
+                AuthorID = x.AuthorID,
                 AlsoKnownAs = x.AlsoKnownAs,
-                BirthCountryID = x.BirthCountryId,
+                BirthCountryID = x.BirthCountryID,
                 BirthYear = x.BirthYear,
                 Comments = x.Comments,
                 DeathYear = x.DeathYear,
@@ -80,7 +80,7 @@ namespace ResearchApp.Data
                 Title = x.Title,
                 BirthCountry = new DropdownOptions
                 {
-                    Id = x.BirthCountry?.CountryId,
+                    Id = x.BirthCountry?.CountryID,
                     Option = x.BirthCountry?.Name
                 }
             }).AsEnumerable();
@@ -93,7 +93,7 @@ namespace ResearchApp.Data
             var newAuthor = new Author
             {
                 AlsoKnownAs = model.AlsoKnownAs,
-                BirthCountryId = updateForm ? model.BirthCountryID : model.BirthCountry?.Id,
+                BirthCountryID = updateForm ? model.BirthCountryID : model.BirthCountry?.Id,
                 BirthYear = model.BirthYear,
                 Comments = model.Comments,
                 DeathYear = model.DeathYear,
@@ -109,15 +109,15 @@ namespace ResearchApp.Data
                 LastName = model.LastName
             };
             await Create(newAuthor);
-            return newAuthor.AuthorId;
+            return newAuthor.AuthorID;
         }
         public async Task UpdateAuthor(AuthorViewModel model, bool updateForm = false)
         {
-            var dbAuthor = await GetAll().Where(x => x.AuthorId == model.AuthorID).FirstOrDefaultAsync();
+            var dbAuthor = await GetAll().Where(x => x.AuthorID == model.AuthorID).FirstOrDefaultAsync();
             if (dbAuthor != null)
             {
                 dbAuthor.AlsoKnownAs = model.AlsoKnownAs;
-                dbAuthor.BirthCountryId = updateForm ? model.BirthCountryID : model.BirthCountry?.Id;
+                dbAuthor.BirthCountryID = updateForm ? model.BirthCountryID : model.BirthCountry?.Id;
                 dbAuthor.BirthYear = model.BirthYear;
                 dbAuthor.Comments = model.Comments;
                 dbAuthor.DeathYear = model.DeathYear;

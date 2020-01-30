@@ -19,8 +19,10 @@ namespace ResearchApp.Data
         Task Delete(int id);
 
         List<DropdownOptions> GetOptions(string type, string optionCol);
-        List<dynamic> GetFilterData(string type, string optionCol, int page, int pageSize, string fieldType);
+        (List<dynamic>, int) GetFilterData(string type, string optionCol, DataSourceRequest request, string fieldType);
         Task<IList<TreeColumnViewModel>> GetTreeColumnsForTable(string tableName);
         AdvanceSearchViewModel SearchRecords(List<SearchParams> paramList);
+        Task<List<TreeNodeViewModel>> GetTableCategories(int? id);
+        string GetFKDisplayColumn(string tableName, string displayName);
     }
 }

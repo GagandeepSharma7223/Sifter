@@ -484,23 +484,16 @@ namespace ResearchApp.Controllers
             return list;
         }
 
-        //[AcceptVerbs("Get")]
-        public IActionResult BindFilterDropDown([DataSourceRequest] DataSourceRequest request, string treeTable, string optionCol, string fieldType)
-        {
-            if (request.PageSize == 0)
-            {
-
-                request.PageSize = 10000;
-            }
-            var result = _workRepo.GetFilterData(treeTable, optionCol, request.Page, request.PageSize, fieldType);
-            return Json(result);
-        }
-
         [AcceptVerbs("Post")]
         public IActionResult BindFilterListView([DataSourceRequest] DataSourceRequest request, string treeTable, string optionCol, string fieldType)
         {
-            var result = _workRepo.GetFilterData(treeTable, optionCol, request.Page, request.PageSize, fieldType);
-            return Json(result);
+            var (result, count) = _workRepo.GetFilterData(treeTable, optionCol, request, fieldType);
+            var response = new DataSourceResult
+            {
+                Data = result,
+                Total = count
+            };
+            return Json(response);
         }
 
 
@@ -648,6 +641,12 @@ namespace ResearchApp.Controllers
                 }
             };
         }
+
+        public JsonResult GetFKDisplayColumn(string tableName, string displayName)
+        {
+            string result = _workRepo.GetFKDisplayColumn(tableName, displayName);
+            return Json(result);
+        }
         #endregion
 
         #region Category
@@ -688,7 +687,7 @@ namespace ResearchApp.Controllers
             {
                 foreach (var item in list)
                 {
-                    await _publisherRepo.Delete(item.CategoryID.GetValueOrDefault());
+                    await _categoryRepo.Delete(item.CategoryID.GetValueOrDefault());
                 }
             }
             return Json(list.ToDataSourceResult(request, ModelState));
@@ -733,7 +732,7 @@ namespace ResearchApp.Controllers
             {
                 foreach (var item in list)
                 {
-                    await _publisherRepo.Delete(item.LanguageID.GetValueOrDefault());
+                    await _languageRepo.Delete(item.LanguageID.GetValueOrDefault());
                 }
             }
             return Json(list.ToDataSourceResult(request, ModelState));
@@ -778,7 +777,7 @@ namespace ResearchApp.Controllers
             {
                 foreach (var item in list)
                 {
-                    await _publisherRepo.Delete(item.CityID.GetValueOrDefault());
+                    await _cityRepo.Delete(item.CityID.GetValueOrDefault());
                 }
             }
             return Json(list.ToDataSourceResult(request, ModelState));
@@ -823,7 +822,7 @@ namespace ResearchApp.Controllers
             {
                 foreach (var item in list)
                 {
-                    await _publisherRepo.Delete(item.RegionID.GetValueOrDefault());
+                    await _regionRepo.Delete(item.RegionID.GetValueOrDefault());
                 }
             }
             return Json(list.ToDataSourceResult(request, ModelState));
@@ -868,7 +867,7 @@ namespace ResearchApp.Controllers
             {
                 foreach (var item in list)
                 {
-                    await _publisherRepo.Delete(item.CountryID.GetValueOrDefault());
+                    await _countryRepo.Delete(item.CountryID.GetValueOrDefault());
                 }
             }
             return Json(list.ToDataSourceResult(request, ModelState));
@@ -913,7 +912,7 @@ namespace ResearchApp.Controllers
             {
                 foreach (var item in list)
                 {
-                    await _publisherRepo.Delete(item.WorkAuthorID.GetValueOrDefault());
+                    await _workAuthorRepo.Delete(item.WorkAuthorID.GetValueOrDefault());
                 }
             }
             return Json(list.ToDataSourceResult(request, ModelState));
@@ -958,7 +957,7 @@ namespace ResearchApp.Controllers
             {
                 foreach (var item in list)
                 {
-                    await _publisherRepo.Delete(item.UnitID.GetValueOrDefault());
+                    await _unitRepo.Delete(item.UnitID.GetValueOrDefault());
                 }
             }
             return Json(list.ToDataSourceResult(request, ModelState));

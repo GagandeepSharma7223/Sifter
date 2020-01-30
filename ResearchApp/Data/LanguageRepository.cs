@@ -25,11 +25,11 @@ namespace ResearchApp.Data
             var data = (IEnumerable<Language>)list.Data;
             if (filterRequest)
             {
-                data = data.OrderBy(x => x.LanguageId);
+                data = data.OrderBy(x => x.LanguageID);
             }
             var result = data.Select(x => new LanguageViewModel
             {
-                LanguageID = x.LanguageId,
+                LanguageID = x.LanguageID,
                 Name = x.Name
             }).AsEnumerable();
             list.Data = result;
@@ -43,11 +43,11 @@ namespace ResearchApp.Data
                 Name = model.Name
             };
             await Create(newLanguage);
-            return newLanguage.LanguageId;
+            return newLanguage.LanguageID;
         }
         public async Task UpdateLanguage(LanguageViewModel model, bool updateForm = false)
         {
-            var dbLanguage = await GetAll().Where(x => x.LanguageId == model.LanguageID).FirstOrDefaultAsync();
+            var dbLanguage = await GetAll().Where(x => x.LanguageID == model.LanguageID).FirstOrDefaultAsync();
             if (dbLanguage != null)
             {
                 dbLanguage.Name = model.Name;

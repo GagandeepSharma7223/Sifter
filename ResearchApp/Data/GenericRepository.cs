@@ -84,18 +84,34 @@ namespace ResearchApp.Data
             return result;
         }
 
-        public List<dynamic> GetFilterData(string type, string optionCol, int page, int pageSize, string fieldType)
+        public (List<dynamic>, int) GetFilterData(string type, string optionCol, DataSourceRequest request, string fieldType)
         {
+            FilterDescriptor descriptor =
+                   request.Filters.Count > 0 ? request.Filters.ElementAt(0) as FilterDescriptor : null;
             if (fieldType != "object")
             {
-                return _dbContext.DynamicListFromSql($"SELECT DISTINCT {optionCol} FROM {type} WHERE {optionCol}!=@a ORDER BY {optionCol} OFFSET { (page - 1) * pageSize } ROWS FETCH NEXT { pageSize } ROWS ONLY", new Dictionary<string, object> { { "a", string.Empty } }).ToList();
+                string filterQuery = descriptor != null ? $"{optionCol} like '%{descriptor.Value}%'" : "1=1";
+                string query = $"SELECT DISTINCT {optionCol} FROM {type} WHERE {optionCol}!=@a and {filterQuery}" +
+                    $"ORDER BY {optionCol} OFFSET { (request.Page - 1) * request.PageSize } ROWS FETCH NEXT { request.PageSize } ROWS ONLY";
+                string queryCount = $"SELECT COUNT(DISTINCT {optionCol}) FROM {type} WHERE {optionCol}!=@a and {filterQuery}";
+                var result = _dbContext.DynamicListFromSql(query,
+                    new Dictionary<string, object> { { "a", string.Empty } }).ToList();
+                var resultCount = _dbContext.DynamicListFromSql(queryCount,
+                    new Dictionary<string, object> { { "a", string.Empty } }).ToList();
+                return (result, resultCount[0]);
             }
             else
             {
                 var sqltblname = _dbContext.DynamicListFromSql($"SELECT FKTable  FROM TreeColumn WHERE TableName=@a and  DisplayName = @b", new Dictionary<string, object> { { "a", type }, { "b", optionCol } }).FirstOrDefault();
                 var colName = _dbContext.DynamicListFromSql($"SELECT FKDisplayCol  FROM TreeColumn WHERE TableName=@a and  DisplayName = @b", new Dictionary<string, object> { { "a", type }, { "b", optionCol } }).FirstOrDefault();
-                string query = $"SELECT MAX({sqltblname}ID) as {sqltblname}ID ,{colName} FROM {sqltblname} where {colName} != @a GROUP BY {colName} ORDER BY {colName}  OFFSET { (page - 1) * pageSize } ROWS FETCH NEXT { pageSize } ROWS ONLY";
-                return _dbContext.DynamicListFromSql(query, new Dictionary<string, object> { { "a", string.Empty } }, fieldType).ToList();
+                string filterQuery = descriptor != null ? $"{colName} like '%{descriptor.Value}%'" : "1=1";
+                string query = $"SELECT MAX({sqltblname}ID) as {sqltblname}ID ,{colName} FROM {sqltblname} where {colName} != @a and {filterQuery} " +
+                      $" GROUP BY {colName} ORDER BY {colName}  OFFSET { (request.Page - 1) * request.PageSize } ROWS FETCH NEXT { request.PageSize } ROWS ONLY";
+                string queryCount = $"SELECT COUNT(DISTINCT {colName}) FROM {sqltblname} WHERE {colName}!=@a and {filterQuery}";
+                var result = _dbContext.DynamicListFromSql(query, new Dictionary<string, object> { { "a", string.Empty } }, fieldType).ToList();
+                var resultCount = _dbContext.DynamicListFromSql(queryCount,
+                    new Dictionary<string, object> { { "a", string.Empty } }).ToList();
+                return (result, resultCount[0]);
             }
         }
 
@@ -259,6 +275,28 @@ namespace ResearchApp.Data
                 }).ToListAsync();
         }
 
+        public async Task<List<TreeNodeViewModel>> GetTableCategories(int? id)
+        {
+            var result = new List<TreeNodeViewModel>();
+            result = await _dbContext.TreeCategory.Select(x => new TreeNodeViewModel
+            {
+                id = x.CategorySeq,
+                Text = x.Name,
+                hasChildren = true,
+                expanded = true
+            }).ToListAsync();
+            if (id.HasValue)
+            {
+                result = await _dbContext.TreeTable.OrderBy(x => x.CategorySeq)
+                                    .Where(x => x.CategorySeq == id).Select(x => new TreeNodeViewModel
+                                    {
+                                        Text = x.DisplayName,
+                                        tableName = x.TableName
+                                    }).ToListAsync();
+            }
+            return result;
+        }
+
         public void ApplyFilter(DataSourceRequest request)
         {
             if (request.Sorts.Any())
@@ -343,16 +381,47 @@ namespace ResearchApp.Data
                         SqlDataAdapter adapter = new SqlDataAdapter(command);
                         DataSet ds = new DataSet();
                         adapter.Fill(ds);
+                        var res = ds.Tables[0];
                         result.Authors = ds.Tables[0].ToList<VAuthor>();
                         result.Works = ds.Tables[1].ToList<VWork>();
                         result.Units = ds.Tables[2].ToList<VUnit>();
                     }
+
+                    result.AuthorColumns = _dbContext.TreeColumn.Where(x => x.TableName == "vAuthor" && x.Display == true)
+                        .OrderBy(x => x.ColSeq).Select(x => new TreeColumnViewModel
+                        {
+                            DisplayName = x.DisplayName,
+                            ColumnName = x.ColumnName,
+                            IDColumn = x.IDColumn
+                        }).ToList();
+
+                    result.WorkColumns = _dbContext.TreeColumn.Where(x => x.TableName == "vWork" && x.Display == true)
+                        .OrderBy(x => x.ColSeq).Select(x => new TreeColumnViewModel
+                        {
+                            DisplayName = x.DisplayName,
+                            ColumnName = x.ColumnName,
+                            IDColumn = x.IDColumn
+                        }).ToList();
+
+                    result.UnitColumns = _dbContext.TreeColumn.Where(x => x.TableName == "vUnit" && x.Display == true)
+                        .OrderBy(x => x.ColSeq).Select(x => new TreeColumnViewModel
+                        {
+                            DisplayName = x.DisplayName,
+                            ColumnName = x.ColumnName,
+                            IDColumn = x.IDColumn
+                        }).ToList();
                 }
             }
             catch (Exception ex)
             {
             }
             return result;
+        }
+
+        public string GetFKDisplayColumn(string tableName, string displayName)
+        {
+            return _dbContext.DynamicListFromSql($"SELECT FKDisplayCol  FROM TreeColumn WHERE TableName=@a and  DisplayName = @b",
+                new Dictionary<string, object> { { "a", tableName }, { "b", displayName } }).FirstOrDefault();
         }
     }
 }

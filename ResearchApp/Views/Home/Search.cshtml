@@ -6,6 +6,7 @@
 <div class="placeholders mb-2">
     <div class="row d-flex justify-content-start">
         <div class="col-md-12">
+            <input type="hidden" id="searchParam" name="searchParam" value="@ViewBag.Search" />
             @(Html.Kendo().Splitter()
                   .Name("vertical")
                   .Orientation(SplitterOrientation.Vertical)

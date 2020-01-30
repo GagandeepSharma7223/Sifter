@@ -66,46 +66,46 @@ namespace ResearchApp.Data
                 var books = (IEnumerable<Work>)list.Data;
                 var result = books.Select(x => new WorkViewModel
                 {
-                    WorkID = x.WorkId,
+                    WorkID = x.WorkID,
                     PublicationYear = x.PublicationYear,
                     Title = x.Title,
                     TitleEnglish = x.TitleEnglish,
                     TitleLiteral = x.TitleLiteral,
-                    AuthorID = x.AuthorId,
-                    CityID = x.CityId,
-                    LanguageID = x.LanguageId,
-                    PublisherID = x.PublisherId,
-                    TranslatorID = x.TranslatorId,
-                    EditorID = x.EditorId,
+                    AuthorID = x.AuthorID,
+                    CityID = x.CityID,
+                    LanguageID = x.LanguageID,
+                    PublisherID = x.PublisherID,
+                    TranslatorID = x.TranslatorID,
+                    EditorID = x.EditorID,
                     Author = new DropdownOptions
                     {
                         Option = x.Author?.FullName,
-                        Id = x.AuthorId
+                        Id = x.AuthorID
                     },
                     City = new DropdownOptions
                     {
-                        Id = x.City?.CityId,
+                        Id = x.City?.CityID,
                         Option = x.City?.Name
                     },
                     Language = new DropdownOptions
                     {
-                        Id = x.Language?.LanguageId,
+                        Id = x.Language?.LanguageID,
                         Option = x.Language?.Name
                     },
                     Publisher = new DropdownOptions
                     {
-                        Id = x.PublisherId,
+                        Id = x.PublisherID,
                         Option = x.Publisher?.Name
                     },
                     Editor = new DropdownOptions
                     {
                         Option = x.Editor?.FullName,
-                        Id = x.EditorId
+                        Id = x.EditorID
                     },
                     Translator = new DropdownOptions
                     {
                         Option = x.Translator?.FullName,
-                        Id = x.TranslatorId
+                        Id = x.TranslatorID
                     }
                 }).AsEnumerable();
                 list.Data = result;
@@ -126,31 +126,31 @@ namespace ResearchApp.Data
                 Title = model.Title,
                 TitleEnglish = model.TitleEnglish,
                 TitleLiteral = model.TitleLiteral,
-                AuthorId = updateForm ? model.AuthorID : model.Author?.Id,
-                CityId = updateForm ? model.CityID : model.City?.Id,
-                LanguageId = updateForm ? model.LanguageID : model.Language?.Id,
-                PublisherId = updateForm ? model.PublisherID : model.Publisher?.Id,
-                TranslatorId = updateForm ? model.TranslatorID : model.Translator?.Id,
-                EditorId = updateForm ? model.EditorID : model.Editor?.Id
+                AuthorID = updateForm ? model.AuthorID : model.Author?.Id,
+                CityID = updateForm ? model.CityID : model.City?.Id,
+                LanguageID = updateForm ? model.LanguageID : model.Language?.Id,
+                PublisherID = updateForm ? model.PublisherID : model.Publisher?.Id,
+                TranslatorID = updateForm ? model.TranslatorID : model.Translator?.Id,
+                EditorID = updateForm ? model.EditorID : model.Editor?.Id
         };
             await Create(newWork);
-            return newWork.WorkId;
+            return newWork.WorkID;
         }
         public async Task UpdateWork(WorkViewModel model, bool updateForm = false)
         {
-            var dbWork = await GetAll().Where(x => x.WorkId == model.WorkID).FirstOrDefaultAsync();
+            var dbWork = await GetAll().Where(x => x.WorkID == model.WorkID).FirstOrDefaultAsync();
             if (dbWork != null)
             {
                 dbWork.PublicationYear = model.PublicationYear;
                 dbWork.Title = model.Title;
                 dbWork.TitleEnglish = model.TitleEnglish;
                 dbWork.TitleLiteral = model.TitleLiteral;
-                dbWork.AuthorId = updateForm ? model.AuthorID : model.Author?.Id;
-                dbWork.CityId = updateForm ? model.CityID : model.City?.Id;
-                dbWork.LanguageId = updateForm ? model.LanguageID : model.Language?.Id;
-                dbWork.PublisherId = updateForm ? model.PublisherID : model.Publisher?.Id;
-                dbWork.TranslatorId = updateForm ? model.TranslatorID : model.Translator?.Id;
-                dbWork.EditorId = updateForm ? model.EditorID : model.Editor?.Id;
+                dbWork.AuthorID = updateForm ? model.AuthorID : model.Author?.Id;
+                dbWork.CityID = updateForm ? model.CityID : model.City?.Id;
+                dbWork.LanguageID = updateForm ? model.LanguageID : model.Language?.Id;
+                dbWork.PublisherID = updateForm ? model.PublisherID : model.Publisher?.Id;
+                dbWork.TranslatorID = updateForm ? model.TranslatorID : model.Translator?.Id;
+                dbWork.EditorID = updateForm ? model.EditorID : model.Editor?.Id;
                 await Update(dbWork);
             }
         }

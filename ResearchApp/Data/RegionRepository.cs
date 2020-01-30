@@ -63,18 +63,18 @@ namespace ResearchApp.Data
             var data = (IEnumerable<Region>)list.Data;
             var result = data.Select(x => new RegionViewModel
             {
-                RegionID = x.RegionId,
+                RegionID = x.RegionID,
                 Name = x.Name,
                 AlternateNames = x.AlternateNames,
-                CountryID = x.CountryId,
+                CountryID = x.CountryID,
                 NameAscii = x.NameAscii,
                 DisplayName = x.DisplayName,
                 GeoNameCode = x.GeoNameCode,
-                GeoNameID = x.GeoNameId,
+                GeoNameID = x.GeoNameID,
                 Slug = x.Slug,
                 Country = new DropdownOptions
                 {
-                    Id = x.CountryId,
+                    Id = x.CountryID,
                     Option = x.Country?.Name
                 }
             }).AsEnumerable();
@@ -88,28 +88,28 @@ namespace ResearchApp.Data
             {
                 Name = model.Name,
                 AlternateNames = model.AlternateNames,
-                CountryId = updateForm ? model.CountryID : model.Country?.Id,
+                CountryID = updateForm ? model.CountryID : model.Country?.Id,
                 NameAscii = model.NameAscii,
                 DisplayName = model.DisplayName,
                 GeoNameCode = model.GeoNameCode,
-                GeoNameId = model.GeoNameID,
+                GeoNameID = model.GeoNameID,
                 Slug = model.Slug
             };
             await Create(newRegion);
-            return newRegion.RegionId;
+            return newRegion.RegionID;
         }
         public async Task UpdateRegion(RegionViewModel model, bool updateForm = false)
         {
-            var dbRegion = await GetAll().Where(x => x.RegionId == model.RegionID).FirstOrDefaultAsync();
+            var dbRegion = await GetAll().Where(x => x.RegionID == model.RegionID).FirstOrDefaultAsync();
             if (dbRegion != null)
             {
                 dbRegion.Name = model.Name;
                 dbRegion.AlternateNames = model.AlternateNames;
-                dbRegion.CountryId = updateForm ? model.CountryID : model.Country?.Id;
+                dbRegion.CountryID = updateForm ? model.CountryID : model.Country?.Id;
                 dbRegion.NameAscii = model.NameAscii;
                 dbRegion.DisplayName = model.DisplayName;
                 dbRegion.GeoNameCode = model.GeoNameCode;
-                dbRegion.GeoNameId = model.GeoNameID;
+                dbRegion.GeoNameID = model.GeoNameID;
                 dbRegion.Slug = model.Slug;
                 await Update(dbRegion);
             }

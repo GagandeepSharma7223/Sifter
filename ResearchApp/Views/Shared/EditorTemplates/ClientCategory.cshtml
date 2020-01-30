@@ -1,5 +1,10 @@
 ﻿@model ResearchApp.ViewModel.DropdownOptions
 
+@{
+    string fkTable = "Category";
+    string fkColumn = "Name";
+}
+
 @(Html.Kendo().DropDownListFor(m => m)
                       .DataValueField("Id")
                       .DataTextField("Option")
@@ -15,7 +20,7 @@
                                 .Type("aspnetmvc-ajax")
                                 .Transport(transport =>
                                 {
-                                    transport.Read("GetDropdownOptions", "Grid", new { treeTable = "Category", optionCol = "Name" });
+                                    transport.Read("GetDropdownOptions", "Grid", new { treeTable = fkTable, optionCol = fkColumn });
                                 })
                                 .Schema(schema =>
                                 {
@@ -23,7 +28,7 @@
                                           .Total("Total");
                                 });
                       })
-                      .Events(e => e.Open("function(e){ onDropdownOpen(e, 'Category') }").DataBound("onDropdownDataBound"))
+                      .Events(e => e.Open("function(e){ onDropdownOpen(e,'" + fkTable + "','" + fkColumn + "')}").DataBound("onDropdownDataBound"))
                       .HeaderTemplateId("optionLabelTemplate")
                       .Virtual(v => v.ItemHeight(26).ValueMapper("valueMapperCategory"))
 

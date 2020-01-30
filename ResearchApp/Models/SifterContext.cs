@@ -67,13 +67,13 @@ namespace ResearchApp.Models
 
             modelBuilder.Entity<Author>(entity =>
             {
-                entity.Property(e => e.AuthorId)
+                entity.Property(e => e.AuthorID)
                     .HasColumnName("AuthorID")
                     .HasDefaultValueSql("(NEXT VALUE FOR [AuthorSeq])");
 
                 entity.Property(e => e.AlsoKnownAs).HasMaxLength(100);
 
-                entity.Property(e => e.BirthCountryId).HasColumnName("BirthCountryID");
+                entity.Property(e => e.BirthCountryID).HasColumnName("BirthCountryID");
 
                 entity.Property(e => e.Comments)
                     .HasMaxLength(400)
@@ -167,7 +167,7 @@ namespace ResearchApp.Models
 
             modelBuilder.Entity<Category>(entity =>
             {
-                entity.Property(e => e.CategoryId)
+                entity.Property(e => e.CategoryID)
                     .HasColumnName("CategoryID")
                     .HasDefaultValueSql("(NEXT VALUE FOR [CategorySeq])");
 
@@ -178,13 +178,13 @@ namespace ResearchApp.Models
 
             modelBuilder.Entity<City>(entity =>
             {
-                entity.Property(e => e.CityId)
+                entity.Property(e => e.CityID)
                     .HasColumnName("CityID")
                     .HasDefaultValueSql("(NEXT VALUE FOR [CitySeq])");
 
                 entity.Property(e => e.AlternateNames).HasMaxLength(200);
 
-                entity.Property(e => e.CountryId).HasColumnName("CountryID");
+                entity.Property(e => e.CountryID).HasColumnName("CountryID");
 
                 entity.Property(e => e.DisplayName).HasMaxLength(200);
 
@@ -192,7 +192,7 @@ namespace ResearchApp.Models
                     .HasMaxLength(10)
                     .IsUnicode(false);
 
-                entity.Property(e => e.GeoNameId).HasColumnName("GeoNameID");
+                entity.Property(e => e.GeoNameID).HasColumnName("GeoNameID");
 
                 entity.Property(e => e.Latitude).HasColumnType("decimal(8, 5)");
 
@@ -202,7 +202,7 @@ namespace ResearchApp.Models
 
                 entity.Property(e => e.NameAscii).HasMaxLength(100);
 
-                entity.Property(e => e.RegionId).HasColumnName("RegionID");
+                entity.Property(e => e.RegionID).HasColumnName("RegionID");
 
                 entity.Property(e => e.SearchNames).HasMaxLength(4000);
 
@@ -215,7 +215,7 @@ namespace ResearchApp.Models
 
             modelBuilder.Entity<Country>(entity =>
             {
-                entity.Property(e => e.CountryId)
+                entity.Property(e => e.CountryID)
                     .HasColumnName("CountryID")
                     .HasDefaultValueSql("(NEXT VALUE FOR [CountrySeq])");
 
@@ -233,7 +233,7 @@ namespace ResearchApp.Models
                     .HasMaxLength(2)
                     .IsUnicode(false);
 
-                entity.Property(e => e.GeoNameId).HasColumnName("GeoNameID");
+                entity.Property(e => e.GeoNameID).HasColumnName("GeoNameID");
 
                 entity.Property(e => e.Name).HasMaxLength(100);
 
@@ -245,7 +245,7 @@ namespace ResearchApp.Models
 
                 entity.Property(e => e.Slug).HasMaxLength(100);
 
-                entity.Property(e => e.Tld)
+                entity.Property(e => e.TlD)
                     .HasColumnName("TLD")
                     .HasMaxLength(10)
                     .IsUnicode(false);
@@ -273,7 +273,7 @@ namespace ResearchApp.Models
 
             modelBuilder.Entity<Language>(entity =>
             {
-                entity.Property(e => e.LanguageId)
+                entity.Property(e => e.LanguageID)
                     .HasColumnName("LanguageID")
                     .HasDefaultValueSql("(NEXT VALUE FOR [LanguageSeq])");
 
@@ -316,7 +316,7 @@ namespace ResearchApp.Models
 
             modelBuilder.Entity<Publisher>(entity =>
             {
-                entity.Property(e => e.PublisherId)
+                entity.Property(e => e.PublisherID)
                     .HasColumnName("PublisherID")
                     .HasDefaultValueSql("(NEXT VALUE FOR [PublisherSeq])");
 
@@ -397,13 +397,13 @@ namespace ResearchApp.Models
 
             modelBuilder.Entity<Region>(entity =>
             {
-                entity.Property(e => e.RegionId)
+                entity.Property(e => e.RegionID)
                     .HasColumnName("RegionID")
                     .HasDefaultValueSql("(NEXT VALUE FOR [RegionSeq])");
 
                 entity.Property(e => e.AlternateNames).HasMaxLength(200);
 
-                entity.Property(e => e.CountryId).HasColumnName("CountryID");
+                entity.Property(e => e.CountryID).HasColumnName("CountryID");
 
                 entity.Property(e => e.DisplayName).HasMaxLength(100);
 
@@ -411,7 +411,7 @@ namespace ResearchApp.Models
                     .HasMaxLength(10)
                     .IsUnicode(false);
 
-                entity.Property(e => e.GeoNameId).HasColumnName("GeoNameID");
+                entity.Property(e => e.GeoNameID).HasColumnName("GeoNameID");
 
                 entity.Property(e => e.Name).HasMaxLength(100);
 
@@ -485,13 +485,13 @@ namespace ResearchApp.Models
 
             modelBuilder.Entity<Unit>(entity =>
             {
-                entity.Property(e => e.UnitId)
+                entity.Property(e => e.UnitID)
                     .HasColumnName("UnitID")
                     .HasDefaultValueSql("(NEXT VALUE FOR [UnitSeq])");
 
                 entity.Property(e => e.Attribution).HasMaxLength(200);
 
-                entity.Property(e => e.CategoryId).HasColumnName("CategoryID");
+                entity.Property(e => e.CategoryID).HasColumnName("CategoryID");
 
                 entity.Property(e => e.LiteralTitle).HasMaxLength(100);
 
@@ -501,7 +501,7 @@ namespace ResearchApp.Models
 
                 entity.Property(e => e.TitleEnglish).HasMaxLength(100);
 
-                entity.Property(e => e.WorkId).HasColumnName("WorkID");
+                entity.Property(e => e.WorkID).HasColumnName("WorkID");
             });
 
             modelBuilder.Entity<VAuthor>(entity =>
@@ -628,19 +628,19 @@ namespace ResearchApp.Models
 
             modelBuilder.Entity<Work>(entity =>
             {
-                entity.Property(e => e.WorkId)
+                entity.Property(e => e.WorkID)
                     .HasColumnName("WorkID")
                     .HasDefaultValueSql("(NEXT VALUE FOR [WorkSeq])");
 
-                entity.Property(e => e.AuthorId).HasColumnName("AuthorID");
+                entity.Property(e => e.AuthorID).HasColumnName("AuthorID");
 
-                entity.Property(e => e.CityId).HasColumnName("CityID");
+                entity.Property(e => e.CityID).HasColumnName("CityID");
 
-                entity.Property(e => e.EditorId).HasColumnName("EditorID");
+                entity.Property(e => e.EditorID).HasColumnName("EditorID");
 
-                entity.Property(e => e.LanguageId).HasColumnName("LanguageID");
+                entity.Property(e => e.LanguageID).HasColumnName("LanguageID");
 
-                entity.Property(e => e.PublisherId).HasColumnName("PublisherID");
+                entity.Property(e => e.PublisherID).HasColumnName("PublisherID");
 
                 entity.Property(e => e.Title).HasMaxLength(200);
 
@@ -648,22 +648,22 @@ namespace ResearchApp.Models
 
                 entity.Property(e => e.TitleLiteral).HasMaxLength(200);
 
-                entity.Property(e => e.TranslatorId).HasColumnName("TranslatorID");
+                entity.Property(e => e.TranslatorID).HasColumnName("TranslatorID");
             });
 
             modelBuilder.Entity<WorkAuthor>(entity =>
             {
-                entity.Property(e => e.WorkAuthorId)
+                entity.Property(e => e.WorkAuthorID)
                     .HasColumnName("WorkAuthorID")
                     .HasDefaultValueSql("(NEXT VALUE FOR [WorkAuthorSeq])");
 
-                entity.Property(e => e.AuthorId).HasColumnName("AuthorID");
+                entity.Property(e => e.AuthorID).HasColumnName("AuthorID");
 
                 entity.Property(e => e.Role)
                     .HasMaxLength(40)
                     .IsUnicode(false);
 
-                entity.Property(e => e.WorkId).HasColumnName("WorkID");
+                entity.Property(e => e.WorkID).HasColumnName("WorkID");
             });
 
             modelBuilder.HasSequence<int>("ActionSeq").StartsAt(6059);

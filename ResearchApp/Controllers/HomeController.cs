@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Linq;
 using ResearchApp.ViewModel;
 using System.Collections.Generic;
+using Kendo.Mvc.UI;
 
 namespace ResearchApp.Controllers
 {
@@ -27,6 +28,12 @@ namespace ResearchApp.Controllers
         public IActionResult Search()
         {
             return View();
+        }
+
+        public IActionResult BrowseAll()
+        {
+            ViewBag.Search = "BrowseAll";
+            return View("Search");
         }
 
         public IActionResult About()
@@ -64,6 +71,11 @@ namespace ResearchApp.Controllers
             return Json(false);
         }
 
+        public async Task<JsonResult> Remote_Data_Binding_Get_Employees(int? id)
+        {
+            var result = await _authorRepo.GetTableCategories(id);
+            return Json(result);
+        }
         public IActionResult LoadSearchLeftPanel()
         {
             return PartialView("_PartialSearchLeftPanel");

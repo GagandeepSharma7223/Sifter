@@ -61,29 +61,29 @@ namespace ResearchApp.Data
             var data = (IEnumerable<City>)list.Data;
             var result = data.Select(x => new CityViewModel
             {
-                CityID = x.CityId,
+                CityID = x.CityID,
                 Name = x.Name,
                 AlternateNames = x.AlternateNames,
-                CountryID = x.CountryId,
+                CountryID = x.CountryID,
                 DisplayName = x.DisplayName,
                 FeatureCode = x.FeatureCode,
-                GeoNameID = x.GeoNameId,
+                GeoNameID = x.GeoNameID,
                 Latitude = x.Latitude,
                 SearchNames = x.SearchNames,
                 Longitude = x.Longitude,
                 NameAscii = x.NameAscii,
                 Population = x.Population,
-                RegionID = x.RegionId,
+                RegionID = x.RegionID,
                 Slug = x.Slug,
                 TimeZone = x.TimeZone,
                 Country = new DropdownOptions
                 {
-                    Id = x.CountryId,
+                    Id = x.CountryID,
                     Option = x.Country?.Name
                 },
                 Region = new DropdownOptions
                 {
-                    Id = x.RegionId,
+                    Id = x.RegionID,
                     Option = x.Region?.Name
                 }
             }).AsEnumerable();
@@ -97,39 +97,39 @@ namespace ResearchApp.Data
             {
                 Name = model.Name,
                 AlternateNames = model.AlternateNames,
-                CountryId = updateForm ? model.CountryID : model.Country?.Id,
+                CountryID = updateForm ? model.CountryID : model.Country?.Id,
                 DisplayName = model.DisplayName,
                 FeatureCode = model.FeatureCode,
-                GeoNameId = model.GeoNameID,
+                GeoNameID = model.GeoNameID,
                 Latitude = model.Latitude,
                 SearchNames = model.SearchNames,
                 Longitude = model.Longitude,
                 NameAscii = model.NameAscii,
                 Population = model.Population,
-                RegionId = updateForm ? model.RegionID : model.Region?.Id,
+                RegionID = updateForm ? model.RegionID : model.Region?.Id,
                 Slug = model.Slug,
                 TimeZone = model.TimeZone
             };
             await Create(newCity);
-            return newCity.CityId;
+            return newCity.CityID;
         }
         public async Task UpdateCity(CityViewModel model, bool updateForm = false)
         {
-            var dbCity = await GetAll().Where(x => x.CityId == model.CityID).FirstOrDefaultAsync();
+            var dbCity = await GetAll().Where(x => x.CityID == model.CityID).FirstOrDefaultAsync();
             if (dbCity != null)
             {
                 dbCity.Name = model.Name;
                 dbCity.AlternateNames = model.AlternateNames;
-                dbCity.CountryId = updateForm ? model.CountryID : model.Country?.Id;
+                dbCity.CountryID = updateForm ? model.CountryID : model.Country?.Id;
                 dbCity.DisplayName = model.DisplayName;
                 dbCity.FeatureCode = model.FeatureCode;
-                dbCity.GeoNameId = model.GeoNameID;
+                dbCity.GeoNameID = model.GeoNameID;
                 dbCity.Latitude = model.Latitude;
                 dbCity.SearchNames = model.SearchNames;
                 dbCity.Longitude = model.Longitude;
                 dbCity.NameAscii = model.NameAscii;
                 dbCity.Population = model.Population;
-                dbCity.RegionId = updateForm ? model.RegionID : model.Region?.Id;
+                dbCity.RegionID = updateForm ? model.RegionID : model.Region?.Id;
                 dbCity.Slug = model.Slug;
                 dbCity.TimeZone = model.TimeZone;
                 await Update(dbCity);
