@@ -1,45 +1,74 @@
 ﻿@using ResearchApp.Data
 <div class="placeholders mb-2">
-    @(Html.Kendo().TabStrip()
-      .Name("search-tab-strip")
-      .Animation(animation =>
-          animation.Open(effect =>
-          effect.Fade(FadeDirection.In)))
-      .Events(eve => eve.Select("tabStripOnSelect"))
-      .Items(tabstrip =>
-      {
-          tabstrip.Add().Text("Authors")
-              .LoadContentFrom("GetSearchForm", "Grid", new { type = GridTypes.VAuthor });
-          tabstrip.Add().Text("Works")
-              .LoadContentFrom("GetSearchForm", "Grid", new { type = GridTypes.VWork });
-          tabstrip.Add().Text("Elements")
-              .LoadContentFrom("GetSearchForm", "Grid", new { type = GridTypes.VUnit });
-          tabstrip.Add().Text("Author Results")
-              .Content("<div class='search-results' id='author-search-results'></div>");
-          tabstrip.Add().Text("Work Results")
-              .Content("<div class='search-results' id='work-search-results'></div>");
-          tabstrip.Add().Text("Element Results")
-              .Content("<div class='search-results' id='unit-search-results'></div>");
-      }
-    ))
+    <div class="wrapper">
+        <div id="search-tab-strip">
+            <ul>
+                <li>Authors</li>
+                <li>Works</li>
+                <li>Elements</li>
+                <li>Author Results</li>
+                <li>Work Results</li>
+                <li>Element Results</li>
+            </ul>
+        </div>
+    </div>
 </div>
 
 <script>
-    $(function () {
+    $(document).ready(function () {
+        var tabStrip = $("#search-tab-strip").kendoTabStrip({
+            animation: { open: { effects: "fadeIn" } },
+            contentUrls: [
+                {
+                    url: "/Grid/GetSearchForm",
+                    cache: true,
+                    data: { type: @((int)GridTypes.VAuthor) }
+                },
+                {
+                    url: "/Grid/GetSearchForm",
+                    cache: true,
+                    data: { type: @((int)GridTypes.VWork) }
+                },
+                {
+                    url: "/Grid/GetSearchForm",
+                    cache: true,
+                    data: { type: @((int)GridTypes.VUnit) }
+                },
+                {
+                    url: "/Grid/SearchForm",
+                    cache: false,
+                    type: "Post",
+                    data: getSearchParams(@((int)GridTypes.VAuthor))
+                },
+                {
+                    url: "/Grid/SearchForm",
+                    cache: false,
+                    type: "Post",
+                    data: getSearchParams(@((int)GridTypes.VWork))
+                },
+                {
+                    url: "/Grid/SearchForm",
+                    cache: false,
+                    type: "Post",
+                    data: getSearchParams(@((int)GridTypes.VUnit))
+                }
+            ],
+        }).data('kendoTabStrip');
+
         hideLoading();
         resizeTabStrip();
         resizeSearchSplitter();
         var searchParam = $('#searchParam').val();
-        var tabStrip = $("#search-tab-strip").kendoTabStrip().data("kendoTabStrip");
         if (searchParam === 'BrowseAll') {
-            tabStrip.select(3);
             tabStrip.remove(tabStrip.tabGroup.children().eq(0));
             tabStrip.remove(tabStrip.tabGroup.children().eq(0));
             tabStrip.remove(tabStrip.tabGroup.children().eq(0));
-            $(tabStrip.items()[0]).children()[1].innerText = "Authors";
-            $(tabStrip.items()[1]).children()[1].innerText = "Works";
-            $(tabStrip.items()[2]).children()[1].innerText = "Elements";
-            getSearchResults();
+            $(tabStrip.items()[0]).children()[0].innerText = "Authors";
+            $(tabStrip.items()[1]).children()[0].innerText = "Works";
+            $(tabStrip.items()[2]).children()[0].innerText = "Elements";
+            tabStrip.reload("li:eq(1)");
+            tabStrip.reload("li:eq(2)");
+            tabStrip.select(0);
         }
         else {
             tabStrip.select(0);

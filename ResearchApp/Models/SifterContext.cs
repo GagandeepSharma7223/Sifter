@@ -31,9 +31,9 @@ namespace ResearchApp.Models
         public virtual DbSet<Publisher> Publisher { get; set; }
         public virtual DbSet<RawBook> RawBook { get; set; }
         public virtual DbSet<Region> Region { get; set; }
-        public virtual DbSet<TreeCategory> TreeCategory { get; set; }
-        public virtual DbSet<TreeColumn> TreeColumn { get; set; }
-        public virtual DbSet<TreeTable> TreeTable { get; set; }
+        //public virtual DbSet<TreeCategory> TreeCategory { get; set; }
+        //public virtual DbSet<TreeColumn> TreeColumn { get; set; }
+        //public virtual DbSet<TreeTable> TreeTable { get; set; }
         public virtual DbSet<Unit> Unit { get; set; }
         public virtual DbSet<VAuthor> VAuthor { get; set; }
         public virtual DbSet<VAuthorLanguage> VAuthorLanguage { get; set; }
@@ -42,6 +42,9 @@ namespace ResearchApp.Models
         public virtual DbSet<VWorkAuthor> VWorkAuthor { get; set; }
         public virtual DbSet<Work> Work { get; set; }
         public virtual DbSet<WorkAuthor> WorkAuthor { get; set; }
+        public virtual DbSet<MetaCategory> MetaCategory { get; set; }
+        public virtual DbSet<MetaColumn> MetaColumn { get; set; }
+        public virtual DbSet<MetaTable> MetaTable { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -666,6 +669,93 @@ namespace ResearchApp.Models
                 entity.Property(e => e.WorkID).HasColumnName("WorkID");
             });
 
+            modelBuilder.Entity<MetaCategory>(entity =>
+            {
+                entity.HasNoKey();
+
+                entity.HasIndex(e => e.CategorySeq)
+                    .HasName("CI")
+                    .IsClustered();
+
+                entity.Property(e => e.MetaCategoryId)
+                    .HasColumnName("MetaCategoryID")
+                    .HasDefaultValueSql("(NEXT VALUE FOR [MetaCategorySeq])");
+
+                entity.Property(e => e.Name)
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+            });
+
+            modelBuilder.Entity<MetaColumn>(entity =>
+            {
+                entity.HasNoKey();
+
+                entity.HasIndex(e => new { e.TableName, e.ColSeq })
+                    .HasName("CI")
+                    .IsClustered();
+
+                entity.Property(e => e.ColType)
+                    .HasMaxLength(20)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.ColumnName)
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.DisplayName)
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.FkdisplayCol)
+                    .HasColumnName("FKDisplayCol")
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.FkjoinCol)
+                    .HasColumnName("FKJoinCol")
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.Fktable)
+                    .HasColumnName("FKTable")
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.Idcolumn).HasColumnName("IDColumn");
+
+                entity.Property(e => e.MetaColumnId)
+                    .HasColumnName("MetaColumnID")
+                    .HasDefaultValueSql("(NEXT VALUE FOR [MetaColumnSeq])");
+
+                entity.Property(e => e.TableName)
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+            });
+
+            modelBuilder.Entity<MetaTable>(entity =>
+            {
+                entity.HasNoKey();
+
+                entity.HasIndex(e => e.TableName)
+                    .HasName("CI")
+                    .IsClustered();
+
+                entity.Property(e => e.DisplayName)
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.MetaCategoryId).HasColumnName("MetaCategoryID");
+
+                entity.Property(e => e.MetaTableId)
+                    .HasColumnName("MetaTableID")
+                    .HasDefaultValueSql("(NEXT VALUE FOR [MetaTableSeq])");
+
+                entity.Property(e => e.TableName)
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+            });
+
+
             modelBuilder.HasSequence<int>("ActionSeq").StartsAt(6059);
 
             modelBuilder.HasSequence<int>("AuthorLanguageSeq").StartsAt(5296);
@@ -699,6 +789,12 @@ namespace ResearchApp.Models
             modelBuilder.HasSequence<int>("WorkAuthorSeq").StartsAt(5508);
 
             modelBuilder.HasSequence<int>("WorkSeq").StartsAt(5216);
+
+            modelBuilder.HasSequence<int>("MetaCategorySeq").StartsAt(101);
+
+            modelBuilder.HasSequence<int>("MetaColumnSeq").StartsAt(1001);
+
+            modelBuilder.HasSequence<int>("MetaTableSeq").StartsAt(101);
 
             OnModelCreatingPartial(modelBuilder);
         }

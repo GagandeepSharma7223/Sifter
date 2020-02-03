@@ -251,44 +251,47 @@ namespace ResearchApp.Data
             }
         }
 
-        public IQueryable<TreeColumn> GetTreeColumns()
+        public IQueryable<MetaColumn> GetTreeColumns()
         {
-            return _dbContext.TreeColumn;
+            return _dbContext.MetaColumn;
         }
 
         public async Task<IList<TreeColumnViewModel>> GetTreeColumnsForTable(string tableName)
         {
-            return await _dbContext.TreeColumn.Where(x => x.TableName == tableName).OrderBy(x => x.ColSeq)
+            return await _dbContext.MetaColumn.Where(x => x.TableName == tableName).OrderBy(x => x.ColSeq)
                 .Select(x => new TreeColumnViewModel
                 {
                     ColSeq = x.ColSeq,
                     ColumnName = x.ColumnName,
-                    Display = x.Display,
-                    IDColumn = x.IDColumn,
+                    Display = x.IsDisplayed,
+                    IDColumn = x.Idcolumn ?? false,
                     DisplayName = x.DisplayName,
-                    Editable = x.Editable,
+                    Editable = x.IsEditable,
                     FkdisplayCol = x.FkdisplayCol,
                     FkjoinCol = x.FkjoinCol,
                     Fktable = x.Fktable,
                     TableName = x.TableName,
-                    Type = !string.IsNullOrEmpty(x.Fktable) ? "dropdown" : x.Type
+                    IsEditable = x.IsEditable ?? false,
+                    IsRequired = x.IsRequired ?? false,
+                    IsUnique = x.IsUnique ?? false,
+                    Type = !string.IsNullOrEmpty(x.Fktable) ? "dropdown" : x.ColType
                 }).ToListAsync();
         }
 
         public async Task<List<TreeNodeViewModel>> GetTableCategories(int? id)
         {
             var result = new List<TreeNodeViewModel>();
-            result = await _dbContext.TreeCategory.Select(x => new TreeNodeViewModel
+            result = await _dbContext.MetaCategory.Select(x => new TreeNodeViewModel
             {
-                id = x.CategorySeq,
+                id = x.MetaCategoryId,
                 Text = x.Name,
                 hasChildren = true,
                 expanded = true
             }).ToListAsync();
             if (id.HasValue)
             {
-                result = await _dbContext.TreeTable.OrderBy(x => x.CategorySeq)
-                                    .Where(x => x.CategorySeq == id).Select(x => new TreeNodeViewModel
+                result = await _dbContext.MetaTable.OrderBy(x => x.TableSeq)
+                                    .Where(x => x.MetaCategoryId == id).Select(x => new TreeNodeViewModel
                                     {
                                         Text = x.DisplayName,
                                         tableName = x.TableName
@@ -355,67 +358,101 @@ namespace ResearchApp.Data
             _dbContext.Dispose();
         }
 
-        public AdvanceSearchViewModel SearchRecords(List<SearchParams> paramList)
-        {
-            var table = paramList.ToDataTable();
-            return ExecuteProcedure(table);
-        }
+        //public void SearchRecords<T>(List<SearchParams> paramList)
+        //{
+        //    var table = paramList.ToDataTable();
 
-        private AdvanceSearchViewModel ExecuteProcedure(DataTable table)
+        //    ExecuteProcedure(table);
+        //}
+
+        //private void ExecuteProcedure<T>(DataTable table)
+        //{
+        //    var result = new AdvanceSearchViewModel();
+        //    try
+        //    {
+        //        //PopulateSearchResult(table, request);
+        //        //switch (request.GridType)
+        //        //{
+        //        //    case GridTypes.VAuthor:
+        //        //        var res = new AdvanceSearchResult<VAuthor>
+        //        //        {
+        //        //            Result = PopulateSearchResult<VAuthor>(table, request).ToList<VAuthor>(),
+        //        //            Columns = GetMetaColumns("vAuthor")
+        //        //        };
+        //        //        break;
+        //        //}
+
+        //        using (SqlConnection connection = new SqlConnection(_dbContext.Database.GetDbConnection().ConnectionString))
+        //        {
+        //            connection.Open();
+        //            using (SqlCommand command = connection.CreateCommand())
+        //            {
+        //                command.CommandText = "dbo.advancedSearch";
+        //                command.CommandType = System.Data.CommandType.StoredProcedure;
+
+        //                SqlParameter parameter = command.Parameters
+        //                                  .AddWithValue("@params", table);
+        //                parameter.SqlDbType = SqlDbType.Structured;
+        //                parameter.TypeName = "dbo.SearchParams";
+        //                SqlDataAdapter adapter = new SqlDataAdapter(command);
+        //                DataSet ds = new DataSet();
+        //                adapter.Fill(ds);
+        //                var res = ds.Tables[0];
+        //                result.Authors = ds.Tables[0].ToList<VAuthor>();
+        //                result.Works = ds.Tables[1].ToList<VWork>();
+        //                result.Units = ds.Tables[2].ToList<VUnit>();
+        //            }
+
+        //            result.AuthorColumns = GetMetaColumns("vAuthor");
+        //            result.WorkColumns = GetMetaColumns("vWork");
+        //            result.UnitColumns = GetMetaColumns("vUnit");
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //    }
+        //}
+
+        public DataTable PopulateSearchResult(DataTable searchTable, AdvanceSearchRequest request)
         {
-            var result = new AdvanceSearchViewModel();
-            try
+            using (SqlConnection connection = new SqlConnection(_dbContext.Database.GetDbConnection().ConnectionString))
             {
-                using (SqlConnection connection = new SqlConnection(_dbContext.Database.GetDbConnection().ConnectionString))
+                connection.Open();
+                using (SqlCommand command = connection.CreateCommand())
                 {
-                    connection.Open();
-                    using (SqlCommand command = connection.CreateCommand())
-                    {
-                        command.CommandText = "dbo.advancedSearch";
-                        command.CommandType = System.Data.CommandType.StoredProcedure;
+                    command.CommandText = "dbo.advancedSearchPage";
+                    command.CommandType = System.Data.CommandType.StoredProcedure;
 
-                        SqlParameter parameter = command.Parameters
-                                          .AddWithValue("@params", table);
-                        parameter.SqlDbType = SqlDbType.Structured;
-                        parameter.TypeName = "dbo.SearchParams";
-                        SqlDataAdapter adapter = new SqlDataAdapter(command);
-                        DataSet ds = new DataSet();
-                        adapter.Fill(ds);
-                        var res = ds.Tables[0];
-                        result.Authors = ds.Tables[0].ToList<VAuthor>();
-                        result.Works = ds.Tables[1].ToList<VWork>();
-                        result.Units = ds.Tables[2].ToList<VUnit>();
-                    }
+                    List<SqlParameter> parameters = new List<SqlParameter>()
+                     {
+                         new SqlParameter("@params", SqlDbType.Structured) {Value = searchTable, TypeName= "dbo.SearchParams"},
+                         new SqlParameter("@outputType", SqlDbType.VarChar, 20) {Value = request.SearchType},
+                         new SqlParameter("@countOnly", SqlDbType.Bit) {Value = request.CountOnly},
+                         new SqlParameter("@offsetRows", SqlDbType.Int) {Value = request.PageNumber * request.PageSize},
+                         new SqlParameter("@fetchRows", SqlDbType.Int) {Value = request.PageSize},
+                         new SqlParameter("@sortByCol", SqlDbType.VarChar, 60) {Value = request.SortField},
+                         new SqlParameter("@sortByOrder", SqlDbType.VarChar, 10) {Value = request.SortDirection}
+                     };
 
-                    result.AuthorColumns = _dbContext.TreeColumn.Where(x => x.TableName == "vAuthor" && x.Display == true)
-                        .OrderBy(x => x.ColSeq).Select(x => new TreeColumnViewModel
-                        {
-                            DisplayName = x.DisplayName,
-                            ColumnName = x.ColumnName,
-                            IDColumn = x.IDColumn
-                        }).ToList();
-
-                    result.WorkColumns = _dbContext.TreeColumn.Where(x => x.TableName == "vWork" && x.Display == true)
-                        .OrderBy(x => x.ColSeq).Select(x => new TreeColumnViewModel
-                        {
-                            DisplayName = x.DisplayName,
-                            ColumnName = x.ColumnName,
-                            IDColumn = x.IDColumn
-                        }).ToList();
-
-                    result.UnitColumns = _dbContext.TreeColumn.Where(x => x.TableName == "vUnit" && x.Display == true)
-                        .OrderBy(x => x.ColSeq).Select(x => new TreeColumnViewModel
-                        {
-                            DisplayName = x.DisplayName,
-                            ColumnName = x.ColumnName,
-                            IDColumn = x.IDColumn
-                        }).ToList();
+                    command.Parameters.AddRange(parameters.ToArray());
+                    SqlDataAdapter adapter = new SqlDataAdapter(command);
+                    DataSet ds = new DataSet();
+                    adapter.Fill(ds);
+                    return ds.Tables[0];
                 }
             }
-            catch (Exception ex)
-            {
-            }
-            return result;
+        }
+
+        public List<TreeColumnViewModel> GetMetaColumns(string tableName)
+        {
+            return _dbContext.MetaColumn.Where(x => x.TableName == tableName
+            && x.IsDisplayed == true)
+                .OrderBy(x => x.ColSeq).Select(x => new TreeColumnViewModel
+                {
+                    DisplayName = x.DisplayName,
+                    ColumnName = x.ColumnName,
+                    IDColumn = x.Idcolumn ?? false
+                }).ToList();
         }
 
         public string GetFKDisplayColumn(string tableName, string displayName)

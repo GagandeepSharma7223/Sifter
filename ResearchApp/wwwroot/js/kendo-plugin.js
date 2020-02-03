@@ -183,27 +183,16 @@
     // Add the ParsingMultiSelect to Kendo UI
     ui.plugin(ParsingMultiSelect);
 
+    var CustomGrid = ui.Grid.extend({
+        options: {
+            name: 'CustomGrid'
+        },
+        _dataSource: function () {
+            kendo.ui.Grid.fn._dataSource.call(this);
+            this.dataSource.attachedGrid = this;
+        }
+    });
 
+    ui.plugin(CustomGrid);
 })(jQuery);
 
-
-// ===========================================================
-
-// view model
-// -----------------------------------------------------------
-//var testVM = kendo.observable({
-//    testItems: [1, 3],
-//    testItemSource: new kendo.data.DataSource({
-//        data: [
-//            { Id: 1, Name: "Test 1" },
-//            { Id: 2, Name: "Test 2" },
-//            { Id: 3, Name: "Test 3" },
-//            { Id: 4, Name: "Test 4" }
-//        ]
-//    }),
-//});
-//// ===========================================================
-
-//$(document).ready(function () {
-//    kendo.bind($("#testView"), testVM);
-//});

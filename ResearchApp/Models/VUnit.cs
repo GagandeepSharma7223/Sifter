@@ -13,5 +13,6 @@ namespace ResearchApp.Models
         public string Category { get; set; }
         public string Text { get; set; }
         public string Attribution { get; set; }
+        //public int? WorkId { get; set; }
     }
 }

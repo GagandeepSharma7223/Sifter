@@ -21,8 +21,10 @@ namespace ResearchApp.Data
         List<DropdownOptions> GetOptions(string type, string optionCol);
         (List<dynamic>, int) GetFilterData(string type, string optionCol, DataSourceRequest request, string fieldType);
         Task<IList<TreeColumnViewModel>> GetTreeColumnsForTable(string tableName);
-        AdvanceSearchViewModel SearchRecords(List<SearchParams> paramList);
+        //AdvanceSearchViewModel SearchRecords(List<SearchParams> paramList);
         Task<List<TreeNodeViewModel>> GetTableCategories(int? id);
         string GetFKDisplayColumn(string tableName, string displayName);
+        DataTable PopulateSearchResult(DataTable searchTable, AdvanceSearchRequest request);
+        List<TreeColumnViewModel> GetMetaColumns(string tableName);
     }
 }

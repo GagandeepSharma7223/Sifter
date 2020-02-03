@@ -21,5 +21,8 @@ namespace ResearchApp.ViewModel
         public string Fktable { get; set; }
         public string FkjoinCol { get; set; }
         public string FkdisplayCol { get; set; }
+        public bool IsEditable { get; set; }
+        public bool IsRequired { get; set; }
+        public bool IsUnique { get; set; }
     }
 }

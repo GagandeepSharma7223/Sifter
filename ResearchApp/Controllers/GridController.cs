@@ -6,10 +6,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 using ResearchApp.Data;
+using ResearchApp.Extension;
+using ResearchApp.Models;
 //using ResearchApp.Data.Extensions;
 using ResearchApp.ViewModel;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Dynamic.Core;
@@ -391,19 +394,51 @@ namespace ResearchApp.Controllers
         }
 
         [AcceptVerbs("Post")]
-        public IActionResult SearchForm(List<SearchParams> searchParams)
+        public IActionResult SearchForm(List<SearchParams> searchParams, AdvanceSearchRequest request)
         {
-            AdvanceSearchViewModel response = new AdvanceSearchViewModel();
             try
             {
-                response = _authorRepo.SearchRecords(searchParams);
+                if (request.PageSize == 0) request.PageSize = 1000;
+                var dbResult = _authorRepo.PopulateSearchResult(searchParams.ToDataTable(), request);
+                var response = new AdvanceSearchResult
+                {
+                    SearlizeResult = JsonConvert.SerializeObject(dbResult.ToDynamic()),
+                    GridType = request.GridType
+                };
+                if (request.Total == 0)
+                {
+                    request.CountOnly = true;
+                    var dbCountResult = _authorRepo.PopulateSearchResult(searchParams.ToDataTable(), request);
+                    if (dbCountResult.Rows.Count > 0)
+                    {
+                        response.Total = (int)dbCountResult.Rows[0][0];
+                    }
+                }
+                switch (request.GridType)
+                {
+                    case GridTypes.VAuthor:
+                        response.Columns = _authorRepo.GetMetaColumns("vAuthor");
+                        break;
+                    case GridTypes.VWork:
+                        response.Columns = _workRepo.GetMetaColumns("vWork");
+                        break;
+                    case GridTypes.VUnit:
+                        response.Columns = _unitRepo.GetMetaColumns("vUnit");
+                        break;
+                };
+                return PartialView("~/Views/Home/_PartialSearchResult.cshtml", response);
             }
             catch (Exception e)
             {
             }
-            return Json(response);
+            return Json(new { IsError = true });
         }
 
+        public JsonResult AdvanceSearchResult(List<SearchParams> searchParams, AdvanceSearchRequest request)
+        {
+            var dbResult = _authorRepo.PopulateSearchResult(searchParams.ToDataTable(), request);
+            return Json(JsonConvert.SerializeObject(dbResult.ToDynamic()));
+        }
 
         public async Task<IActionResult> List([DataSourceRequest]DataSourceRequest request, GridTypes type)
         {

@@ -9,7 +9,7 @@
                     if (!item.IDColumn)
                     {
                         <div class="row form-group">
-                            <label class="col-md-1 col-form-label">@(item.Type == "dropdown" ? item.DisplayName : item.ColumnName)</label>
+                            <label class="col-md-1 col-form-label">@(item.Type == "dropdown" ? item.DisplayName : item.ColumnName) <span class="text-danger">@(item.IsRequired ? "*" : "")</span></label>
                             <div class="col-md-5 dirty-marker k-dirty-cell">
                                 <span class=""></span>
                                 @switch (item.Type)
@@ -66,7 +66,7 @@
                                         }
                                         else
                                         {
-                                            @(Html.TextBox(item.ColumnName, value, new { @class = "k-textbox", style = "width:60%" }))
+                                            @(Html.TextBox(item.ColumnName, value, new { @class = "k-textbox", style = "width:60%", @dataValidation = item.IsRequired ? "required" : "" }))
                                         }
                                         break;
                                     case "int":
@@ -74,6 +74,7 @@
                                             .Spinners(false)
                                             .Name(item.ColumnName)
                                             .Format("#")
+                                            .HtmlAttributes(new { @dataValidation = item.IsRequired ? "required" : "" })
                                             .Value(Model.SelectedItem != null && Model.SelectedItem[item.ColumnName] != null && Model.SelectedItem[item.ColumnName].ToString() != "" ?
                                                 Model.SelectedItem[item.ColumnName] : null))
                                         break;
@@ -83,6 +84,7 @@
                                             .Format("#.########")
                                             .Decimals(8)
                                             .Name(item.ColumnName)
+                                            .HtmlAttributes(new { @dataValidation = item.IsRequired ? "required" : "" })
                                             .Value(Model.SelectedItem != null && Model.SelectedItem[item.ColumnName] != null && Model.SelectedItem[item.ColumnName].ToString() != "" ?
                                                 Model.SelectedItem[item.ColumnName] : null))
                                         break;
@@ -101,7 +103,7 @@
                                               .MinLength(3)
                                               .Height(200)
                                               .OptionLabel("Select")
-                                              .HtmlAttributes(new { style = "width:60%" })
+                                              .HtmlAttributes(new { style = "width:60%", @dataValidation = item.IsRequired ? "required" : "" })
                                               .DataSource(source =>
                                               {
                                                   source.Custom()
@@ -125,7 +127,7 @@
                                         break;
                                     default:
                                         value = Model.SelectedItem != null ? Model.SelectedItem[item.ColumnName] : null;
-                                        @(Html.TextArea(item.ColumnName, value, new { @class = "k-textbox", style = "width:60%", @cols = 80, @rows = 5 }))
+                                        @(Html.TextArea(item.ColumnName, value, new { @class = "k-textbox", style = "width:60%", @cols = 80, @rows = 5, @dataValidation = item.IsRequired ? "required" : "" }))
                                         break;
                                 }
                             </div>
@@ -237,4 +239,24 @@
         var totalItems = grid.dataSource.total();
         return `Item ${page > 1 ? ((page - 1) * pageSize) + (selectedItemIndex + 1) : selectedItemIndex + 1} of ${totalItems}`
     }
+
+    $("#edit-form").kendoValidator({
+        rules: {
+            //customRule1: function (input) {
+            //    // all of the input must have a value
+            //    return $.trim(input.val()) !== "";
+            //},
+            requiredRule: function (input) {
+                //only 'Tom' will be valid value for the username input
+                if (input.is("[datavalidation='required']")) {
+                    return input.val() !== "";
+                }
+                return true;
+            }
+        },
+        messages: {
+            requiredRule: "This is required field.",
+            //customRule2: "Your UserName must be Tom"
+        }
+    });
 </script>

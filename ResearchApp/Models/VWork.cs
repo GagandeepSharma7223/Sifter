@@ -17,5 +17,6 @@ namespace ResearchApp.Models
         public string Publisher { get; set; }
         public string Editor { get; set; }
         public string Translator { get; set; }
+        public int? AuthorId { get; set; }
     }
 }
