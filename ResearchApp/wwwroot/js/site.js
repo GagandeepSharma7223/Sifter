@@ -16,36 +16,13 @@ var browserWindow = $(window);
                     return false;
                 }
                 return true;
-            },
-            //titlevalidation: function (input, params) {
-            //    if (input.is("[name='Title']") && input.val() == "") {
-            //        input.attr("data-titlevalidation-msg", "Title is required field");
-            //        return false;
-            //    }
-            //    return true;
-            //},
-            //namevalidation: function (input, params) {
-            //    if (input.is("[name='Name']") && input.val() == "") {
-            //        input.attr("data-namevalidation-msg", "Name is required field");
-            //        return false;
-            //    }
-            //    return true;
-            //}
+            }
         },
         messages: { //custom rules messages
             requiredvalidation: function (input) {
                 // return the message text
                 return input.attr("data-val-requiredvalidation");
-            },
-            //titlevalidation: function (input) {
-            //    // return the message text
-            //    return input.attr("data-val-titlevalidation");
-            //},
-            //namevalidation: function (input) {
-            //    // return the message text
-            //    return input.attr("data-val-namevalidation");
-            //}
-
+            }
         }
     });
 })(jQuery, kendo);
@@ -54,11 +31,6 @@ function getSelectTable() {
     var treeView = $('#treeview').data('kendoTreeView');
     if (treeView && treeView.select().length)
         return treeView.dataItem(treeView.select()).tableName;
-    //else if (treeView && treeView.select().length === 0) {
-    //    return "Work";
-    //}
-    //else if (selectedSearchOption)
-    //    return selectedSearchOption;
     else
         return "Work";
 }
@@ -113,10 +85,6 @@ $(window).resize(function () {
 });
 
 $(function () {
-    //jQuery.fn.scrollTo = function (elem) {
-    //    $(this).scrollTop($(this).scrollTop() - $(this).offset().top + elem.offset().top);
-    //    return this;
-    //};
     populateDDSession('Author', 'FullName');
     populateDDSession('Category', 'Name');
     populateDDSession('City', 'Name');
@@ -278,8 +246,6 @@ function gridDataBoundConfig() {
                 grid.editCell(td);
                 // select added item in dropdown
                 setTimeout(function () {
-                    //row = grid.tbody
-                    //    .find("tr[data-uid='" + dataItem.uid + "']");
                     var dropdown = td.find("input[data-role='dropdownlist']");
                     var dropdownList = $(dropdown).data("kendoDropDownList");
                     dropdownList.value(addedItemDD.Id);
@@ -416,7 +382,6 @@ function getFormView(tableName, addNewItem) {
             $('#kendo-grid-container').css('visibility', 'hidden');
             resizeGrid();
             resizeSplitter();
-            //browserWindow.resize(resizeSplitter);
             hideLoading();
         }).fail(function (xhr) {
             hideLoading();
@@ -560,8 +525,6 @@ $(document).on("click", '.dd-clear', function (e) {
 });
 
 function cellChangeEvent(e) {
-    //debugger
-    //var data = this.data();
 }
 
 function kendoFastReDrawRow(grid, row) {
@@ -793,24 +756,6 @@ function initColumnMenuFilter(e) {
         serverPaging: true,
         serverFiltering: true
     });
-
-    //var dataSourceListViewScroll = new kendo.data.DataSource({
-    //    type: "aspnetmvc-ajax",
-    //    transport: {
-    //        read: {
-    //            type: "POST",
-    //            url: "/Grid/BindFilterListView",
-    //            data: {
-    //                treeTable: treeTable,
-    //                optionCol: field,
-    //                fieldType: fieldType
-    //            }
-    //        }
-    //    },
-    //    pageSize: columnFilterOptions.listViewPageSize,
-    //    serverPaging: true,
-    //    serverSorting: true
-    //});
 
     var pageModel = {};
     pageModel[field] = 1;
@@ -1163,7 +1108,6 @@ function initColumnMenuFilter(e) {
                             });
                         }
 
-
                         if (fieldFilters.length) {
                             removeFiltersForField(filter, field);
                             filter.filters.push({
@@ -1177,6 +1121,7 @@ function initColumnMenuFilter(e) {
                         toggleFilterbutton();
                     }
                 });
+
                 // Filter reset click callback
                 container.find("[type='reset']").click(function (e) {
                     e.preventDefault();
@@ -1731,15 +1676,6 @@ function getSearchParams(gridType, pageNo, sortField, sortDirection) {
         SortField: sortField,
         SortDirection: sortDirection
     });
-    //params = [{
-    //    tableName: "VAuthor",
-    //    columnName: "Author",
-    //    columnType: "text",
-    //    comparisonType: "contains",
-    //    textValue: "test",
-    //    number1: undefined,
-    //    number2: undefined
-    //}];
     return {
         searchParams: params,
         request: requestParam
@@ -1825,7 +1761,7 @@ function getSearchResults() {
     tabStrip.options.contentUrls[3].data = getSearchParams(11);  //Need to make them dynamic
     tabStrip.options.contentUrls[4].data = getSearchParams(12);
     tabStrip.options.contentUrls[5].data = getSearchParams(13);
-    tabStrip.select(3); 
+    tabStrip.select(3);
     tabStrip.reload("li:eq(4)");
     tabStrip.reload("li:eq(5)");
 }
@@ -1925,7 +1861,13 @@ function generateGrid(response, container) {
         pageable: true,
         page: function (e) {
             var gridType = e.sender.element.attr('id').split('-')[2];
-            populateSearch(gridType, e.page - 1, e.sender.dataSource);
+            var sortFieldArr = e.sender.dataSource.sort();
+            var sortField = '', sortDir = 'asc';
+            if (sortFieldArr && sortFieldArr.length) {
+                sortField = sortFieldArr[0].field;
+                sortDir = sortFieldArr[0].dir;
+            }
+            populateSearch(gridType, e.page - 1, e.sender.dataSource, sortField, sortDir);
         },
         sort: function (e) {
             var gridType = e.sender.element.attr('id').split('-')[2];

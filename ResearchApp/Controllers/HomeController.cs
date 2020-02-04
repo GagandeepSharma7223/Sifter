@@ -2,10 +2,6 @@
 using Microsoft.Extensions.Configuration;
 using ResearchApp.Data;
 using System.Threading.Tasks;
-using System.Linq;
-using ResearchApp.ViewModel;
-using System.Collections.Generic;
-using Kendo.Mvc.UI;
 
 namespace ResearchApp.Controllers
 {
