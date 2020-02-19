@@ -61,6 +61,72 @@ namespace ResearchApp.Data
             }
         }
 
+        public int Create(Dictionary<string, object> model, string tableName, List<TreeColumnViewModel> columns)
+        {
+            var columnsToAdd = columns.Where(x => x.IsEditable == true && !x.IDColumn).Select(x => x.ColumnName);
+            var keysToRemove = model.Keys.Where(x => !columnsToAdd.Contains(x)).ToList();
+            keysToRemove.ForEach(x => model.Remove(x));
+            string columnNames = string.Join(", ", model.Select(x => x.Key));
+            var keys = model.Select(x => x.Key);
+            string indexes = string.Empty;
+            for (int i = 0; i < keys.Count(); i++)
+            {
+                indexes += "@" + keys.ElementAt(i);
+                if (i < keys.Count() - 1)
+                    indexes += ", ";
+            }
+            string query = $"INSERT INTO {tableName} ({columnNames}) Output Inserted.{tableName}ID VALUES ({indexes})";
+            return _dbContext.ExecuteScalarFromSql(query, model);
+        }
+
+        public async Task Update(Dictionary<string, object> model, string tableName, List<TreeColumnViewModel> columns)
+        {
+            var columnsToUpdate = columns.Where(x => x.IsEditable == true).Select(x => x.ColumnName);
+            var primaryKey = model.Where(x => x.Key == columns.Where(x => x.IDColumn)
+                .Select(x => x.ColumnName).FirstOrDefault())
+                    .Select(x => x.Value).FirstOrDefault();
+            var keysToRemove = model.Keys.Where(x => !columnsToUpdate.Contains(x)).ToList();
+            keysToRemove.ForEach(x => model.Remove(x));
+            string updateValues = string.Join(", ", model.Where(x => x.Key != tableName + "ID")
+                //.Select(x => x.Key + "='" + x.Value?.ToString().Replace("'", "''") + "'"));
+                .Select(x => GetQueryValue(columns, x)));
+            string query = $"UPDATE {tableName} SET {updateValues} WHERE {tableName}ID = {primaryKey}";
+            await ExecuteSqlRaw(query);
+        }
+
+        private object GetQueryValue(List<TreeColumnViewModel> columns, KeyValuePair<string, object> model)
+        {
+            var columnDetail = columns.Find(x => x.ColumnName == model.Key);
+            if (model.Value == null) return $"{model.Key} = null";
+            switch (columnDetail.ColType)
+            {
+                case "int":
+                    return $"{model.Key} = {Convert.ToInt32(model.Value)}";
+                case "boolean":
+                    return $"{model.Key} = {(Convert.ToBoolean(model.Value) ? 1 : 0)}";
+                case "decimal":
+                    return $"{model.Key} = {Convert.ToDecimal(model.Value)}";
+                default:
+                    return $"{model.Key} ='{model.Value.ToString().Replace("'", "''")}'";
+            }
+        }
+
+        public async Task Destroy(string primaryKey, string tableName, int id)
+        {
+            string query = $"Delete from {tableName} WHERE {primaryKey} = {id}";
+            await ExecuteSqlRaw(query);
+        }
+
+        public async Task<int> ExecuteSqlRaw(string query, IEnumerable<object> parameters)
+        {
+            return await _dbContext.Database.ExecuteSqlRawAsync(query, parameters);
+        }
+
+        public async Task ExecuteSqlRaw(string query)
+        {
+            await _dbContext.Database.ExecuteSqlRawAsync(query);
+        }
+
         public async Task Delete(int id)
         {
             var entity = await _dbContext.Set<TEntity>().FindAsync(id);
@@ -71,10 +137,15 @@ namespace ResearchApp.Data
         public List<DropdownOptions> GetOptions(string type, string optionCol)
         {
             var result = new List<DropdownOptions>();
-            var groupedItems = _dbContext.Query($"ResearchApp.Models.{type}")
-                .Select($"new ({type}Id as Id,{optionCol} as Option)").ToDynamicList();
+            string query = $"SELECT {type}ID,{optionCol} FROM {type}";
+            var list = _dbContext.DynamicListFromSql(query, new Dictionary<string, object>(), "object")
+                .Select(x => new DropdownOptions
+                {
+                    Id = x.Id,
+                    Option = x.Option
+                }).ToList();
 
-            result = groupedItems.Select(x => new DropdownOptions
+            result = list.Select(x => new DropdownOptions
             {
                 Id = x.Id,
                 Option = x.Option
@@ -171,61 +242,6 @@ namespace ResearchApp.Data
             }
             return listOfStringCompare;
         }
-
-        public async Task<List<StringCompareRequest>> ModifyFilters(TEntity entity, IList<FilterDescriptor> filters, string repoTable)
-        {
-            var listOfStringCompare = new List<StringCompareRequest>();
-            if (filters.Any())
-            {
-                for (int i = filters.Count() - 1; i > -1; i--)
-                {
-                    var descriptor = filters.ElementAt(i) as FilterDescriptor;
-                    if (descriptor != null)
-                    {
-                        // Filter For Greater Than and less than 
-                        if (descriptor.Operator == FilterOperator.IsGreaterThanOrEqualTo ||
-                            descriptor.Operator == FilterOperator.IsLessThanOrEqualTo ||
-                            descriptor.Operator == FilterOperator.IsGreaterThan ||
-                            descriptor.Operator == FilterOperator.IsLessThan)
-                        {
-                            int value = Convert.ToInt32(descriptor.Value);
-                            //var fkColumn = await GetTreeColumns().Where(x => x.TableName == repoTable && x.DisplayName == descriptor.Member).Select(x => x.FkdisplayCol).FirstOrDefaultAsync();
-                            // Get String Value From Integer Value
-                            //var dropdownText = _dbContext.DynamicListFromSql($"SELECT {fkColumn}  FROM {descriptor.Member} WHERE {descriptor.Member}Id=@0", new Dictionary<string, object> { { "0", value } }).FirstOrDefault();
-                            //if (!string.IsNullOrEmpty(dropdownText))
-                            //{
-                            //    listOfStringCompare.Add(new StringCompareRequest
-                            //    {
-                            //        Entity = descriptor.Member,
-                            //        Value = dropdownText,
-                            //        Operator = descriptor.Operator,
-                            //        FKColumn = fkColumn
-                            //    });
-                            //}
-                            filters.RemoveAt(i);
-                        }
-                        //else
-                        //{
-                        //    PropertyInfo propInfo = GetPropertyType(entity, descriptor.Member);
-                        //    if (propInfo.PropertyType == typeof(DropdownOptions))
-                        //    {
-                        //        descriptor.Member = descriptor.Member + "Id";
-                        //    }
-                        //}
-                    }
-                    //else if (filters.ElementAt(i) is CompositeFilterDescriptor)
-                    //{
-                    //    var list = await ModifyFilters(entity, ((CompositeFilterDescriptor)filters.ElementAt(i)).FilterDescriptors, repoTable);
-                    //    if (list.Any())
-                    //    {
-                    //        listOfStringCompare.AddRange(list);
-                    //    }
-                    //}
-                }
-            }
-            return listOfStringCompare;
-        }
-
 
         private static PropertyInfo GetPropertyType(TEntity entity, string propName)
         {
@@ -358,61 +374,6 @@ namespace ResearchApp.Data
             _dbContext.Dispose();
         }
 
-        //public void SearchRecords<T>(List<SearchParams> paramList)
-        //{
-        //    var table = paramList.ToDataTable();
-
-        //    ExecuteProcedure(table);
-        //}
-
-        //private void ExecuteProcedure<T>(DataTable table)
-        //{
-        //    var result = new AdvanceSearchViewModel();
-        //    try
-        //    {
-        //        //PopulateSearchResult(table, request);
-        //        //switch (request.GridType)
-        //        //{
-        //        //    case GridTypes.VAuthor:
-        //        //        var res = new AdvanceSearchResult<VAuthor>
-        //        //        {
-        //        //            Result = PopulateSearchResult<VAuthor>(table, request).ToList<VAuthor>(),
-        //        //            Columns = GetMetaColumns("vAuthor")
-        //        //        };
-        //        //        break;
-        //        //}
-
-        //        using (SqlConnection connection = new SqlConnection(_dbContext.Database.GetDbConnection().ConnectionString))
-        //        {
-        //            connection.Open();
-        //            using (SqlCommand command = connection.CreateCommand())
-        //            {
-        //                command.CommandText = "dbo.advancedSearch";
-        //                command.CommandType = System.Data.CommandType.StoredProcedure;
-
-        //                SqlParameter parameter = command.Parameters
-        //                                  .AddWithValue("@params", table);
-        //                parameter.SqlDbType = SqlDbType.Structured;
-        //                parameter.TypeName = "dbo.SearchParams";
-        //                SqlDataAdapter adapter = new SqlDataAdapter(command);
-        //                DataSet ds = new DataSet();
-        //                adapter.Fill(ds);
-        //                var res = ds.Tables[0];
-        //                result.Authors = ds.Tables[0].ToList<VAuthor>();
-        //                result.Works = ds.Tables[1].ToList<VWork>();
-        //                result.Units = ds.Tables[2].ToList<VUnit>();
-        //            }
-
-        //            result.AuthorColumns = GetMetaColumns("vAuthor");
-        //            result.WorkColumns = GetMetaColumns("vWork");
-        //            result.UnitColumns = GetMetaColumns("vUnit");
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //    }
-        //}
-
         public DataTable PopulateSearchResult(DataTable searchTable, AdvanceSearchRequest request)
         {
             using (SqlConnection connection = new SqlConnection(_dbContext.Database.GetDbConnection().ConnectionString))
@@ -420,18 +381,21 @@ namespace ResearchApp.Data
                 connection.Open();
                 using (SqlCommand command = connection.CreateCommand())
                 {
-                    command.CommandText = "dbo.advancedSearchPage";
+                    command.CommandText = "dbo.advancedSearch";
                     command.CommandType = System.Data.CommandType.StoredProcedure;
-
+                    var uniqueIdCol = (request.IsView ? request.TableName.Substring(1, request.TableName.Length - 1) : request.TableName) + "ID";
+                    string fromClause = string.Empty; // " from Work left outer join Author on Author.AuthorID = Work.AuthorID ";
                     List<SqlParameter> parameters = new List<SqlParameter>()
                      {
-                         new SqlParameter("@params", SqlDbType.Structured) {Value = searchTable, TypeName= "dbo.SearchParams"},
-                         new SqlParameter("@outputType", SqlDbType.VarChar, 20) {Value = request.SearchType},
-                         new SqlParameter("@countOnly", SqlDbType.Bit) {Value = request.CountOnly},
-                         new SqlParameter("@offsetRows", SqlDbType.Int) {Value = request.PageNumber * request.PageSize},
-                         new SqlParameter("@fetchRows", SqlDbType.Int) {Value = request.PageSize},
-                         new SqlParameter("@sortByCol", SqlDbType.VarChar, 60) {Value = request.SortField},
-                         new SqlParameter("@sortByOrder", SqlDbType.VarChar, 10) {Value = request.SortDirection}
+                         new SqlParameter("@searchParams", SqlDbType.Structured) { Value = searchTable, TypeName= "dbo.SearchParams" },
+                         new SqlParameter("@outputTable", SqlDbType.VarChar, 20) { Value = request.TableName },
+                         new SqlParameter("@uniqueIDCol", SqlDbType.VarChar, 60) { Value = uniqueIdCol },
+                         new SqlParameter("@countOnly", SqlDbType.Bit) { Value = request.CountOnly },
+                         new SqlParameter("@offsetRows", SqlDbType.Int) { Value = request.PageNumber * request.PageSize },
+                         new SqlParameter("@fetchRows", SqlDbType.Int) { Value = request.PageSize },
+                         new SqlParameter("@sortByCol", SqlDbType.VarChar, 60) { Value = request.SortField ?? "" },
+                         new SqlParameter("@sortByOrder", SqlDbType.VarChar, 10) { Value = request.SortDirection ?? "asc" },
+                         new SqlParameter("@fromClause", SqlDbType.VarChar, 1000) { Value = fromClause }
                      };
 
                     command.Parameters.AddRange(parameters.ToArray());
@@ -451,6 +415,14 @@ namespace ResearchApp.Data
                 {
                     DisplayName = x.DisplayName,
                     ColumnName = x.ColumnName,
+                    FkdisplayCol = x.FkdisplayCol,
+                    FkjoinCol = x.FkjoinCol,
+                    Fktable = x.Fktable,
+                    ColType = x.ColType,
+                    IsEditable = x.IsEditable ?? false,
+                    IsRequired = x.IsRequired ?? false,
+                    ColSeq = x.ColSeq,
+                    IsUnique = x.IsUnique ?? false,
                     IDColumn = x.Idcolumn ?? false
                 }).ToList();
         }

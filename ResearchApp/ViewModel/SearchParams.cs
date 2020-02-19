@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace ResearchApp.ViewModel
+﻿namespace ResearchApp.ViewModel
 {
     public class SearchParams
     {
@@ -12,7 +7,6 @@ namespace ResearchApp.ViewModel
         public string ColumnType { get; set; }
         public string ComparisonType { get; set; }
         public string TextValue { get; set; }
-        public decimal? Number1 { get; set; }
-        public decimal? Number2 { get; set; }
+        public string AndOr { get; set; }
     }
 }

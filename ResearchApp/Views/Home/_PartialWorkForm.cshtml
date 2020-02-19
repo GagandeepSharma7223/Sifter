@@ -22,7 +22,7 @@
                                                .Name(item.ColumnName)
                                                .Value(value)
                                                .OptionLabel("Select")
-                                               .DataValueField("Id")
+                                               .DataValueField("Option")
                                                .DataTextField("Option")
                                                .HtmlAttributes(new { style = "width:60%" })
                                                .BindTo(new List<TextDropdownOptions>
@@ -44,7 +44,7 @@
                                                 .Name(item.ColumnName)
                                                 .Value(value)
                                                 .OptionLabel("Select")
-                                                .DataValueField("Id")
+                                                .DataValueField("Option")
                                                 .DataTextField("Option")
                                                 .HtmlAttributes(new { style = "width:60%" })
                                                 .BindTo(new List<TextDropdownOptions>
@@ -93,36 +93,48 @@
                                         @(Html.CheckBox(item.ColumnName, chkValue))
                                         break;
                                     case "dropdown":
-                                        value = Model.SelectedItem != null ? Convert.ToString(Model.SelectedItem[item.ColumnName] ?? null) : null;
+                                        value = Model.SelectedItem != null ? Convert.ToString(Model.SelectedItem[item.DisplayName] ?? null) : null;
+                                        @*if(typeof(object) == value)
+                                        {
+                                            value = 
+                                        }
+                                        }*@
                                         @(Html.Kendo().DropDownList()
-                                              .Name(item.DisplayName + "ID")
-                                              .Value(value)
-                                              .DataValueField("Id")
-                                              .DataTextField("Option")
-                                              .Filter(FilterType.Contains)
-                                              .MinLength(3)
-                                              .Height(200)
-                                              .OptionLabel("Select")
-                                              .HtmlAttributes(new { style = "width:60%", @dataValidation = item.IsRequired ? "required" : "" })
-                                              .DataSource(source =>
-                                              {
-                                                  source.Custom()
-                                                        .ServerFiltering(true)
-                                                        .ServerPaging(true)
-                                                        .PageSize(20)
-                                                        .Type("aspnetmvc-ajax")
-                                                        .Transport(transport =>
-                                                        {
-                                                            transport.Read("GetDropdownOptions", "Grid", new { treeTable = item.Fktable, optionCol = item.FkdisplayCol });
-                                                        })
-                                                        .Schema(schema =>
-                                                        {
-                                                            schema.Data("Data")
-                                                                  .Total("Total");
-                                                        });
-                                              })
-                                              .Virtual(v => v.ItemHeight(26).ValueMapper("valueMapper" + item.Fktable))
-
+                                                  .Name(item.DisplayName)
+                                                  .DataValueField("Option")
+                                                  .DataTextField("Option")
+                                                  .Filter(FilterType.Contains)
+                                                  .Height(200)
+                                                  .Value(value)
+                                                  .ValuePrimitive(true)
+                                                  .OptionLabel("Select")
+                                                  .HtmlAttributes(new { style = "width:60%", @dataValidation = item.IsRequired ? "required" : "" })
+                                                  .DataSource(source =>
+                                                  {
+                                                      source.Custom()
+                                                            .ServerFiltering(true)
+                                                            .ServerPaging(true)
+                                                            .PageSize(20)
+                                                            .Type("aspnetmvc-ajax")
+                                                            .Transport(transport =>
+                                                            {
+                                                                transport.Read("GetDropdownOptions", "Grid", new { treeTable = item.Fktable, optionCol = item.FkdisplayCol });
+                                                            })
+                                                            .Schema(schema =>
+                                                            {
+                                                                schema
+                                                                .Model(model =>
+                                                                {
+                                                                    model.Id("Id");
+                                                                    model.Field("Option", typeof(string));
+                                                                })
+                                                                .Data("Data")
+                                                                      .Total("Total");
+                                                            });
+                                                  })
+                                                  //.Events(evt => evt.DataBound("function(e){ onFormDropdownDataBound(e,'" + value + "')}"))
+                                                  .Virtual(v => v.ItemHeight(26)
+                                                  .ValueMapper("function(options){ dropDownOptionMapper(options,'" + item.Fktable + "')}"))
                                         )
                                         break;
                                     default:

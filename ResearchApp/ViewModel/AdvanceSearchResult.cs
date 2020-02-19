@@ -15,6 +15,6 @@ namespace ResearchApp.ViewModel
         public string SearlizeResult { get; set; }
         public List<TreeColumnViewModel> Columns { get; set; }
         public int Total { get; set; }
-        public GridTypes GridType { get; set; }
+        public string TableName { get; set; }
     }
 }

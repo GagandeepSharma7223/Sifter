@@ -67,7 +67,7 @@ namespace ResearchApp.Controllers
             return Json(false);
         }
 
-        public async Task<JsonResult> Remote_Data_Binding_Get_Employees(int? id)
+        public async Task<JsonResult> BindAdminRemoteTree(int? id)
         {
             var result = await _authorRepo.GetTableCategories(id);
             return Json(result);
@@ -80,5 +80,10 @@ namespace ResearchApp.Controllers
         {
             return PartialView("_PartialSearchRightPanel");
         }
+
+        //public IActionResult LoadAdminGrid()
+        //{
+        //    return PartialView("_PartialLoadAdminGrid");
+        //}
     }
 }

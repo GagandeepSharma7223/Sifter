@@ -38,21 +38,21 @@
                     url: "/Grid/SearchForm",
                     cache: false,
                     type: "Post",
-                    data: getSearchParams(@((int)GridTypes.VAuthor))
+                    data: getSearchParams('@GridTypes.VAuthor', true)
                 },
                 {
                     url: "/Grid/SearchForm",
                     cache: false,
                     type: "Post",
-                    data: getSearchParams(@((int)GridTypes.VWork))
+                    data: getSearchParams('@GridTypes.VWork', true)
                 },
                 {
                     url: "/Grid/SearchForm",
                     cache: false,
                     type: "Post",
-                    data: getSearchParams(@((int)GridTypes.VUnit))
+                    data: getSearchParams('@GridTypes.VUnit', true)
                 }
-            ],
+            ]
         }).data('kendoTabStrip');
 
         hideLoading();

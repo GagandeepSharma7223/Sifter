@@ -15,7 +15,7 @@
                             if (item.ColumnName == "Gender")
                             {
                                 <div class="col-3 col-sm-2 col-md-1">
-                                    @(Html.Hidden(Model.FormName + "." + "Filter." + item.ColumnName, "equals"))
+                                    @(Html.Hidden(Model.FormName + "." + "Filter." + item.ColumnName, "eq"))
                                     @(Html.Kendo().DropDownList()
                                           .Name(Model.FormName + "." + item.ColumnName)
                                           .DataValueField("Id")
@@ -42,7 +42,7 @@
                             else if (item.ColumnName == "Role")
                             {
                                 <div class="col-3 col-sm-2 col-md-1">
-                                    @(Html.Hidden(Model.FormName + "." + "Filter." + item.ColumnName, "equals"))
+                                    @(Html.Hidden(Model.FormName + "." + "Filter." + item.ColumnName, "eq"))
                                     @(Html.Kendo().DropDownList()
                                       .Name(Model.FormName + "." + item.ColumnName)
                                       .DataValueField("Id")
@@ -89,7 +89,7 @@
                                                     Option = "Starts With"
                                                 },
                                                 new TextDropdownOptions{
-                                                    Id = "equals",
+                                                    Id = "eq",
                                                     Option = "Equals"
                                                 }
                                               })
@@ -138,7 +138,7 @@
                             break;
                         case "boolean":
                             <div class="col-3 col-sm-2 col-md-1">
-                                @(Html.Hidden(Model.FormName + "." + "Filter." + item.ColumnName, "equals"))
+                                @(Html.Hidden(Model.FormName + "." + "Filter." + item.ColumnName, "eq"))
                                 @(Html.Kendo().DropDownList()
                                       .Name(Model.FormName + "." + item.ColumnName)
                                       .DataValueField("Id")
@@ -184,7 +184,7 @@
                                               Option = "Starts With"
                                           },
                                           new TextDropdownOptions{
-                                              Id = "equals",
+                                              Id = "eq",
                                               Option = "Equals"
                                           }
                                       })
@@ -240,7 +240,7 @@
                                                     Option = "Starts With"
                                                 },
                                                 new TextDropdownOptions{
-                                                    Id = "equals",
+                                                    Id = "eq",
                                                     Option = "Equals"
                                                 }
                                               })

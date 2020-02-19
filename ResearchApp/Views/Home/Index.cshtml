@@ -16,21 +16,22 @@
                           .Scrollable(false)
                           .Collapsible(false)
                           .Content(
-                            Html.Kendo().Splitter()
-                                .Name("horizontal")
-                                .Panes(horizontalPanes =>
-                                {
-                                    horizontalPanes.Add()
-                                        .HtmlAttributes(new { id = "left-pane" })
-                                        .Size("200px")
-                                        .Scrollable(true)
-                                        .Collapsible(true)
-                                        .LoadContentFrom("LoadTreeView", "Home");
+                          Html.Kendo().Splitter()
+                              .Name("horizontal")
+                              .Panes(horizontalPanes =>
+                              {
+                                  horizontalPanes.Add()
+                                      .HtmlAttributes(new { id = "left-pane" })
+                                      .Size("200px")
+                                      .Scrollable(true)
+                                      .Collapsible(true)
+                                      .LoadContentFrom("LoadTreeView", "Home");
 
-                                    horizontalPanes.Add()
-                                       .HtmlAttributes(new { id = "myModal" })
-                                       .LoadContentFrom("GetView", "Grid", new { type = GridTypes.Work });
-                                }).ToHtmlString());
+                                  horizontalPanes.Add()
+                                     .HtmlAttributes(new { id = "myModal" })
+                                     .LoadContentFrom("AdminSearchForm", "Grid");
+                                  //.LoadContentFrom("GetView", "Grid", new { type = GridTypes.Work });
+                              }).ToHtmlString());
                   })
             )
         </div>

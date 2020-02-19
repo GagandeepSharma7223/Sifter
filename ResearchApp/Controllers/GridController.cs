@@ -396,8 +396,7 @@ namespace ResearchApp.Controllers
                 var dbResult = _authorRepo.PopulateSearchResult(searchParams.ToDataTable(), request);
                 var response = new AdvanceSearchResult
                 {
-                    SearlizeResult = JsonConvert.SerializeObject(dbResult.ToDynamic()),
-                    GridType = request.GridType
+                    SearlizeResult = JsonConvert.SerializeObject(dbResult.ToDynamic())
                 };
                 if (request.Total == 0)
                 {
@@ -408,18 +407,8 @@ namespace ResearchApp.Controllers
                         response.Total = (int)dbCountResult.Rows[0][0];
                     }
                 }
-                switch (request.GridType)
-                {
-                    case GridTypes.VAuthor:
-                        response.Columns = _authorRepo.GetMetaColumns("vAuthor");
-                        break;
-                    case GridTypes.VWork:
-                        response.Columns = _workRepo.GetMetaColumns("vWork");
-                        break;
-                    case GridTypes.VUnit:
-                        response.Columns = _unitRepo.GetMetaColumns("vUnit");
-                        break;
-                };
+                response.Columns = _authorRepo.GetMetaColumns(request.TableName);
+                response.TableName = request.TableName;
                 return PartialView("~/Views/Home/_PartialSearchResult.cshtml", response);
             }
             catch (Exception e)
@@ -431,7 +420,17 @@ namespace ResearchApp.Controllers
         public JsonResult AdvanceSearchResult(List<SearchParams> searchParams, AdvanceSearchRequest request)
         {
             var dbResult = _authorRepo.PopulateSearchResult(searchParams.ToDataTable(), request);
-            return Json(JsonConvert.SerializeObject(dbResult.ToDynamic()));
+            request.CountOnly = true;
+            var dbCountResult = _authorRepo.PopulateSearchResult(searchParams.ToDataTable(), request);
+            var response = new AdvanceSearchResult
+            {
+                SearlizeResult = JsonConvert.SerializeObject(dbResult.ToDynamic())
+            };
+            if (dbCountResult.Rows.Count > 0)
+            {
+                response.Total = (int)dbCountResult.Rows[0][0];
+            }
+            return Json(response);
         }
 
         public async Task<IActionResult> List([DataSourceRequest]DataSourceRequest request, GridTypes type)
@@ -525,7 +524,6 @@ namespace ResearchApp.Controllers
             return Json(response);
         }
 
-
         [AcceptVerbs("Post")]
         [ResponseCache(Duration = 3600)]
         public IActionResult GetDropdownOptions([DataSourceRequest] DataSourceRequest request, string treeTable, string optionCol)
@@ -536,10 +534,10 @@ namespace ResearchApp.Controllers
                 cachedDetails.Insert(0, new DropdownOptions { Id = 0, Option = "" });
                 _cache.Set($"{treeTable}Options", cachedDetails, CacheEntryOptions);
             }
-            if (!cachedDetails.Any(x => x.Id == 0))
-            {
-                cachedDetails.Insert(0, new DropdownOptions { Id = 0, Option = "" });
-            }
+            //if (!cachedDetails.Any(x => x.Id == 0))
+            //{
+            //    cachedDetails.Insert(0, new DropdownOptions { Id = 0, Option = "" });
+            //}
             return Json(cachedDetails.ToDataSourceResult(request));
         }
 
@@ -572,7 +570,28 @@ namespace ResearchApp.Controllers
                     }
                 }
             }
+            return Json(indices);
+        }
 
+        public IActionResult Dropdown_OptionMapper(string[] values, string treeTable = "Author")
+        {
+            var indices = new List<int>();
+
+            if (values != null && values.Any())
+            {
+                var index = 0;
+                if (_cache.TryGetValue($"{treeTable}Options", out List<DropdownOptions> cachedDetails))
+                {
+                    foreach (var item in cachedDetails)
+                    {
+                        if (values.Contains(item.Option))
+                        {
+                            indices.Add(index);
+                        }
+                        index += 1;
+                    }
+                }
+            }
             return Json(indices);
         }
 
@@ -675,6 +694,45 @@ namespace ResearchApp.Controllers
         {
             string result = _workRepo.GetFKDisplayColumn(tableName, displayName);
             return Json(result);
+        }
+
+        public IActionResult AdminSearchForm(AdvanceSearchRequest request)
+        {
+            try
+            {
+                if (request.PageSize == 0) request.PageSize = 1000;
+                if (string.IsNullOrEmpty(request.TableName))
+                {
+                    request.TableName = "Work";
+                }
+                var dbResult = _authorRepo.PopulateSearchResult(new List<SearchParams>().ToDataTable(), request);
+                var response = new AdvanceSearchResult
+                {
+                    SearlizeResult = JsonConvert.SerializeObject(dbResult.ToDynamic()),
+                };
+                if (request.Total == 0)
+                {
+                    request.CountOnly = true;
+                    var dbCountResult = _authorRepo.PopulateSearchResult(new List<SearchParams>().ToDataTable(), request);
+                    if (dbCountResult.Rows.Count > 0)
+                    {
+                        response.Total = (int)dbCountResult.Rows[0][0];
+                    }
+                }
+                response.Columns = _workRepo.GetMetaColumns(request.TableName);
+                response.TableName = request.TableName;
+                return PartialView("~/Views/Home/_PartialLoadAdminGrid.cshtml", response);
+            }
+            catch (Exception e)
+            {
+            }
+            return Json(new { IsError = true });
+        }
+
+        public JsonResult GetAdminSearchResult(List<SearchParams> searchParams, AdvanceSearchRequest request)
+        {
+            var dbResult = _authorRepo.PopulateSearchResult(searchParams.ToDataTable(), request);
+            return Json(JsonConvert.SerializeObject(dbResult.ToDynamic()));
         }
         #endregion
 
@@ -992,5 +1050,56 @@ namespace ResearchApp.Controllers
             return Json(list.ToDataSourceResult(request, ModelState));
         }
         #endregion
+
+
+
+        [AcceptVerbs("Post")]
+        public IActionResult Add([DataSourceRequest] DataSourceRequest request, string models, string tableName, List<TreeColumnViewModel> columns)
+        {
+            List<Dictionary<string, object>> list = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(models);
+            //List<Dictionary<string, object>> list = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(models);
+            //var columnsToInsert = columns.Where(x => !x.IDColumn).Select(x => x.ColumnName);
+            foreach (var item in list)
+            {
+                int id = _workRepo.Create(item, tableName, columns);
+                item[tableName + "ID"] = id;
+            }
+            return Json(list.ToDataSourceResult(request));
+        }
+
+        [AcceptVerbs("Post")]
+        public async Task<IActionResult> Update([DataSourceRequest] DataSourceRequest request, string models, string tableName,
+            List<TreeColumnViewModel> columns)
+        {
+            List<Dictionary<string, object>> dataItems = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(models);
+            List<Dictionary<string, object>> list = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(models);
+            //var columnsToUpdate = columns.Select(x => x.ColumnName);
+            foreach (var item in dataItems)
+            {
+                await _workRepo.Update(item, tableName, columns);
+            }
+            return Json(list.ToDataSourceResult(request));
+        }
+
+        [AcceptVerbs("Post")]
+        public async Task<IActionResult> Destroy([DataSourceRequest] DataSourceRequest request,
+            string models, string tableName, string primaryKey)
+        {
+            List<Dictionary<string, object>> dataItems = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(models);
+            if (dataItems.Any())
+            {
+                foreach (var item in dataItems)
+                {
+
+                    await _workRepo.Destroy(primaryKey, tableName, Convert.ToInt32(item[primaryKey]));
+                }
+                //foreach (var work in works)
+                //{
+                //    await _workRepo.Delete(work.WorkID.GetValueOrDefault());
+                //}
+            }
+            return Json(dataItems.ToDataSourceResult(request));
+        }
     }
+
 }

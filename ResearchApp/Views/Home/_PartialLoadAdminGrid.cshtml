@@ -1,0 +1,13 @@
+﻿@model dynamic
+<div class="grid-container ml-2">
+    <div id="kendo-grid-container">
+        <div class='search-results' id='search-results-@Model.TableName'>
+        </div>
+    </div>
+</div>
+<div id="form-container"></div>
+<script>
+        $(document).ready(function () {
+            generateAdminGrid(@Html.Raw(Json.Serialize(Model)), '#search-results-@Model.TableName');
+        });
+</script>

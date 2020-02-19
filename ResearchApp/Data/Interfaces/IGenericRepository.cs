@@ -26,5 +26,10 @@ namespace ResearchApp.Data
         string GetFKDisplayColumn(string tableName, string displayName);
         DataTable PopulateSearchResult(DataTable searchTable, AdvanceSearchRequest request);
         List<TreeColumnViewModel> GetMetaColumns(string tableName);
+        int Create(Dictionary<string, object> model, string tableName, List<TreeColumnViewModel> columns);
+        Task Update(Dictionary<string, object> model, string tableName, List<TreeColumnViewModel> columns);
+        Task Destroy(string primaryKey, string tableName, int id);
+        //Task ExecuteSqlRaw(string query, object[] parameters);
+        //Task ExecuteSqlRaw(string query);
     }
 }

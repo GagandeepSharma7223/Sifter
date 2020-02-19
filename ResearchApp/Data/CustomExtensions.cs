@@ -37,8 +37,8 @@ namespace ResearchApp.Data
             }
         }
 
-
-        public static IEnumerable<dynamic> DynamicListFromSql(this DbContext db, string Sql, Dictionary<string, object> Params, string fieldType = "string")
+        public static IEnumerable<dynamic> DynamicListFromSql(this DbContext db, string Sql,
+            Dictionary<string, object> Params, string fieldType = "string")
         {
             using (var cmd = db.Database.GetDbConnection().CreateCommand())
             {
@@ -61,8 +61,8 @@ namespace ResearchApp.Data
                         {
                             yield return new DropdownOptions
                             {
-                              Id = (int)record[0],
-                              Option = record[1].ToString()
+                                Id = (int)record[0],
+                                Option = record[1].ToString()
                             };
                         }
                         else
@@ -70,6 +70,25 @@ namespace ResearchApp.Data
                             yield return record[0];
                         }
                 }
+            }
+        }
+
+        public static int ExecuteScalarFromSql(this DbContext db, string Sql,
+           Dictionary<string, object> Params)
+        {
+            using (var cmd = db.Database.GetDbConnection().CreateCommand())
+            {
+                cmd.CommandText = Sql;
+                if (cmd.Connection.State != ConnectionState.Open) { cmd.Connection.Open(); }
+
+                foreach (KeyValuePair<string, object> p in Params)
+                {
+                    DbParameter dbParameter = cmd.CreateParameter();
+                    dbParameter.ParameterName = p.Key;
+                    dbParameter.Value = p.Value == null ? DBNull.Value : p.Value;
+                    cmd.Parameters.Add(dbParameter);
+                }
+                return (int)cmd.ExecuteScalar();
             }
         }
 

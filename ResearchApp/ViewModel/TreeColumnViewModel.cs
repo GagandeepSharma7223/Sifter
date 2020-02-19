@@ -24,5 +24,6 @@ namespace ResearchApp.ViewModel
         public bool IsEditable { get; set; }
         public bool IsRequired { get; set; }
         public bool IsUnique { get; set; }
+        public string ColType { get; set; }
     }
 }

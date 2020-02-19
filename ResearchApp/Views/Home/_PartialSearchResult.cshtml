@@ -1,9 +1,9 @@
 ﻿@model dynamic
-<div class='search-results' id='search-results-@((int)Model.GridType)'>
+<div class='search-results' id='search-results-@Model.TableName'>
 </div>
 
 <script>
         $(document).ready(function () {
-            generateGrid(@Html.Raw(Json.Serialize(Model)), '#search-results-@((int)Model.GridType)');
+            generateGrid(@Html.Raw(Json.Serialize(Model)), '#search-results-@Model.TableName');
         });
 </script>

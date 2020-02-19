@@ -1,10 +1,8 @@
 ﻿// Write your Javascript code.
-
-
 var isGridEditable = false, isWordWrap = false, isFormWrap = false, isLoggedIn = false,
     editfield = "", displayFieldSelectedDD = "", columnNameAddItemDD = "", tableNameAddItemDD = "", addedItemDD = {}, selectedAddItemDD = null,
     isAddNewItemDD = false, isAddNewItemRequestCompletedDD = false, formViewSelectedItem = null, currentFilterColumn, grid, selectedItemIndex,
-    gridFooterEle, selectedDropdownEle, filterEnabled = false, gridSelectionIndex;
+    gridFooterEle, selectedDropdownEle, filterEnabled = false, gridSelectionIndex, gridColumns;
 var browserWindow = $(window);
 //register custom validation rules
 (function ($, kendo) {
@@ -84,15 +82,15 @@ $(window).resize(function () {
     });
 });
 
-$(function () {
-    populateDDSession('Author', 'FullName');
-    populateDDSession('Category', 'Name');
-    populateDDSession('City', 'Name');
-    populateDDSession('Country', 'Name');
-    populateDDSession('Language', 'Name');
-    populateDDSession('Publisher', 'Name');
-    populateDDSession('Work', 'Title');
-});
+//$(function () {
+//    populateDDSession('Author', 'FullName');
+//    populateDDSession('Category', 'Name');
+//    populateDDSession('City', 'Name');
+//    populateDDSession('Country', 'Name');
+//    populateDDSession('Language', 'Name');
+//    populateDDSession('Publisher', 'Name');
+//    populateDDSession('Work', 'Title');
+//});
 
 kendo.syncReady(function () { jQuery("#switch").kendoSwitch({}); });
 
@@ -177,18 +175,16 @@ function checkIfGridEditable(e) {
 function loadData(e) {
     isFormWrap = false;
     resetAddNewProps();
-    $("#myModal").kendoSplitter();
-    var splitter = $("#myModal").data("kendoSplitter");
+    var splitter = $("#horizontal").data("kendoSplitter");
     var treeView = $('#treeview').data('kendoTreeView');
     if (treeView) {
         var tableName = treeView.dataItem(e.node).tableName;
         if (tableName) {
             showLoading();
-            splitter.ajaxRequest(".k-pane:last", "/Grid/GetView", { type: tableName });
+            splitter.ajaxRequest("#myModal", "/Grid/AdminSearchForm", { TableName: tableName });
         }
     }
 }
-
 
 function loadEditData(obj) {
     var splitter = $("#myModal").data("kendoSplitter");
@@ -277,6 +273,21 @@ function onDataBound(e) {
     }
 }
 
+function adminGridOnDataBound(e) {
+    console.log("event data bound");
+    if (gridSelectionIndex) {
+        if (grid.dataSource.data().length - 1 > gridSelectionIndex)
+            gridSelectionIndex++;
+        grid.select(`tr:eq(${gridSelectionIndex})`);
+    } else {
+        grid.select("tr:eq(0)");
+    }
+    gridDataBoundConfig();
+    if (isFormWrap) {
+        formSwitchEvents();
+    }
+}
+
 function treeViewDataBound() {
     selectTreeViewItem("Works");
 }
@@ -356,7 +367,7 @@ function triggerFormView() {
     isFormWrap = true;
     formViewSelectedItem = grid.dataItem(grid.select());
     selectedItemIndex = grid.dataSource.data().indexOf(formViewSelectedItem);
-    $("#myModal").kendoSplitter();
+    //$("#myModal").kendoSplitter();
     gridFooterEle = $('.k-pager-wrap').clone(true);
     getFormView();
 }
@@ -382,7 +393,6 @@ function getFormView(tableName, addNewItem) {
             $('#kendo-grid-container').css('visibility', 'hidden');
             resizeGrid();
             resizeSplitter();
-            hideLoading();
         }).fail(function (xhr) {
             hideLoading();
         });
@@ -395,6 +405,7 @@ function onClose() {
 function onOpen(e) {
     $('#dialog input').focus();
 }
+
 var chkEdit = false;
 $(document).on("click", '.startEditable', function (e) {
     if (!isLoggedIn) {
@@ -445,7 +456,7 @@ $(document).on("click", '.removeFilter', function (e) {
 $(document).on("change", "input.chkbx", function (e) {
     var dataItem = grid.dataItem($(e.target).closest("tr"));
     $(e.target).closest("td").prepend("<span class='k-dirty'></span>");
-    dataItem.IsOrganization = this.checked;
+    dataItem[e.target.title] = this.checked;
     dataItem.dirty = true;
 });
 
@@ -711,7 +722,6 @@ function clearFilter() {
 
 function initColumnMenuFilter(e) {
     var menu = e.container.find(".k-menu").data("kendoMenu");
-    var filterMenu = e.container.find("[data-role='filtermenu']").getKendoFilterMenu();
     var grid = e.sender;
     var field = e.field;
     var treeTable = getSelectTable();
@@ -726,9 +736,9 @@ function initColumnMenuFilter(e) {
     }
 
     // Fetch FKDisplay Column from db
-    $.get("/Grid/GetFKDisplayColumn", { tableName: treeTable, displayName: field }, function (response) {
-        fkDisplayColumn = response;
-    });
+    //$.get("/Grid/GetFKDisplayColumn", { tableName: treeTable, displayName: field }, function (response) {
+    //    fkDisplayColumn = response;
+    //});
 
     var dataSource = this.dataSource;
     var dataSourceListView = new kendo.data.DataSource({
@@ -848,12 +858,12 @@ function initColumnMenuFilter(e) {
                                 var inputSecond = advancedOptionFrm.find("input:eq(1)");
                                 inputFirst.removeClass('k-textbox').removeAttr("data-bind");
                                 inputSecond.removeClass('k-textbox').removeAttr("data-bind");
-
+                                var fkTableDetail = gridColumns.find(x => x.DisplayName === field);
                                 ddFilterOne = $(inputFirst).kendoDropDownList({
                                     dataSource: {
                                         type: "aspnetmvc-ajax",
                                         transport: {
-                                            read: `/Grid/GetDropdownOptions?treeTable=${field}&optionCol=${fkDisplayColumn}`
+                                            read: `/Grid/GetDropdownOptions?treeTable=${fkTableDetail.Fktable}&optionCol=${fkTableDetail.FkdisplayCol}`
                                         },
                                         schema: {
                                             model: {
@@ -902,7 +912,7 @@ function initColumnMenuFilter(e) {
                                     dataSource: {
                                         type: "aspnetmvc-ajax",
                                         transport: {
-                                            read: `/Grid/GetDropdownOptions?treeTable=${field}&optionCol=${fkDisplayColumn}`
+                                            read: `/Grid/GetDropdownOptions?treeTable=${fkTableDetail.Fktable}&optionCol=${fkTableDetail.FkdisplayCol}`
                                         },
                                         schema: {
                                             model: {
@@ -1078,8 +1088,10 @@ function initColumnMenuFilter(e) {
                             fieldFilters = $.map(element.find(":checkbox:checked"), function (input, index) {
                                 return {
                                     field: fieldType === 'object' ? field + 'ID' : field,
-                                    operator: 'eq',
-                                    value: parseValue(fieldType, input.value)
+                                    operator: 'in list',
+                                    value: parseValue(fieldType, input.value),
+                                    tableName: treeTable,
+                                    columnType: fieldType
                                 };
                             });
                             // Get Field Filters
@@ -1087,14 +1099,18 @@ function initColumnMenuFilter(e) {
                                 fieldFilters.push({
                                     field: fieldType === 'object' ? field + 'ID' : field,
                                     operator: filterOneValue,
-                                    value: parseValue(fieldType, inputFilterOne)
+                                    value: parseValue(fieldType, inputFilterOne),
+                                    tableName: treeTable,
+                                    columnType: fieldType
                                 });
                             }
                             if (inputFilterTwo) {
                                 fieldFilters.push({
                                     field: fieldType === 'object' ? field + 'ID' : field,
                                     operator: filterTwoValue,
-                                    value: parseValue(fieldType, inputFilterTwo)
+                                    value: parseValue(fieldType, inputFilterTwo),
+                                    tableName: treeTable,
+                                    columnType: fieldType
                                 });
                             }
                         }
@@ -1102,8 +1118,10 @@ function initColumnMenuFilter(e) {
                             fieldFilters = $.map(element.find(":checkbox:checked"), function (input, index) {
                                 return {
                                     field: field,
-                                    operator: 'eq',
-                                    value: parseValue(fieldType, input.value)
+                                    operator: 'in list',
+                                    value: parseValue(fieldType, input.value),
+                                    tableName: treeTable,
+                                    columnType: fieldType
                                 };
                             });
                         }
@@ -1114,6 +1132,11 @@ function initColumnMenuFilter(e) {
                                 logic: 'or',
                                 filters: fieldFilters
                             });
+
+                            var gridType = grid.element.attr('id').split('-')[2];
+                            var columnFilters = Array.prototype.concat(...filter.filters.map(x => x.filters));
+                            var params = { dataSource: grid.dataSource, columnFilters: columnFilters };
+                            populateSearch(gridType, false, params);
                             dataSource.filter(filter);
                         }
                         var popup = $(helpTextElement.children(":last").children(":first")).data("kendoPopup");
@@ -1134,11 +1157,15 @@ function initColumnMenuFilter(e) {
                             item.select(0);
                         }
                     });
-
+                    var gridType = grid.element.attr('id').split('-')[2];
+                    var params = { dataSource: grid.dataSource };
+                    populateSearch(gridType, false, params);
                     var filter = { logic: "and", filters: [] };
                     dataSource.filter(filter);
                     var gridView = $('#list-view-' + field).data('kendoGrid');
                     gridView.dataSource.filter(filter);
+                    var popup = $(helpTextElement.children(":last").children(":first")).data("kendoPopup");
+                    popup.close();
                 });
                 // Filter search text event
                 $('#filter-search-' + field).on('keyup', function (e) {
@@ -1358,26 +1385,30 @@ $(document).on("click", '#save-form-btn', function (e) {
     if (validator.validate()) {
         showLoading();
         var data = objectifyForm($('#edit-form').serializeArray());
-        var formDDs = $("#edit-form input[data-role='dropdownlist']");
-        formDDs.each(function (index, item) {
-            var value = $(item).data("kendoDropDownList").value();
-            var text = $(item).data("kendoDropDownList").text();
-            var ddPropName = item.name.slice(0, -2);
-            if (value > 0) {
-                data[ddPropName] = {
-                    Id: parseInt(value),
-                    Option: text
-                };
-            }
-            else {
-                data[ddPropName] = {};
-            }
-        });
+        var arr = [];
+        //var formDDs = $("#edit-form input[data-role='dropdownlist']");
+        //formDDs.each(function (index, item) {
+        //    var dropdownList = $(item).data("kendoDropDownList");
+        //    //var text = $(item).data("kendoDropDownList").text();
+        //    var ddPropName = item.name.slice(0, -2);
+        //    if (dropdownList.value() > 0) {
+        //        //data[ddPropName] = {
+        //        //    Id: parseInt(value),
+        //        //    Option: text
+        //        //};
+        //        data[ddPropName] = dropdownList.text();
+        //    }
+        //    else {
+        //        data[ddPropName] = {};
+        //    }
+        //});
+        arr.push(data);
         var treeTable = getSelectTable();
         var idField = treeTable + "ID";
-        $.post('/Grid/SaveForm', { type: treeTable, selectedItem: JSON.stringify(data) })
-            .done(function (id) {
-                if (!data[idField]) {
+        if (!data[idField]) {  //Add
+            $.post('/Grid/Add', { tableName: treeTable, models: JSON.stringify(arr), columns: gridColumns })
+                .done(function (response) {
+                    var id = response.Data[0].id;
                     // If add form comes from adding new option to dropdown
                     if (isAddNewItemDD) {
                         // Show up admin grid where add new item get triggered
@@ -1397,8 +1428,14 @@ $(document).on("click", '#save-form-btn', function (e) {
                         selectGridRow();
                         getFormView();
                     }
-                }
-                else {
+                })
+                .fail(function () {
+                    hideLoading();
+                });
+        }
+        else {  //Update
+            $.post('/Grid/Update', { tableName: treeTable, models: JSON.stringify(arr), columns: gridColumns })
+                .done(function (response) {
                     $.each(formViewSelectedItem, function (name, value) {
                         if (data.hasOwnProperty(name) && data[name] !== formViewSelectedItem[name]) {
                             formViewSelectedItem.set(name, data[name]);
@@ -1406,10 +1443,46 @@ $(document).on("click", '#save-form-btn', function (e) {
                     });
                     $('.k-dirty').removeClass('k-dirty');
                     hideLoading();
-                }
-            })
-            .fail(function () {
-            });
+                })
+                .fail(function () {
+                    hideLoading();
+                });
+        }
+        //$.post('/Grid/SaveForm', { type: treeTable, selectedItem: JSON.stringify(data) })
+        //    .done(function (id) {
+        //        if (!data[idField]) {
+        //            // If add form comes from adding new option to dropdown
+        //            if (isAddNewItemDD) {
+        //                // Show up admin grid where add new item get triggered
+        //                // Select that perticular item
+        //                // Select that perticular cell
+        //                addedItemDD = {
+        //                    Id: id,
+        //                    Option: data[displayFieldSelectedDD]
+        //                };
+        //                backToGridDD();
+        //            }
+        //            else {
+        //                data[idField] = id;
+        //                grid.dataSource.add(data);
+        //                formViewSelectedItem = grid.dataSource.data().find(x => x[idField] === data[idField]);
+        //                selectedItemIndex = grid.dataSource.data().indexOf(formViewSelectedItem);
+        //                selectGridRow();
+        //                getFormView();
+        //            }
+        //        }
+        //        else {
+        //            $.each(formViewSelectedItem, function (name, value) {
+        //                if (data.hasOwnProperty(name) && data[name] !== formViewSelectedItem[name]) {
+        //                    formViewSelectedItem.set(name, data[name]);
+        //                }
+        //            });
+        //            $('.k-dirty').removeClass('k-dirty');
+        //            hideLoading();
+        //        }
+        //    })
+        //    .fail(function () {
+        //    });
     }
 });
 
@@ -1594,88 +1667,125 @@ var searchParam = {
     SortField: '',
     SortDirection: 'asc'
 };
-var searchGridOptions = {}, gridElement;
+var searchGridOptions = {}, adminGridOptions = {}, gridElement;
 
-function getSearchParams(gridType, pageNo, sortField, sortDirection) {
-    if (!pageNo) pageNo = 0;
-    var filters = [];
+function getSearchParams(tableName, isView, config = {}) {
+    if (!config.page) config.page = 0;
+    var filters = [], requestParam = [], params = [];
     var searchForms = $('form');
-    $.each(searchForms, function (index, value) {
-        var data = objectifyForm($(this).serializeArray());
-        $.each(data, function (name, value) {
-            var propArr = name.split('.');
-            var member = propArr[2];
-            var tableName = propArr[0];
-            if (name.indexOf("Filter") >= 0) {
-                var operator = value;  // Operator Value
-                switch (operator) {
-                    case 'in list':
-                        var memberValue = data[`${tableName}.${member}ID.hdn`];
+    if (isView) {
+        $.each(searchForms, function (index, value) {
+            var data = objectifyForm($(this).serializeArray());
+            $.each(data, function (name, value) {
+                var propArr = name.split('.');
+                var member = propArr[2];
+                var tableName = propArr[0];
+                if (name.indexOf("Filter") >= 0) {
+                    var operator = value;  // Operator Value
+                    switch (operator) {
+                        case 'in list':
+                            var memberValue = data[`${tableName}.${member}ID.hdn`];
+                            break;
+                        default:
+                            memberValue = data[`${tableName}.${member}`];
+                            break;
+                    }
+                    if (Array.isArray(memberValue)) {
+                        if (memberValue.length)
+                            memberValue = memberValue.join('|');
+                        else
+                            memberValue = '';
+                    }
+                    if (memberValue) {
+                        filters.push({
+                            'field': member,
+                            'operator': operator,
+                            'value': memberValue,
+                            'tableName': tableName,
+                            'columnType': 'text'
+                        });
+                    }
+                }
+                else if (propArr[1] === "Start") {
+                    if (member && value) {
+                        filters.push({
+                            'field': member,
+                            'operator': "",
+                            'value': value,
+                            'tableName': tableName,
+                            'columnType': 'number'
+                        });
+                    }
+                }
+                else if (propArr[1] === "End") {
+                    if (member && value) {
+                        filters.push({
+                            'field': member,
+                            'operator': "",
+                            'value': value,
+                            'tableName': tableName,
+                            'columnType': 'number'
+                        });
+                    }
+                }
+            });
+        });
+        var filterArr = { logic: "and", filters: [] };
+        filterArr.filters = filters;
+        filters.forEach(function (item, index) {
+            params.push({
+                tableName: item.tableName,
+                columnName: item.field,
+                columnType: item.columnType,
+                comparisonType: item.operator,
+                textValue: item.value,
+                andOr: 'and'
+            });
+        });
+    }
+    else if (config.columnFilters) {
+        for (var i = 0; i < config.columnFilters.length; i++) {
+            var item = config.columnFilters[i], columnType;
+            if (!params.some(x => x.columnName === item.field && x.comparisonType === item.operator)) {
+                var value = item.value, sameColumns = config.columnFilters.filter(x => x.field === item.field && x.operator === 'eq');
+                if (sameColumns.length > 1) {
+                    value = sameColumns.map(x => x.value).join('|');
+                    //config.columnFilters = config.columnFilters.filter((el) => el.field !== item.field);
+                }
+                textValue = value;
+                switch (item.columnType) {
+                    case 'string':
+                        columnType = 'text';
+                        break;
+                    case 'number':
+                        columnType = 'number';
+                        break;
+                    case 'object':
+                        columnType = 'number';
                         break;
                     default:
-                        memberValue = data[`${tableName}.${member}`];
+                        columnType = 'text';
                         break;
                 }
-                if (Array.isArray(memberValue)) {
-                    if (memberValue.length)
-                        memberValue = memberValue.join('|');
-                    else
-                        memberValue = '';
-                }
-                if (memberValue) {
-                    filters.push({
-                        'field': member,
-                        'operator': operator,
-                        'value': memberValue,
-                        'tableName': tableName,
-                        'columnType': 'text'
-                    });
-                }
+                params.push({
+                    tableName: item.tableName,
+                    columnName: item.field,
+                    columnType: columnType,
+                    comparisonType: item.operator,
+                    textValue: value,
+                    andOr: 'and'
+                });
             }
-            else if (propArr[1] === "Start") {
-                if (member && value) {
-                    filters.push({
-                        'field': member,
-                        'operator': "",
-                        'number1': value,
-                        'tableName': tableName,
-                        'columnType': 'number'
-                    });
-                }
-            }
-            else if (propArr[1] === "End") {
-                if (member && value) {
-                    filters.push({
-                        'field': member,
-                        'operator': "",
-                        'number2': value,
-                        'tableName': tableName,
-                        'columnType': 'number'
-                    });
-                }
-            }
-        });
+        }
+    }
+    requestParam = $.extend({}, searchParam, {
+        TableName: tableName,
+        IsView: isView,
+        PageNumber: config.page,
+        SortField: config.sortField,
+        SortDirection: config.sortDir
     });
-    var filterArr = { logic: "and", filters: [] };
-    filterArr.filters = filters;
-    var params = [];
-    filters.forEach(function (item, index) {
-        params.push({
-            tableName: item.tableName,
-            columnName: item.field,
-            columnType: item.columnType,
-            comparisonType: item.operator,
-            textValue: item.value,
-            number1: item.number1,
-            number2: item.number2
-        });
-    });
-    var requestParam = $.extend({}, searchParam, {
-        GridType: gridType,
-        PageNumber: pageNo,
-        SortField: sortField,
-        SortDirection: sortDirection
-    });
+
     return {
         searchParams: params,
         request: requestParam
@@ -1723,7 +1833,7 @@ function getSearchResults() {
                     filters.push({
                         'field': member,
                         'operator': "",
-                        'number1': value,
+                        'value': value,
                         'tableName': tableName,
                         'columnType': 'number'
                     });
@@ -1751,16 +1861,14 @@ function getSearchResults() {
             columnName: item.field,
             columnType: item.columnType,
             comparisonType: item.operator,
-            textValue: item.value,
-            number1: item.number1,
-            number2: item.number2
+            textValue: item.value
         });
     });
     searchParams = { type: selectedSearchOption, filter: filterArr };
     var tabStrip = $("#search-tab-strip").data("kendoTabStrip");
-    tabStrip.options.contentUrls[3].data = getSearchParams(11);  //Need to make them dynamic
-    tabStrip.options.contentUrls[4].data = getSearchParams(12);
-    tabStrip.options.contentUrls[5].data = getSearchParams(13);
+    tabStrip.options.contentUrls[3].data = getSearchParams('VAuthor', true);  //Need to make them dynamic
+    tabStrip.options.contentUrls[4].data = getSearchParams('VWork', true);
+    tabStrip.options.contentUrls[5].data = getSearchParams('VUnit', true);
     tabStrip.select(3);
     tabStrip.reload("li:eq(4)");
     tabStrip.reload("li:eq(5)");
@@ -1780,38 +1888,6 @@ function getFilterForSearch(value) {
             return value;
     }
 }
-
-var searchDataSource = new kendo.data.DataSource(
-    {
-        transport: {
-            read: function (operation) {
-                var data = operation.data.data || [];
-                //if (data.length === 0 && dataSourceGridView.data().length) {
-                //    data = dataSourceGridView.data();
-                //}
-                operation.success(data);
-                //endGridLoading = operation.data.endLoading;
-                //if (operation.data.endLoading && gridElement) {
-                //    endKendoLoading(gridElement);
-                //    operation.success(operation.data.data);
-                //    endGridLoading = false;
-                //}
-            }
-        },
-        pageSize: 1000,
-        serverSorting: true,
-        serverFiltering: true,
-        serverPaging: true,
-        schema: {
-            data: function (response) {
-                return response;
-            },
-            total: function () {
-                return searchGridOptions.Total;
-            }
-        }
-    }
-);
 
 function generateGrid(response, container) {
     response.Result = JSON.parse(response.SearlizeResult);
@@ -1837,7 +1913,7 @@ function generateGrid(response, container) {
                 data: function (response) {
                     return response;
                 },
-                total: function () {
+                total: function (e) {
                     return searchGridOptions.Total;
                 }
             },
@@ -1863,19 +1939,25 @@ function generateGrid(response, container) {
             var gridType = e.sender.element.attr('id').split('-')[2];
             var sortFieldArr = e.sender.dataSource.sort();
             var sortField = '', sortDir = 'asc';
+            searchGridOptions.Total = e.sender.dataSource.total();
             if (sortFieldArr && sortFieldArr.length) {
                 sortField = sortFieldArr[0].field;
                 sortDir = sortFieldArr[0].dir;
             }
-            populateSearch(gridType, e.page - 1, e.sender.dataSource, sortField, sortDir);
+
+            var params = { dataSource: e.sender.dataSource, page: e.page - 1, sortField, sortDir };
+            populateSearch(gridType, true, params);
         },
         sort: function (e) {
+            searchGridOptions.Total = e.sender.dataSource.total();
             var gridType = e.sender.element.attr('id').split('-')[2];
-            populateSearch(gridType, e.sender.pager.page() - 1, e.sender.dataSource, e.sort.field, e.sort.dir);
+            var params = { dataSource: e.sender.dataSource, page: e.sender.pager.page() - 1, sortField: e.sort.field, sortDir: e.sort.dir };
+            populateSearch(gridType, true, params);
             e.sender.dataSource.sort({ field: e.sort.field, dir: e.sort.dir });
         },
         columnMenu: true,
         dataBound: function (e) {
+            grid = e.sender;
             $(e.sender.element).find('.k-grid-content').height($('.k-tabstrip-wrapper').height() - 125);
             $(e.sender.element).find('td').addClass('text-nowrap');
         }
@@ -1886,6 +1968,169 @@ function generateGrid(response, container) {
     resizeSearchGrid();
 }
 
+function generateAdminGrid(response, container) {
+    var treeTable = getSelectTable();
+    response.Result = JSON.parse(response.SearlizeResult);
+    adminGridOptions.Total = response.Total;
+    gridColumns = response.Columns;
+    var model = generateAdminGridModel(gridColumns);
+    var columns = generateAdminGridColumns(gridColumns);
+    var dataSource = new kendo.data.DataSource(
+        {
+            batch: true,
+            transport: {
+                read: function (operation) {
+                    var data = operation.data.data || [];
+                    operation.success(data);
+                    if (operation.data.endLoading && gridElement) {
+                        endKendoLoading(gridElement);
+                        operation.success(data);
+                    }
+                },
+                create: function (options) {
+                    $.ajax({
+                        url: "/Grid/Add",
+                        type: 'POST',
+                        data: {
+                            models: kendo.stringify(options.data.models),
+                            columns: gridColumns,
+                            tableName: treeTable
+                        },
+                        success: function (result) {
+                            // notify the data source that the request succeeded
+                            options.success(result.Data);
+                            endKendoLoading(gridElement);
+                        },
+                        error: function (result) {
+                            // notify the data source that the request failed
+                            options.error(result);
+                            endKendoLoading(gridElement);
+                        },
+                        complete: function (result) {
+                            resizeGrid();
+                            resizeSplitter();
+                        }
+                    });
+                },
+                update: function (options) {
+                    $.ajax({
+                        url: "/Grid/Update",
+                        type: 'POST',
+                        data: {
+                            models: kendo.stringify(options.data.models),
+                            columns: gridColumns,
+                            tableName: treeTable
+                        },
+                        success: function (result) {
+                            // notify the data source that the request succeeded
+                            options.success(result.Data);
+                            endKendoLoading(gridElement);
+                        },
+                        error: function (result) {
+                            // notify the data source that the request failed
+                            options.error(result);
+                            endKendoLoading(gridElement);
+                        },
+                        complete: function (result) {
+                            resizeGrid();
+                            resizeSplitter();
+                        }
+                    });
+                },
+                destroy: function (options) {
+                    $.ajax({
+                        url: "/Grid/Destroy",
+                        type: 'POST',
+                        data: {
+                            models: kendo.stringify(options.data.models),
+                            tableName: treeTable,
+                            primaryKey: gridColumns.find(x => x.IDColumn).ColumnName
+                        },
+                        success: function (result) {
+                            options.success(result.Data);
+                            endKendoLoading(gridElement);
+                        },
+                        error: function (result) {
+                            options.error(result);
+                        }
+                    });
+                }
+            },
+            pageSize: 1000,
+            serverSorting: true,
+            serverFiltering: true,
+            serverPaging: true,
+            schema: {
+                model: model,
+                data: function (response) {
+                    return response;
+                },
+                total: function () {
+                    return adminGridOptions.Total;
+                }
+            },
+            requestStart: function (e) {
+                console.log(e);
+                if (e.sender.attachedGrid) {
+                    gridElement = e.sender.attachedGrid.element;
+                    startKendoLoading(gridElement);
+                }
+            }
+        }
+    );
+    var gridOptions = {
+        toolbar: [
+            { name: "create" },
+            { name: "save" }
+        ],
+        dataSource: dataSource,
+        columns: columns,
+        sortable: true,
+        filterable: true,
+        reorderable: true,
+        //scrollable: false,
+        resizable: true,
+        pageable: {
+            buttonCount: 7
+        },
+        page: function (e) {
+            var gridType = e.sender.element.attr('id').split('-')[2];
+            var sortFieldArr = e.sender.dataSource.sort();
+            var sortField = '', sortDir = 'asc';
+            if (sortFieldArr && sortFieldArr.length) {
+                sortField = sortFieldArr[0].field;
+                sortDir = sortFieldArr[0].dir;
+            }
+            var params = { dataSource: e.sender.dataSource, page: e.page - 1, sortField, sortDir };
+            populateSearch(gridType, false, params);
+            //populateSearch(gridType, false, e.page - 1, e.sender.dataSource, sortField, sortDir);
+        },
+        sort: function (e) {
+            var gridType = e.sender.element.attr('id').split('-')[2];
+            //populateSearch(gridType, false, e.sender.pager.page() - 1, e.sender.dataSource, e.sort.field, e.sort.dir);
+            var params = { dataSource: e.sender.dataSource, page: e.sender.pager.page() - 1, sortField: e.sort.field, sortDir: e.sort.dir };
+            populateSearch(gridType, false, params);
+            e.sender.dataSource.sort({ field: e.sort.field, dir: e.sort.dir });
+        },
+        columnMenu: true,
+        editable: true,
+        selectable: true,
+        dataBound: function (e) {
+            grid = e.sender;
+            adminGridOnDataBound();
+        },
+        change: function (e) {
+            var selectedRows = this.select();
+        },
+        columnMenuInit: columnMenuInit
+    };
+    grid = $(container).kendoCustomGrid(gridOptions)
+        .data("kendoCustomGrid");
+    grid.dataSource.read({ data: response.Result, endLoading: true });
+    grid.thead.find("[data-index=0]>.k-header-column-menu").remove();
+    adminGridOnDataBound();
+}
+
 function startKendoLoading(target) {
     kendo.ui.progress(target, true);
 }
@@ -1894,10 +2139,12 @@ function endKendoLoading(target) {
     kendo.ui.progress(target, false);
 }
 
-function populateSearch(gridType, pageNo, dataSource, sortField = '', sortDirection = 'asc') {
-    $.post("/Grid/AdvanceSearchResult", getSearchParams(gridType, pageNo, sortField, sortDirection), function (response) {
+function populateSearch(gridType, isView, { dataSource, page, sortField = '', sortDir = 'asc', columnFilters }) {
+    $.post("/Grid/AdvanceSearchResult", getSearchParams(gridType, isView, { page, sortField, sortDir, columnFilters }), function (response) {
         if (response) {
-            var gridData = JSON.parse(response);
+            var gridData = JSON.parse(response.SearlizeResult);
+            searchGridOptions.Total = response.Total;
+            adminGridOptions.Total = response.Total;
             dataSource.read({ data: gridData, endLoading: true });
         }
     });
@@ -1911,6 +2158,98 @@ function generateColumns(columnsDef) {
             title: item.DisplayName
         };
     });
+}
+
+function generateAdminGridColumns(columnsDef) {
+    var columns = columnsDef.map(function (item) {
+        if (item.Fktable) {
+            return {
+                field: item.DisplayName,
+                width: 180,
+                title: item.DisplayName,
+                editable: function (e) {
+                    if (item.IsEditable) {
+                        return isGridEditable;
+                    }
+                    return false;
+                },
+                editor: function (container, options) {
+                    dropDownEditor(container, options, item);
+                },
+                template: function (dataItem) {
+                    return dataItem[item.DisplayName] ? dataItem[item.DisplayName] : "";
+                }
+            };
+        }
+        else if ((item.ColType === "number" || item.ColType === 'int') && item.Fktable === null && !item.IDColumn) {
+            return {
+                field: item.ColumnName,
+                width: item.IDColumn ? 50 : 180,
+                title: item.DisplayName,
+                editor: numericEditor,
+                editable: function (e) {
+                    if (item.IsEditable) {
+                        return isGridEditable;
+                    }
+                    return false;
+                }
+            };
+        }
+        else if (item.ColType === "boolean") {
+            return {
+                field: item.ColumnName,
+                width: 110,
+                title: item.DisplayName,
+                editable: function (e) {
+                    return false;
+                },
+                template: `<input disabled="disabled" type="checkbox" #= ${item.ColumnName} ? \'checked="checked"\' : "" # title="${item.ColumnName}" 
+                                class='chkbx' data-bind="checked: ${item.ColumnName}">`
+            };
+        }
+        else {
+            var options = {
+                field: item.ColumnName,
+                width: item.IDColumn ? 50 : 180,
+                title: item.DisplayName,
+                editable: function (e) {
+                    if (item.IsEditable) {
+                        return isGridEditable;
+                    }
+                    return false;
+                }
+            };
+            if (item.ColumnName === 'Gender') {
+                options.editor = genderDropDownEditor;
+            }
+            else if (item.ColumnName === 'Role') {
+                options.editor = roleDropDownEditor;
+            }
+            return options;
+        }
+    });
+    var idColumn = columnsDef.find(x => x.IDColumn);
+    if (idColumn) {
+        columns.unshift({
+            field: idColumn.ColumnName,
+            menu: false,
+            sortable: false,
+            width: 80,
+            template: `<div class='text-center'><input type='checkbox' id='#=${idColumn.ColumnName}#' class='grid-item'/></div>`,
+            headerTemplate: `<div class='k-grid-delete text-center'><a role='button' class='k-button k-button-icontext' href=''>Delete</a></div>`
+        });
+    }
+    return columns;
+}
+
+function dirtyField(data, fieldName) {
+    var hasClass = $("[data-uid=" + data.uid + "]").find(".k-dirty-cell").length < 1;
+    if (data.dirty && data.dirtyFields[fieldName] && hasClass) {
+        return "<span class='k-dirty'></span>";
+    }
+    else {
+        return "";
+    }
 }
 
 function generateModel(response) {
@@ -1968,8 +2307,69 @@ function generateModel(response) {
         return model;
     }
 }
-var selectedSearchOption = 'Author';
+var isDateField = [];
+function generateAdminGridModel(columnDef) {
+    if (columnDef && columnDef.length) {
+        var model = {};
+        var fields = {};
+        columnDef.forEach(function (property, index) {
+            var propType = property.ColType;
+            if (property.IDColumn) {
+                model["id"] = property.ColumnName;
+                fields[property.ColumnName] = {
+                    type: "number",
+                    editable: false
+                };
+            }
+            else if ((propType === 'int' || propType === 'number') && property.Fktable === null) {
+                fields[property.ColumnName] = {
+                    type: "number",
+                    nullable: true,
+                    validation: {
+                        required: false
+                    }
+                };
+            }
+            else if (propType === "boolean") {
+                fields[property.ColumnName] = {
+                    type: "boolean",
+                    nullable: true
+                };
+            }
+            else if (property.Fktable !== null) {
+                fields[property.DisplayName] = {
+                    type: 'object',
+                    nullable: true,
+                    editable: true
+                };
+            }
+            else {
+                fields[property.ColumnName] = {
+                    type: "string",
+                    validation: {
+                        required: false
+                    }
+                };
+            }
+            //else if (propType === "string" && kendo.parseDate(sampleDataItem[property])) {
+            //    var parsedDate = kendo.parseDate(sampleDataItem[property]);
+            //    if (parsedDate) {
+            //        fields[property] = {
+            //            type: "date",
+            //            validation: {
+            //                required: false
+            //            }
+            //        };
+            //        isDateField[property] = true;
+            //    }
+            //}
+        });
+        model.fields = fields;
+        return model;
+    }
+}
 
+var selectedSearchOption = 'Author', searchParams;
 $(document).on("click", '.search-Opt', function (e) {
     showLoading();
     var tabStrip = $("#search-tab-strip").data("kendoTabStrip");
@@ -1986,7 +2386,6 @@ $(document).on("click", '.search-Opt', function (e) {
     });
 });
 
-var searchParams;
 function getGridParams(e) {
     if (!searchParams) {
         var treeTable = getSelectTable();
@@ -2039,9 +2438,9 @@ function clearSearchForm() {
         }, 50);
     });
     var tabStrip = $("#search-tab-strip").data("kendoTabStrip");
-    tabStrip.options.contentUrls[3].data = getSearchParams(11);
-    tabStrip.options.contentUrls[4].data = getSearchParams(12);
-    tabStrip.options.contentUrls[5].data = getSearchParams(13);
+    tabStrip.options.contentUrls[3].data = getSearchParams('VAuthor', true);  //Need to make them dynamic
+    tabStrip.options.contentUrls[4].data = getSearchParams('VWork', true);
+    tabStrip.options.contentUrls[5].data = getSearchParams('VUnit', true);
     tabStrip.select(0);
     tabStrip.reload("li:eq(3)"); //Need to make them dynamic
     tabStrip.reload("li:eq(4)");
@@ -2101,3 +2500,135 @@ function tabStripOnSelect(e) {
 function gridOnChange(e) {
     console.log('test');
 }
+
+function genderDropDownEditor(container, options) {
+    var data = [
+        { text: "", value: "" },
+        { text: "Male", value: "Male" },
+        { text: "Female", value: "Female" }
+    ];
+    $(`<select name="${options.field}" data-bind="value: ${options.field}"></select>`)
+        .appendTo(container)
+        .kendoDropDownList({
+            autoBind: false,
+            dataTextField: "text",
+            dataValueField: "value",
+            dataSource: data,
+            valuePrimitive: true,
+            value: options.model[options.field],
+            change: function (e) {
+                var element = e.sender.element,
+                    td = element.closest('td'),
+                    row = element.closest('tr');
+                var dataItem = grid.dataItem(row);
+                var colIdx = $("td", row).index(td);
+                var colName = grid.columns[colIdx].field;
+                dataItem.set(colName, e.sender.value());
+            }
+        });
+}
+
+function roleDropDownEditor(container, options) {
+    var data = [
+        { text: "", value: "" },
+        { text: "Author", value: "Author" },
+        { text: "Editor", value: "Editor" },
+        { text: "Translator", value: "Translator" }
+    ];
+    $(`<select name="${options.field}" data-bind="value: ${options.field}"></select>`)
+        //$('<input required name="' + options.field + '"/>')
+        .appendTo(container)
+        .kendoDropDownList({
+            autoBind: false,
+            dataTextField: "text",
+            dataValueField: "value",
+            dataSource: data,
+            valuePrimitive: true,
+            change: function (e) {
+                var element = e.sender.element,
+                    td = element.closest('td'),
+                    row = element.closest('tr');
+                var dataItem = grid.dataItem(row);
+                var colIdx = $("td", row).index(td);
+                var colName = grid.columns[colIdx].field;
+                dataItem.set(colName, e.dataItem.value);
+            }
+        });
+}
+
+function dropDownOptionMapper(options, fkTableName) {
+    $.ajax({
+        url: "/Grid/Dropdown_OptionMapper",
+        data: convertValues(options.value, fkTableName),
+        success: function (data) {
+            options.success(data);
+        }
+    });
+}
+
+function dropDownEditor(container, options, colOptions) {
+    var fkTableName = colOptions.Fktable;
+    var url = `/Grid/GetDropdownOptions?treeTable=${fkTableName}&optionCol=${colOptions.FkdisplayCol}`;
+    $(`<select name="${options.field}" data-bind="value: ${options.field}"></select>`)
+        .appendTo(container)
+        .kendoDropDownList({
+            dataSource: {
+                type: "aspnetmvc-ajax",
+                transport: {
+                    read: url
+                },
+                schema: {
+                    model: {
+                        fields: {
+                            Id: { type: "number" },
+                            Option: { type: "string" }
+                        }
+                    },
+                    data: function (response) {
+                        return response.Data;
+                    },
+                    total: function (response) {
+                        return response.Total;
+                    }
+                },
+                pageSize: 80,
+                serverPaging: true,
+                serverFiltering: true
+            },
+            autoBind: false,
+            dataTextField: "Option",
+            dataValueField: "Option",
+            valuePrimitive: true,
+            filter: "contains",
+            virtual: {
+                itemHeight: 26,
+                valueMapper: function (options) {
+                    $.ajax({
+                        url: "/Grid/Dropdown_OptionMapper",
+                        data: convertValues(options.value, fkTableName),
+                        success: function (data) {
+                            options.success(data);
+                        }
+                    });
+                }
+            },
+            select: function (e) {
+                var element = e.sender.element,
+                    td = element.closest('td'),
+                    row = element.closest('tr');
+                var dataItem = grid.dataItem(row);
+                var colIdx = $("td", row).index(td);
+                var colName = grid.columns[colIdx].field + "ID";
+                dataItem.set(colName, e.dataItem.Id);
+            }
+        });
+}
+
+
+//function onFormDropdownDataBound(e, value) {
+//    //console.log(e.sender.element.attr('id') + '::' + e.sender.value() + '  original value ::' + value);
+//    setTimeout(function () {
+//        //e.sender.text(value);
+//    });
+
+//}

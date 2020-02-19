@@ -333,6 +333,9 @@ input[type=number] {
 
 .k-grid-content table {
     position: relative;
+    /*table-layout: auto;
+    border-collapse: collapse;
+    width: 100%;*/
 }
 
 .k-filter-row > th:first-child, .k-grid tfoot td:first-child {
