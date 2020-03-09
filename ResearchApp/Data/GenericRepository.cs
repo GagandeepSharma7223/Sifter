@@ -79,6 +79,47 @@ namespace ResearchApp.Data
             return _dbContext.ExecuteScalarFromSql(query, model);
         }
 
+        public (bool, string) ValidateUniqueColumns(Dictionary<string, object> model,
+            string tableName, List<TreeColumnViewModel> columns, bool updateQuery = false)
+        {
+            bool hasDuplicateValue = false;
+            string duplicateColumn = string.Empty, query = string.Empty;
+            var uniqueColumns = columns.Where(x => x.IsUnique).Select(x => x.ColumnName);
+            if (uniqueColumns.Any())
+            {
+                foreach (var column in uniqueColumns)
+                {
+                    var item = model.Where(x => x.Key == column).FirstOrDefault();
+                    if (item.Value != null && item.Value.ToString() != string.Empty)
+                    {
+                        if (updateQuery)
+                        {
+                            string idColumn = columns.Where(x => x.IDColumn).Select(x => x.ColumnName).FirstOrDefault();
+                            int id = Convert.ToInt32(model.Where(x => x.Key == idColumn).Select(x => x.Value).FirstOrDefault());
+                            query = $"SELECT COUNT({item.Key}) FROM {tableName} WHERE LOWER({item.Key}) = '{item.Value.ToString().Trim().ToLower()}' and {idColumn} != {id}";
+                        }
+                        else
+                        {
+                            query = $"SELECT COUNT({item.Key}) FROM {tableName} WHERE {item.Key} = '{item.Value}'";
+                        }
+                        var resultCount = _dbContext.DynamicListFromSql(query,
+                        new Dictionary<string, object> { }).ToList();
+                        var count = Convert.ToInt32(resultCount[0]);
+                        if (count > 0)
+                        {
+                            duplicateColumn = item.Key;
+                            hasDuplicateValue = true;
+                        }
+                        if (hasDuplicateValue)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+            return (hasDuplicateValue, duplicateColumn);
+        }
+
         public async Task Update(Dictionary<string, object> model, string tableName, List<TreeColumnViewModel> columns)
         {
             var columnsToUpdate = columns.Where(x => x.IsEditable == true).Select(x => x.ColumnName);
@@ -88,7 +129,6 @@ namespace ResearchApp.Data
             var keysToRemove = model.Keys.Where(x => !columnsToUpdate.Contains(x)).ToList();
             keysToRemove.ForEach(x => model.Remove(x));
             string updateValues = string.Join(", ", model.Where(x => x.Key != tableName + "ID")
-                //.Select(x => x.Key + "='" + x.Value?.ToString().Replace("'", "''") + "'"));
                 .Select(x => GetQueryValue(columns, x)));
             string query = $"UPDATE {tableName} SET {updateValues} WHERE {tableName}ID = {primaryKey}";
             await ExecuteSqlRaw(query);
@@ -173,8 +213,8 @@ namespace ResearchApp.Data
             }
             else
             {
-                var sqltblname = _dbContext.DynamicListFromSql($"SELECT FKTable  FROM TreeColumn WHERE TableName=@a and  DisplayName = @b", new Dictionary<string, object> { { "a", type }, { "b", optionCol } }).FirstOrDefault();
-                var colName = _dbContext.DynamicListFromSql($"SELECT FKDisplayCol  FROM TreeColumn WHERE TableName=@a and  DisplayName = @b", new Dictionary<string, object> { { "a", type }, { "b", optionCol } }).FirstOrDefault();
+                var sqltblname = _dbContext.DynamicListFromSql($"SELECT FKTable  FROM MetaColumn WHERE TableName=@a and  DisplayName = @b", new Dictionary<string, object> { { "a", type }, { "b", optionCol } }).FirstOrDefault();
+                var colName = _dbContext.DynamicListFromSql($"SELECT FKDisplayCol  FROM MetaColumn WHERE TableName=@a and  DisplayName = @b", new Dictionary<string, object> { { "a", type }, { "b", optionCol } }).FirstOrDefault();
                 string filterQuery = descriptor != null ? $"{colName} like '%{descriptor.Value}%'" : "1=1";
                 string query = $"SELECT MAX({sqltblname}ID) as {sqltblname}ID ,{colName} FROM {sqltblname} where {colName} != @a and {filterQuery} " +
                       $" GROUP BY {colName} ORDER BY {colName}  OFFSET { (request.Page - 1) * request.PageSize } ROWS FETCH NEXT { request.PageSize } ROWS ONLY";
@@ -290,6 +330,7 @@ namespace ResearchApp.Data
                     IsEditable = x.IsEditable ?? false,
                     IsRequired = x.IsRequired ?? false,
                     IsUnique = x.IsUnique ?? false,
+                    PixelWidth = x.PixelWidth ?? 120,
                     Type = !string.IsNullOrEmpty(x.Fktable) ? "dropdown" : x.ColType
                 }).ToListAsync();
         }
@@ -383,8 +424,11 @@ namespace ResearchApp.Data
                 {
                     command.CommandText = "dbo.advancedSearch";
                     command.CommandType = System.Data.CommandType.StoredProcedure;
-                    var uniqueIdCol = (request.IsView ? request.TableName.Substring(1, request.TableName.Length - 1) : request.TableName) + "ID";
-                    string fromClause = string.Empty; // " from Work left outer join Author on Author.AuthorID = Work.AuthorID ";
+
+                    var uniqueIdCol = _dbContext.MetaColumn
+                        .Where(x => x.TableName == request.TableName && x.Idcolumn == true)
+                        .Select(x => x.ColumnName).FirstOrDefault() ?? "";
+
                     List<SqlParameter> parameters = new List<SqlParameter>()
                      {
                          new SqlParameter("@searchParams", SqlDbType.Structured) { Value = searchTable, TypeName= "dbo.SearchParams" },
@@ -395,7 +439,7 @@ namespace ResearchApp.Data
                          new SqlParameter("@fetchRows", SqlDbType.Int) { Value = request.PageSize },
                          new SqlParameter("@sortByCol", SqlDbType.VarChar, 60) { Value = request.SortField ?? "" },
                          new SqlParameter("@sortByOrder", SqlDbType.VarChar, 10) { Value = request.SortDirection ?? "asc" },
-                         new SqlParameter("@fromClause", SqlDbType.VarChar, 1000) { Value = fromClause }
+                         new SqlParameter("@fromClause", SqlDbType.VarChar, 1000) { Value = request.FromClause }
                      };
 
                     command.Parameters.AddRange(parameters.ToArray());
@@ -423,13 +467,14 @@ namespace ResearchApp.Data
                     IsRequired = x.IsRequired ?? false,
                     ColSeq = x.ColSeq,
                     IsUnique = x.IsUnique ?? false,
-                    IDColumn = x.Idcolumn ?? false
+                    IDColumn = x.Idcolumn ?? false,
+                    PixelWidth = x.PixelWidth ?? 120,
                 }).ToList();
         }
 
         public string GetFKDisplayColumn(string tableName, string displayName)
         {
-            return _dbContext.DynamicListFromSql($"SELECT FKDisplayCol  FROM TreeColumn WHERE TableName=@a and  DisplayName = @b",
+            return _dbContext.DynamicListFromSql($"SELECT FKDisplayCol  FROM MetaColumn WHERE TableName=@a and  DisplayName = @b",
                 new Dictionary<string, object> { { "a", tableName }, { "b", displayName } }).FirstOrDefault();
         }
     }

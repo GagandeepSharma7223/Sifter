@@ -388,11 +388,40 @@ input[type=number] {
 }
 
 
-.kendo-grid-filter .k-grid-content{
+/*.kendo-grid-filter .k-grid-content{
     height: 130px !important;
-}
+}*/
 
 .menu-item-container {
     font-size: 9px;
     font-weight: 500;
+}
+
+.k-tooltip.k-invalid-msg {
+    z-index: 10000;
+}
+
+table .k-tooltip {
+    max-width: 160px !important;
+    transform: translate(-20%, 0%);
+}
+
+.k-block, .k-content, .k-dropdown .k-input, .k-popup, .k-toolbar, .k-widget {
+    color: #000000 !important;
+}
+
+.muted-text {
+    color: #808080 !important;
+}
+
+.k-state-selected .muted-text {
+    color: #fff !important;
+}
+
+.k-dialog-buttongroup.k-dialog-button-layout-stretched .k-button {
+    white-space: normal !important;
+}
+
+.col-form-label {
+    word-wrap: break-word;
 }

@@ -19,5 +19,6 @@ namespace ResearchApp.Models
         public string Fktable { get; set; }
         public string FkjoinCol { get; set; }
         public string FkdisplayCol { get; set; }
+        public int? PixelWidth { get; set; }
     }
 }

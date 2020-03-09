@@ -22,17 +22,17 @@
                 {
                     url: "/Grid/GetSearchForm",
                     cache: true,
-                    data: { type: @((int)GridTypes.VAuthor) }
+                    data: { type: '@GridTypes.VAuthor' }
                 },
                 {
                     url: "/Grid/GetSearchForm",
                     cache: true,
-                    data: { type: @((int)GridTypes.VWork) }
+                    data: { type: '@GridTypes.VWork' }
                 },
                 {
                     url: "/Grid/GetSearchForm",
                     cache: true,
-                    data: { type: @((int)GridTypes.VUnit) }
+                    data: { type: 'vElement' }
                 },
                 {
                     url: "/Grid/SearchForm",
@@ -50,7 +50,7 @@
                     url: "/Grid/SearchForm",
                     cache: false,
                     type: "Post",
-                    data: getSearchParams('@GridTypes.VUnit', true)
+                    data: getSearchParams('vElement', true)
                 }
             ]
         }).data('kendoTabStrip');

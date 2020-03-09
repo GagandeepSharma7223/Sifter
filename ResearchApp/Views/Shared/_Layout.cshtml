@@ -63,7 +63,17 @@
     </footer>
 
     <div id="loader" style="display:none;"></div>
-
+    <div id="dialog-confirm"></div>
+    <div id="dialog-confirm-delete"></div>
+    @(Html.Kendo().Window()
+        .Name("alertWindow")
+        .Title("").Actions(action => action.Close())
+        .Draggable()
+        .Resizable()
+        .Width(400)
+        .Height(100)
+        .Modal(true)
+        .Visible(false))
     <script type="text/x-kendo-template" id="message">
         <span class="k-widget k-tooltip k-tooltip-validation k-invalid-msg field-validation-error" data-for="#=field#"
               data-valmsg-for="#=field#" id="#=field#_validationMessage" role="alert">
@@ -74,6 +84,10 @@
 
     <script type="text/x-kendo-template" id="custom-toolbar">
         <div class="toolbar-btns text-right" style="flex:1;">
+            <span class="k-button-icontext">
+                <a class="k-grid-fontMinus" href=""><span class="k-icon k-i-minus"></span></a>
+                <a class="k-grid-fontPlus" href=""><span class="k-icon k-i-plus"></span></a>
+            </span>
             <span class="label">Form View</span> <input type="checkbox" id="form-switch" aria-label="Forms Switch" />
             <span class="label">Word Wrap</span> <input type="checkbox" id="wrap-switch" aria-label="Notifications Switch" />
             <a role="button" class="k-button k-button-icontext k-grid-StartEditing removeFilter" href="">Remove Filters</a>
@@ -102,6 +116,10 @@
                 <span class="k-icon k-i-arrow-end-right"></span>
             </a>
             <div class="text-right" style="flex:1;">
+                <span class="k-button-icontext">
+                    <a class="k-grid-fontMinus" href=""><span class="k-icon k-i-minus"></span></a>
+                    <a class="k-grid-fontPlus" href=""><span class="k-icon k-i-plus"></span></a>
+                </span>
                 <span class="label">Form View</span> <input type="checkbox" id="form-view-switch" aria-label="Forms Switch" />
                 <a role="button" class="k-button k-button-icontext k-grid-StartEditing startEditable" href="">Start Editing</a>
                 <a role="button" class="k-button k-button-icontext k-grid-StopEditing stopEditable btn-danger" href="">Stop Editing</a>

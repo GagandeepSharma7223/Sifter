@@ -9,7 +9,7 @@
                     if (!item.IDColumn)
                     {
                         <div class="row form-group">
-                            <label class="col-md-1 col-form-label">@(item.Type == "dropdown" ? item.DisplayName : item.ColumnName) <span class="text-danger">@(item.IsRequired ? "*" : "")</span></label>
+                            <label class="col-md-1 col-form-label">@(item.Type == "dropdown" ? item.DisplayName : item.ColumnName) <strong class="text-danger">@(item.IsRequired ? "*" : "")</strong></label>
                             <div class="col-md-5 dirty-marker k-dirty-cell">
                                 <span class=""></span>
                                 @switch (item.Type)
@@ -95,10 +95,10 @@
                                     case "dropdown":
                                         value = Model.SelectedItem != null ? Convert.ToString(Model.SelectedItem[item.DisplayName] ?? null) : null;
                                         @*if(typeof(object) == value)
-                                        {
-                                            value = 
-                                        }
-                                        }*@
+                                            {
+                                                value =
+                                            }
+                                            }*@
                                         @(Html.Kendo().DropDownList()
                                                   .Name(item.DisplayName)
                                                   .DataValueField("Option")
@@ -252,23 +252,8 @@
         return `Item ${page > 1 ? ((page - 1) * pageSize) + (selectedItemIndex + 1) : selectedItemIndex + 1} of ${totalItems}`
     }
 
-    $("#edit-form").kendoValidator({
-        rules: {
-            //customRule1: function (input) {
-            //    // all of the input must have a value
-            //    return $.trim(input.val()) !== "";
-            //},
-            requiredRule: function (input) {
-                //only 'Tom' will be valid value for the username input
-                if (input.is("[datavalidation='required']")) {
-                    return input.val() !== "";
-                }
-                return true;
-            }
-        },
-        messages: {
-            requiredRule: "This is required field.",
-            //customRule2: "Your UserName must be Tom"
-        }
-    });
+    if (currentFontSize) {
+        $('.k-grid').css('font-size', currentFontSize);
+    }
+
 </script>

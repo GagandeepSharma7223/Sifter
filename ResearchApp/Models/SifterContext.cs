@@ -62,10 +62,6 @@ namespace ResearchApp.Models
                 entity.Property(e => e.ActionId)
                     .HasColumnName("ActionID")
                     .HasDefaultValueSql("(NEXT VALUE FOR [ActionSeq])");
-
-                entity.Property(e => e.Name)
-                    .HasMaxLength(100)
-                    .IsUnicode(false);
             });
 
             modelBuilder.Entity<Author>(entity =>

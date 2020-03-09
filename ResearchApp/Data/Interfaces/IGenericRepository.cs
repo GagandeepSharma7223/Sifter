@@ -29,7 +29,7 @@ namespace ResearchApp.Data
         int Create(Dictionary<string, object> model, string tableName, List<TreeColumnViewModel> columns);
         Task Update(Dictionary<string, object> model, string tableName, List<TreeColumnViewModel> columns);
         Task Destroy(string primaryKey, string tableName, int id);
-        //Task ExecuteSqlRaw(string query, object[] parameters);
-        //Task ExecuteSqlRaw(string query);
+        (bool, string) ValidateUniqueColumns(Dictionary<string, object> model, string tableName,
+            List<TreeColumnViewModel> columns, bool updateQuery = false);
     }
 }

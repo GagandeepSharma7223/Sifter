@@ -12,5 +12,15 @@ namespace ResearchApp.ViewModel
         public int Total { get; set; }
         public string SortField { get; set; }
         public string SortDirection { get; set; }
+        public bool IsAdvanceSearch { get; set; }
+        public string FromClause
+        {
+            get
+            {
+                return IsAdvanceSearch ?
+                    " from vAuthor left outer join vWork on vWork.AuthorID = vAuthor.AuthorID left outer join vElement on vElement.WorkID = vWork.WorkID " :
+                    string.Empty;
+            }
+        }
     }
 }

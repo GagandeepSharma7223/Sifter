@@ -233,11 +233,11 @@ namespace ResearchApp.Controllers
             return PartialView(view);
         }
 
-        public async Task<IActionResult> GetFormView(GridTypes type, string selectedItem)
+        public async Task<IActionResult> GetFormView(string type, string selectedItem)
         {
             string view = "~/Views/Home/_PartialWorkForm.cshtml";
             dynamic item = selectedItem != null ? JsonConvert.DeserializeObject<Dictionary<string, object>>(selectedItem) : null;
-            var controls = await _workRepo.GetTreeColumnsForTable(type.ToString());
+            var controls = await _workRepo.GetTreeColumnsForTable(type);
             var formViewModel = new FormViewModel
             {
                 SelectedItem = item,
@@ -246,9 +246,9 @@ namespace ResearchApp.Controllers
             return PartialView(view, formViewModel);
         }
 
-        public async Task<IActionResult> GetSearchForm(GridTypes type)
+        public async Task<IActionResult> GetSearchForm(string type)
         {
-            var controls = await _workRepo.GetTreeColumnsForTable(type.ToString());
+            var controls = await _workRepo.GetTreeColumnsForTable(type);
             var formViewModel = new FormViewModel
             {
                 TableColumns = controls,
@@ -725,8 +725,9 @@ namespace ResearchApp.Controllers
             }
             catch (Exception e)
             {
+                return Json(new { e.Message });
             }
-            return Json(new { IsError = true });
+            //return Json(new { IsError = true });
         }
 
         public JsonResult GetAdminSearchResult(List<SearchParams> searchParams, AdvanceSearchRequest request)
@@ -1057,10 +1058,14 @@ namespace ResearchApp.Controllers
         public IActionResult Add([DataSourceRequest] DataSourceRequest request, string models, string tableName, List<TreeColumnViewModel> columns)
         {
             List<Dictionary<string, object>> list = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(models);
-            //List<Dictionary<string, object>> list = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(models);
-            //var columnsToInsert = columns.Where(x => !x.IDColumn).Select(x => x.ColumnName);
             foreach (var item in list)
             {
+                var (isDuplicate, duplicateColumn) = _workRepo.ValidateUniqueColumns(item, tableName, columns);
+                if (isDuplicate)
+                {
+                    ModelState.AddModelError(duplicateColumn, $"Please enter a unique value for the {duplicateColumn} column.");
+                    return Json(list.ToDataSourceResult(request, ModelState));
+                }
                 int id = _workRepo.Create(item, tableName, columns);
                 item[tableName + "ID"] = id;
             }
@@ -1073,9 +1078,14 @@ namespace ResearchApp.Controllers
         {
             List<Dictionary<string, object>> dataItems = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(models);
             List<Dictionary<string, object>> list = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(models);
-            //var columnsToUpdate = columns.Select(x => x.ColumnName);
             foreach (var item in dataItems)
             {
+                var (isDuplicate, duplicateColumn) = _workRepo.ValidateUniqueColumns(item, tableName, columns, true);
+                if (isDuplicate)
+                {
+                    ModelState.AddModelError(duplicateColumn, $"Please enter a unique value for the {duplicateColumn} column.");
+                    return Json(list.ToDataSourceResult(request, ModelState));
+                }
                 await _workRepo.Update(item, tableName, columns);
             }
             return Json(list.ToDataSourceResult(request));
@@ -1090,13 +1100,8 @@ namespace ResearchApp.Controllers
             {
                 foreach (var item in dataItems)
                 {
-
                     await _workRepo.Destroy(primaryKey, tableName, Convert.ToInt32(item[primaryKey]));
                 }
-                //foreach (var work in works)
-                //{
-                //    await _workRepo.Delete(work.WorkID.GetValueOrDefault());
-                //}
             }
             return Json(dataItems.ToDataSourceResult(request));
         }
