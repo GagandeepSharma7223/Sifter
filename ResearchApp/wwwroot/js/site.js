@@ -143,6 +143,64 @@ function login(e) {
     }
 }
 
+$(document).on("click", '#login-btn', function (e) {
+    loginUser();
+});
+
+$(document).on("click", '#logout-btn', function (e) {
+    localStorage.removeItem("username");
+    toggleLoginForm();
+});
+
+$(document).on("click", '#forgot-password-btn', function (e) {
+    forgotPassword();
+});
+
+function toggleLoginForm() {
+    var username = localStorage.getItem("username");
+    if (username) {
+        $('#form-login').addClass('d-none');
+        $('#logout-block').removeClass('d-none');
+    }
+    else {
+        $('#logout-block').addClass('d-none');
+        $('#form-login').removeClass('d-none');
+    }
+}
+
+function loginUser() {
+    var validator = $("#form-login").data("kendoValidator");
+    if (validator.validate()) {
+        showLoading();
+        var data = objectifyForm($('#form-login').serializeArray());
+        $.post("/Grid/Login", data, function (success) {
+            hideLoading();
+            if (success) {
+                // valid credentials
+                localStorage.setItem("username", data.Username);
+                toggleLoginForm();
+            }
+            else {
+                // invalid credentials
+                showErrorDialog("Error", "Invalid Credentials");
+            }
+        });
+
+    }
+}
+
+function forgotPassword() {
+    var validator = $("#form-login").data("kendoValidator");
+    if (validator.validate()) {
+        showLoading();
+        var data = objectifyForm($('#form-login').serializeArray());
+        $.post("/Grid/ForgotPassword", data, function (success) {
+            showErrorDialog("Success", "Email with login credentials sent successfully.");
+            hideLoading();
+        });
+    }
+}
+
 function makeGridEditable() {
     isGridEditable = true;
 }
@@ -1158,7 +1216,7 @@ function initColumnMenuFilter(e) {
                         }
                         var popup = $(helpTextElement.children(":last").children(":first")).data("kendoPopup");
                         popup.close();
-                        menu.wrapper.parent().hide()
+                        menu.wrapper.parent().hide();
                         toggleFilterbutton();
                     }
                 });

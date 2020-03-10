@@ -45,6 +45,8 @@ namespace ResearchApp.Models
         public virtual DbSet<MetaCategory> MetaCategory { get; set; }
         public virtual DbSet<MetaColumn> MetaColumn { get; set; }
         public virtual DbSet<MetaTable> MetaTable { get; set; }
+        public virtual DbSet<Member> Member { get; set; }
+        public virtual DbSet<MemberLogin> MemberLogin { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -751,6 +753,75 @@ namespace ResearchApp.Models
                     .IsUnicode(false);
             });
 
+            modelBuilder.Entity<Member>(entity =>
+            {
+                entity.HasIndex(e => e.Name)
+                    .HasName("I1");
+
+                entity.Property(e => e.MemberId)
+                    .HasColumnName("MemberID")
+                    .HasDefaultValueSql("(NEXT VALUE FOR [MemberSeq])");
+
+                entity.Property(e => e.Created).HasColumnType("datetime");
+
+                entity.Property(e => e.Email)
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.FirstName)
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.LastName)
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.Name)
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.Password)
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.UserName)
+                    .HasMaxLength(128)
+                    .HasDefaultValueSql("('')");
+
+                entity.Property(e => e.ValidFromUtc)
+                    .HasColumnName("ValidFromUTC")
+                    .HasDefaultValueSql("(sysutcdatetime())");
+
+                entity.Property(e => e.ValidToUtc)
+                    .HasColumnName("ValidToUTC")
+                    .HasDefaultValueSql("(CONVERT([datetime2],'9999-12-31 23:59:59.9999999'))");
+            });
+
+            modelBuilder.Entity<MemberLogin>(entity =>
+            {
+                entity.HasIndex(e => e.LoginTime)
+                    .HasName("I2");
+
+                entity.HasIndex(e => e.MemberId)
+                    .HasName("I1");
+
+                entity.Property(e => e.MemberLoginId)
+                    .HasColumnName("MemberLoginID")
+                    .HasDefaultValueSql("(NEXT VALUE FOR [MemberLoginSeq])");
+
+                entity.Property(e => e.Ipaddress)
+                    .HasColumnName("IPAddress")
+                    .HasMaxLength(40)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.LoginTime).HasColumnType("datetime");
+
+                entity.Property(e => e.MemberId).HasColumnName("MemberID");
+            });
+
+            modelBuilder.HasSequence<int>("MemberLoginSeq").StartsAt(1000001);
+
+            modelBuilder.HasSequence<int>("MemberSeq").StartsAt(10001);
 
             modelBuilder.HasSequence<int>("ActionSeq").StartsAt(6059);
 

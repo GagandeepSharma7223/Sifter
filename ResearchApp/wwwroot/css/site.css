@@ -425,3 +425,8 @@ table .k-tooltip {
 .col-form-label {
     word-wrap: break-word;
 }
+
+.btn-link {
+    font-size: 10px;
+    font-weight: 500;
+}

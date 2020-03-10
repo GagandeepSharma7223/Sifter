@@ -4,6 +4,24 @@
             <p class="mb-0">The Sifter</p>
             <footer class="blockquote-footer"><cite title="Source Title">Food History Database</cite></footer>
         </blockquote>
+        <form id="form-login">
+            <div class="form-group">
+                <input type="text" id="Username" name="Username" class="k-textbox" placeholder="Username" required validationMessage="Enter {0}">
+            </div>
+            <div class="form-group">
+                <input type="password" id="login-password" name="Password" class="k-textbox" placeholder="Password" required validationMessage="Enter {0}">
+                <button type="button" id="forgot-password-btn" class="btn btn-link float-right">Forgot Password</button>
+            </div>
+            <div class="form-group">
+                <button type="button" id="login-btn" class="k-button btn-block k-primary btn-primary col-7">Login</button>
+            </div>
+        </form>
+        <div id="logout-block" class="row">
+            <label class="col-form-label col-12">test</label>
+            <div class="col-6 mb-2">
+                <button type="button" id="logout-btn" class="k-button btn-block k-primary btn-primary">Logout</button>
+            </div>
+        </div>
         <div class="k-content menu-item-container">
             <div class="row mb-2">
                 <div class="col-6 mb-2">
@@ -43,5 +61,8 @@
             $('.navigation-btn').removeClass('k-primary');
             $('.' + selectedPage).addClass('k-primary');
         }
+        toggleLoginForm();
     });
+
+    $("#form-login").kendoValidator();
 </script>

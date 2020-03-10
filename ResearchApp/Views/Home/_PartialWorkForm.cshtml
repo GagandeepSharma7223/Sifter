@@ -256,4 +256,22 @@
         $('.k-grid').css('font-size', currentFontSize);
     }
 
+    $("#edit-form").kendoValidator({
+        rules: {
+            //customRule1: function (input) {
+            //    // all of the input must have a value
+            //    return $.trim(input.val()) !== "";
+            //},
+            requiredRule: function (input) {
+                if (input.is("[datavalidation='required']")) {
+                    return input.val() !== "";
+                }
+                return true;
+            }
+        },
+        messages: {
+            requiredRule: "This is required field.",
+            //customRule2: "Your UserName must be Tom"
+        }
+    });
 </script>

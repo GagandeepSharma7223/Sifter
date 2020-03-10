@@ -1,9 +1,12 @@
 ﻿using Kendo.Mvc;
 using Kendo.Mvc.UI;
+using MailKit.Net.Smtp;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using MimeKit;
 using ResearchApp.Data.Enum;
+using ResearchApp.Extension;
 using ResearchApp.Models;
 using ResearchApp.ViewModel;
 using System;
@@ -13,7 +16,7 @@ using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Reflection;
 using System.Threading.Tasks;
-using ResearchApp.Extension;
+
 namespace ResearchApp.Data
 {
     public class GenericRepository<TEntity> : IGenericRepository<TEntity>, IDisposable
@@ -476,6 +479,42 @@ namespace ResearchApp.Data
         {
             return _dbContext.DynamicListFromSql($"SELECT FKDisplayCol  FROM MetaColumn WHERE TableName=@a and  DisplayName = @b",
                 new Dictionary<string, object> { { "a", tableName }, { "b", displayName } }).FirstOrDefault();
+        }
+
+        public async Task<bool> LoginUser(LoginViewModel model)
+        {
+            return await _dbContext.Member.AnyAsync(x => x.Name.ToLower() == model.Username.ToLower().Trim() &&
+                x.Password == model.Password);
+        }
+
+        public async Task SendMail(EmailViewModel model)
+        {
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(model.FromName, model.FromEmail));
+            message.To.Add(new MailboxAddress(model.ToName, model.ToEmail));
+            message.Subject = model.Subject;
+            message.Body = new TextPart("plain")
+            {
+                Text = model.Body
+            };
+
+            using (var client = new SmtpClient())
+            {
+                client.Connect("smtp.gmail.com", 587, false);
+                client.Authenticate(model.FromEmail, model.FromPassword);
+                await client.SendAsync(message);
+                await client.DisconnectAsync(true);
+            }
+        }
+
+        public async Task<(string, string)> GetMemberDetailFromUserName(string userName)
+        {
+            var member = await _dbContext.Member.Where(x => x.Name.ToLower() == userName.ToLower().Trim()).FirstOrDefaultAsync();
+            if (member != null)
+            {
+                return (member.Email, member.Password);
+            }
+            return (string.Empty, string.Empty);
         }
     }
 }

@@ -2,6 +2,7 @@
 using Kendo.Mvc.UI;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using ResearchApp.Data;
 using ResearchApp.Extension;
@@ -27,13 +28,13 @@ namespace ResearchApp.Controllers
         private readonly IWorkAuthorRepository _workAuthorRepo;
         private readonly IUnitRepository _unitRepo;
         private readonly IMemoryCache _cache;
-
+        private readonly IConfiguration _configuration;
         MemoryCacheEntryOptions CacheEntryOptions = new MemoryCacheEntryOptions()
                  .SetSlidingExpiration(TimeSpan.FromHours(1));
 
         public GridController(IMemoryCache memoryCache, IWorkRepository workRepo, IAuthorRepository authorRepo, IPublisherRepository publisherRepo,
             ICategoryRepository categoryRepo, ILanguageRepository languageRepo, ICityRepository cityRepo, IRegionRepository regionRepo,
-            ICountryRepository countryRepo, IWorkAuthorRepository workAuthorRepo, IUnitRepository unitRepo)
+            ICountryRepository countryRepo, IWorkAuthorRepository workAuthorRepo, IUnitRepository unitRepo, IConfiguration configuration)
         {
             _workRepo = workRepo;
             _publisherRepo = publisherRepo;
@@ -46,6 +47,7 @@ namespace ResearchApp.Controllers
             _workAuthorRepo = workAuthorRepo;
             _unitRepo = unitRepo;
             _cache = memoryCache;
+            _configuration = configuration;
         }
 
         #region Books
@@ -1104,6 +1106,51 @@ namespace ResearchApp.Controllers
                 }
             }
             return Json(dataItems.ToDataSourceResult(request));
+        }
+
+        [AcceptVerbs("Post")]
+        public async Task<IActionResult> Login(LoginViewModel model)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var result = await _workRepo.LoginUser(model);
+                    //await _workRepo.SendMail();
+                    return Json(result);
+                }
+            }
+            catch (Exception e)
+            {
+            }
+            return Json(false);
+        }
+
+        [AcceptVerbs("Post")]
+        public async Task<IActionResult> ForgotPassword(string userName)
+        {
+            try
+            {
+                var (toEmail, password) = await _workRepo.GetMemberDetailFromUserName(userName);
+                if (toEmail != string.Empty)
+                {
+                    var model = new EmailViewModel
+                    {
+                        FromEmail = _configuration["AppSettings:SmtpEmail"],
+                        FromPassword = _configuration["AppSettings:SmtpPassword"],
+                        Subject = "Forgot Password",
+                        ToName = userName,
+                        ToEmail = toEmail,
+                        Body = $"Your Password is  {password}"
+                    };
+                    await _workRepo.SendMail(model);
+                }
+                return Json(true);
+            }
+            catch (Exception e)
+            {
+            }
+            return Json(false);
         }
     }
 
