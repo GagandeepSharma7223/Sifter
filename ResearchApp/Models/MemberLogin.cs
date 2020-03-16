@@ -7,7 +7,7 @@ namespace ResearchApp.Models
     {
         public int MemberLoginId { get; set; }
         public int? MemberId { get; set; }
-        public DateTime? LoginTime { get; set; }
+        //public DateTime? LoginTime { get; set; }
         public string Ipaddress { get; set; }
     }
 }

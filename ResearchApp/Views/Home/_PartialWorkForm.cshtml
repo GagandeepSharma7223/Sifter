@@ -93,14 +93,9 @@
                                         @(Html.CheckBox(item.ColumnName, chkValue))
                                         break;
                                     case "dropdown":
-                                        value = Model.SelectedItem != null ? Convert.ToString(Model.SelectedItem[item.DisplayName] ?? null) : null;
-                                        @*if(typeof(object) == value)
-                                            {
-                                                value =
-                                            }
-                                            }*@
+                                        value = Model.SelectedItem != null ? Convert.ToString(Model.SelectedItem[item.ColumnName.Remove(item.ColumnName.Length - 2)] ?? null) : null;
                                         @(Html.Kendo().DropDownList()
-                                                  .Name(item.DisplayName)
+                                                  .Name(item.ColumnName.Remove(item.ColumnName.Length - 2))
                                                   .DataValueField("Option")
                                                   .DataTextField("Option")
                                                   .Filter(FilterType.Contains)
@@ -133,6 +128,7 @@
                                                             });
                                                   })
                                                   //.Events(evt => evt.DataBound("function(e){ onFormDropdownDataBound(e,'" + value + "')}"))
+                                                  .Events(evt => evt.Select("onFormDropdownSelect"))
                                                   .Virtual(v => v.ItemHeight(26)
                                                   .ValueMapper("function(options){ dropDownOptionMapper(options,'" + item.Fktable + "')}"))
                                         )
@@ -151,7 +147,7 @@
                         <div class="row form-group" id="form-primary-key">
                             <label class="col-md-1 col-form-label">@item.ColumnName</label>
                             <div>
-                                <label class="col-md-2 col-form-label">@Model.SelectedItem[item.ColumnName]</label>
+                                <label class="col-form-label">@Model.SelectedItem[item.ColumnName]</label>
                             </div>
                         </div>
                     }

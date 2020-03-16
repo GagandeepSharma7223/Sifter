@@ -799,8 +799,8 @@ namespace ResearchApp.Models
 
             modelBuilder.Entity<MemberLogin>(entity =>
             {
-                entity.HasIndex(e => e.LoginTime)
-                    .HasName("I2");
+                //entity.HasIndex(e => e.LoginTime)
+                //    .HasName("I2");
 
                 entity.HasIndex(e => e.MemberId)
                     .HasName("I1");
@@ -814,7 +814,7 @@ namespace ResearchApp.Models
                     .HasMaxLength(40)
                     .IsUnicode(false);
 
-                entity.Property(e => e.LoginTime).HasColumnType("datetime");
+                //entity.Property(e => e.LoginTime).HasColumnType("datetime");
 
                 entity.Property(e => e.MemberId).HasColumnName("MemberID");
             });

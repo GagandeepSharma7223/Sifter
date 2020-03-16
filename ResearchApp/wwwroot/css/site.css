@@ -430,3 +430,7 @@ table .k-tooltip {
     font-size: 10px;
     font-weight: 500;
 }
+
+.icon-btn {
+    padding: 2px 0px 2px 4px;
+}

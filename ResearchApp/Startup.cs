@@ -9,6 +9,8 @@ using ResearchApp.Data;
 using ResearchApp.Models;
 using System;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 
 namespace GridAndMenuCoreApp
 {
@@ -64,6 +66,8 @@ namespace GridAndMenuCoreApp
             services.AddScoped<ICountryRepository, CountryRepository>();
             services.AddScoped<IWorkAuthorRepository, WorkAuthorRepository>();
             services.AddScoped<IUnitRepository, UnitRepository>();
+            services.AddHttpContextAccessor();
+            services.TryAddSingleton<IActionContextAccessor, ActionContextAccessor>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -1,5 +1,6 @@
 ﻿using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
@@ -29,12 +30,13 @@ namespace ResearchApp.Controllers
         private readonly IUnitRepository _unitRepo;
         private readonly IMemoryCache _cache;
         private readonly IConfiguration _configuration;
+        private IHttpContextAccessor _accessor;
         MemoryCacheEntryOptions CacheEntryOptions = new MemoryCacheEntryOptions()
                  .SetSlidingExpiration(TimeSpan.FromHours(1));
 
         public GridController(IMemoryCache memoryCache, IWorkRepository workRepo, IAuthorRepository authorRepo, IPublisherRepository publisherRepo,
             ICategoryRepository categoryRepo, ILanguageRepository languageRepo, ICityRepository cityRepo, IRegionRepository regionRepo,
-            ICountryRepository countryRepo, IWorkAuthorRepository workAuthorRepo, IUnitRepository unitRepo, IConfiguration configuration)
+            ICountryRepository countryRepo, IWorkAuthorRepository workAuthorRepo, IUnitRepository unitRepo, IConfiguration configuration, IHttpContextAccessor accessor)
         {
             _workRepo = workRepo;
             _publisherRepo = publisherRepo;
@@ -48,6 +50,7 @@ namespace ResearchApp.Controllers
             _unitRepo = unitRepo;
             _cache = memoryCache;
             _configuration = configuration;
+            _accessor = accessor;
         }
 
         #region Books
@@ -533,13 +536,9 @@ namespace ResearchApp.Controllers
             if (!_cache.TryGetValue($"{treeTable}Options", out List<DropdownOptions> cachedDetails))
             {
                 cachedDetails = _workRepo.GetOptions(treeTable, optionCol);
-                cachedDetails.Insert(0, new DropdownOptions { Id = 0, Option = "" });
+                //cachedDetails.Insert(0, new DropdownOptions { Id = 0, Option = "" });
                 _cache.Set($"{treeTable}Options", cachedDetails, CacheEntryOptions);
             }
-            //if (!cachedDetails.Any(x => x.Id == 0))
-            //{
-            //    cachedDetails.Insert(0, new DropdownOptions { Id = 0, Option = "" });
-            //}
             return Json(cachedDetails.ToDataSourceResult(request));
         }
 
@@ -1068,7 +1067,7 @@ namespace ResearchApp.Controllers
                     ModelState.AddModelError(duplicateColumn, $"Please enter a unique value for the {duplicateColumn} column.");
                     return Json(list.ToDataSourceResult(request, ModelState));
                 }
-                int id = _workRepo.Create(item, tableName, columns);
+                int id = _workRepo.Create(new Dictionary<string, object>(item), tableName, columns);
                 item[tableName + "ID"] = id;
             }
             return Json(list.ToDataSourceResult(request));
@@ -1115,8 +1114,8 @@ namespace ResearchApp.Controllers
             {
                 if (ModelState.IsValid)
                 {
+                    model.IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
                     var result = await _workRepo.LoginUser(model);
-                    //await _workRepo.SendMail();
                     return Json(result);
                 }
             }
@@ -1131,8 +1130,8 @@ namespace ResearchApp.Controllers
         {
             try
             {
-                var (toEmail, password) = await _workRepo.GetMemberDetailFromUserName(userName);
-                if (toEmail != string.Empty)
+                var memberDetail = await _workRepo.GetMemberDetailFromUserName(userName);
+                if (memberDetail != null)
                 {
                     var model = new EmailViewModel
                     {
@@ -1140,8 +1139,8 @@ namespace ResearchApp.Controllers
                         FromPassword = _configuration["AppSettings:SmtpPassword"],
                         Subject = "Forgot Password",
                         ToName = userName,
-                        ToEmail = toEmail,
-                        Body = $"Your Password is  {password}"
+                        ToEmail = memberDetail.Email,
+                        Body = $"Your Password is  {memberDetail.Password}"
                     };
                     await _workRepo.SendMail(model);
                 }

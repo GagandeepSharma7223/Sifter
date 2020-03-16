@@ -79,6 +79,7 @@ namespace ResearchApp.Data
                     indexes += ", ";
             }
             string query = $"INSERT INTO {tableName} ({columnNames}) Output Inserted.{tableName}ID VALUES ({indexes})";
+            _cache.Remove(GetClientCacheKey(tableName, CacheTypes.DropdownOptions));
             return _dbContext.ExecuteScalarFromSql(query, model);
         }
 
@@ -134,13 +135,14 @@ namespace ResearchApp.Data
             string updateValues = string.Join(", ", model.Where(x => x.Key != tableName + "ID")
                 .Select(x => GetQueryValue(columns, x)));
             string query = $"UPDATE {tableName} SET {updateValues} WHERE {tableName}ID = {primaryKey}";
+            _cache.Remove(GetClientCacheKey(tableName, CacheTypes.DropdownOptions));
             await ExecuteSqlRaw(query);
         }
 
         private object GetQueryValue(List<TreeColumnViewModel> columns, KeyValuePair<string, object> model)
         {
             var columnDetail = columns.Find(x => x.ColumnName == model.Key);
-            if (model.Value == null) return $"{model.Key} = null";
+            if (model.Value == null || model.Value?.ToString() == string.Empty) return $"{model.Key} = null";
             switch (columnDetail.ColType)
             {
                 case "int":
@@ -481,10 +483,30 @@ namespace ResearchApp.Data
                 new Dictionary<string, object> { { "a", tableName }, { "b", displayName } }).FirstOrDefault();
         }
 
-        public async Task<bool> LoginUser(LoginViewModel model)
+        public async Task<MemberViewModel> LoginUser(LoginViewModel model)
         {
-            return await _dbContext.Member.AnyAsync(x => x.Name.ToLower() == model.Username.ToLower().Trim() &&
-                x.Password == model.Password);
+            var member = await _dbContext.Member.Where(x => x.Name.ToLower() == model.Username.ToLower().Trim() &&
+                x.Password == model.Password).Select(x => new MemberViewModel
+                {
+                    AdminUser = x.AdminUser,
+                    Created = x.Created,
+                    Email = x.Email,
+                    FirstName = x.FirstName,
+                    LastName = x.LastName,
+                    MemberId = x.MemberId,
+                    Name = x.Name,
+                    SuperUser = x.SuperUser,
+                    UserName = x.UserName,
+                    Password = x.Password
+                }).FirstOrDefaultAsync();
+            var memberLogin = new MemberLogin
+            {
+                MemberId = member.MemberId,
+                Ipaddress = model.IPAddress
+            };
+            await _dbContext.MemberLogin.AddAsync(memberLogin);
+            await _dbContext.SaveChangesAsync();
+            return member;
         }
 
         public async Task SendMail(EmailViewModel model)
@@ -507,14 +529,22 @@ namespace ResearchApp.Data
             }
         }
 
-        public async Task<(string, string)> GetMemberDetailFromUserName(string userName)
+        public async Task<MemberViewModel> GetMemberDetailFromUserName(string userName)
         {
-            var member = await _dbContext.Member.Where(x => x.Name.ToLower() == userName.ToLower().Trim()).FirstOrDefaultAsync();
-            if (member != null)
-            {
-                return (member.Email, member.Password);
-            }
-            return (string.Empty, string.Empty);
+            return await _dbContext.Member.Where(x => x.Name.ToLower() == userName.ToLower().Trim())
+                .Select(x => new MemberViewModel
+                {
+                    AdminUser = x.AdminUser,
+                    Created = x.Created,
+                    Email = x.Email,
+                    FirstName = x.FirstName,
+                    LastName = x.LastName,
+                    MemberId = x.MemberId,
+                    Name = x.Name,
+                    SuperUser = x.SuperUser,
+                    UserName = x.UserName,
+                    Password = x.Password
+                }).FirstOrDefaultAsync();
         }
     }
 }

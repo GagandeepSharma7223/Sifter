@@ -31,8 +31,8 @@ namespace ResearchApp.Data
         Task Destroy(string primaryKey, string tableName, int id);
         (bool, string) ValidateUniqueColumns(Dictionary<string, object> model, string tableName,
             List<TreeColumnViewModel> columns, bool updateQuery = false);
-        Task<bool> LoginUser(LoginViewModel model);
+        Task<MemberViewModel> LoginUser(LoginViewModel model);
         Task SendMail(EmailViewModel model);
-        Task<(string, string)> GetMemberDetailFromUserName(string userName);
+        Task<MemberViewModel> GetMemberDetailFromUserName(string userName);
     }
 }
