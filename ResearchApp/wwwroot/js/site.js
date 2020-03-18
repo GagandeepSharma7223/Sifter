@@ -177,14 +177,17 @@ function toggleLoginForm() {
         $('#logout-block').removeClass('d-none');
         if (userObj.SuperUser) {
             $('.startEditable').removeClass('k-state-disabled');
+            $('.admin-link').removeClass('d-none');
         }
         else {
             $('.startEditable').addClass('k-state-disabled');
+            $('.admin-link').addClass('d-none');
         }
     }
     else {
         $('#logout-block').addClass('d-none');
         $('#form-login').removeClass('d-none');
+        $('.admin-link').addClass('d-none');
         $('.startEditable').addClass('k-state-disabled');
     }
 
@@ -1778,7 +1781,7 @@ function getSearchParams(tableName, isView, config = {}) {
     if (!config.page) config.page = 0;
     var filters = [], requestParam = [], params = [];
     var searchForms = $('form');
-    if (isView) {
+    if (isView && !config.isGlobalSearch) {
         $.each(searchForms, function (index, value) {
             var data = objectifyForm($(this).serializeArray());
             $.each(data, function (name, value) {
@@ -1892,17 +1895,24 @@ function getSearchParams(tableName, isView, config = {}) {
         PageNumber: config.page,
         SortField: config.sortField,
         SortDirection: config.sortDir,
-        IsAdvanceSearch: config.isAdvanceSearch
+        IsAdvanceSearch: config.isAdvanceSearch,
+        IsGlobalSearch: config.isGlobalSearch,
+        SearchText: config.searchText
     });
 
+    if (config.isGlobalSearch) {
+        return {
+            request: requestParam
+        };
+    }
     return {
         searchParams: params,
         request: requestParam
     };
 }
 
-function getSearchResults() {
-    //showLoading();
+function getSearchResults(config) {
+    showLoading();
     var filters = [];
     var searchForms = $('form');
     $.each(searchForms, function (index, value) {
@@ -1975,12 +1985,19 @@ function getSearchResults() {
     });
     searchParams = { type: selectedSearchOption, filter: filterArr };
     var tabStrip = $("#search-tab-strip").data("kendoTabStrip");
-    tabStrip.options.contentUrls[3].data = getSearchParams('vAuthor', true, { isAdvanceSearch: true });  //Need to make them dynamic
-    tabStrip.options.contentUrls[4].data = getSearchParams('vWork', true, { isAdvanceSearch: true });
-    tabStrip.options.contentUrls[5].data = getSearchParams('vElement', true, { isAdvanceSearch: true });
-    tabStrip.select(3);
-    tabStrip.reload("li:eq(4)");
-    tabStrip.reload("li:eq(5)");
+    //tabStrip.options.contentUrls[3].data = getSearchParams('vAuthor', true, { isAdvanceSearch: true });  //Need to make them dynamic
+    //tabStrip.options.contentUrls[4].data = getSearchParams('vWork', true, { isAdvanceSearch: true });
+    //tabStrip.options.contentUrls[5].data = getSearchParams('vElement', true, { isAdvanceSearch: true });
+    tabStrip.options.contentUrls[0].data = getSearchParams('vAuthor', true, config);  //Need to make them dynamic
+    tabStrip.options.contentUrls[1].data = getSearchParams('vWork', true, config);
+    tabStrip.options.contentUrls[2].data = getSearchParams('vElement', true, config);
+    tabStrip.select(0);
+    tabStrip.reload("li:eq(0)");
+    tabStrip.reload("li:eq(1)");
+    tabStrip.reload("li:eq(2)");
+    //tabStrip.select(3);
+    //tabStrip.reload("li:eq(4)");
+    //tabStrip.reload("li:eq(5)");
 }
 
 function noRecordFound(ele) {
@@ -2793,7 +2810,7 @@ function generateAdminGridModel(columnDef) {
                     };
                 }
                 else if (property.Fktable !== null) {
-                    fields[property.ColumnName].validation = {
+                    fields[property.ColumnName.slice(0, -2)].validation = {
                         dropdownlistValidation: function (input) {
                             if (input.val()) {
                                 return true;
@@ -3106,7 +3123,25 @@ function onFormDropdownSelect(e) {
     }).appendTo('#edit-form');
 }
 
+$(document).on("click", '.searchJumpTo', function (e) {
+    //clearSearchForm();
+    $('.search-block-body').addClass('d-none');
+    var blockToShow = $(this).attr('display-block');
+    $('#' + blockToShow).removeClass('d-none');
+});
 
+$(document).on("click", '#common-search-btn', function (e) {
+    getSearchResults({ isAdvanceSearch: true });
+});
+$(document).on("click", '#text-common-search-btn', function (e) {
+    if ($('#SearchQuery').val()) {
+        getSearchResults({
+            isAdvanceSearch: true,
+            isGlobalSearch: true,
+            searchText: $('#SearchQuery').val()
+        });
+    }
+});
 //function onFormDropdownDataBound(e, value) {
 //    //console.log(e.sender.element.attr('id') + '::' + e.sender.value() + '  original value ::' + value);
 //    setTimeout(function () {

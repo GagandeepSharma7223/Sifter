@@ -25,6 +25,7 @@ namespace ResearchApp.Data
         Task<List<TreeNodeViewModel>> GetTableCategories(int? id);
         string GetFKDisplayColumn(string tableName, string displayName);
         DataTable PopulateSearchResult(DataTable searchTable, AdvanceSearchRequest request);
+        DataTable PopulateSearchResult(AdvanceSearchRequest request);
         List<TreeColumnViewModel> GetMetaColumns(string tableName);
         int Create(Dictionary<string, object> model, string tableName, List<TreeColumnViewModel> columns);
         Task Update(Dictionary<string, object> model, string tableName, List<TreeColumnViewModel> columns);

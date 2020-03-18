@@ -9,6 +9,7 @@
                 <li>Author Results</li>
                 <li>Work Results</li>
                 <li>Element Results</li>
+                <li>Search</li>
             </ul>
         </div>
     </div>
@@ -51,6 +52,12 @@
                     cache: false,
                     type: "Post",
                     data: getSearchParams('vElement', true)
+                },
+                {
+                    url: "/Grid/GetCommonSearchForm",
+                    cache: false,
+                    type: "Post",
+                    //data: getSearchParams('vElement', true)
                 }
             ]
         }).data('kendoTabStrip');

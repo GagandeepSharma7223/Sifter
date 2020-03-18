@@ -13,6 +13,9 @@ namespace ResearchApp.ViewModel
         public string SortField { get; set; }
         public string SortDirection { get; set; }
         public bool IsAdvanceSearch { get; set; }
+        public bool IsGlobalSearch { get; set; }
+        public string SearchText { get; set; }
+        public bool GetParamTable { get; set; }
         public string FromClause
         {
             get

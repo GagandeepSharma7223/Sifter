@@ -456,6 +456,37 @@ namespace ResearchApp.Data
             }
         }
 
+        public DataTable PopulateSearchResult(AdvanceSearchRequest request)
+        {
+            using (SqlConnection connection = new SqlConnection(_dbContext.Database.GetDbConnection().ConnectionString))
+            {
+                connection.Open();
+                using (SqlCommand command = connection.CreateCommand())
+                {
+                    command.CommandText = "dbo.parseQuery";
+                    command.CommandType = System.Data.CommandType.StoredProcedure;
+
+                    List<SqlParameter> parameters = new List<SqlParameter>()
+                     {
+                         new SqlParameter("@outputTable", SqlDbType.VarChar, 40) { Value = request.TableName },
+                         new SqlParameter("@search", SqlDbType.VarChar, 200) { Value = request.SearchText },
+                         new SqlParameter("@countOnly", SqlDbType.Bit) { Value = request.CountOnly },
+                         new SqlParameter("@offsetRows", SqlDbType.Int) { Value = request.PageNumber * request.PageSize },
+                         new SqlParameter("@fetchRows", SqlDbType.Int) { Value = request.PageSize },
+                         new SqlParameter("@sortByCol", SqlDbType.VarChar, 60) { Value = request.SortField ?? "" },
+                         new SqlParameter("@sortByOrder", SqlDbType.VarChar, 10) { Value = request.SortDirection ?? "asc" },
+                         new SqlParameter("@getParamTable", SqlDbType.Bit) { Value = request.GetParamTable }
+                     };
+
+                    command.Parameters.AddRange(parameters.ToArray());
+                    SqlDataAdapter adapter = new SqlDataAdapter(command);
+                    DataSet ds = new DataSet();
+                    adapter.Fill(ds);
+                    return ds.Tables[0];
+                }
+            }
+        }
+
         public List<TreeColumnViewModel> GetMetaColumns(string tableName)
         {
             return _dbContext.MetaColumn.Where(x => x.TableName == tableName

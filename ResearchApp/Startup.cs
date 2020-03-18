@@ -37,9 +37,13 @@ namespace GridAndMenuCoreApp
 
             // Add framework services.
             services.AddMvc()
-                    .AddNewtonsoftJson(options =>
-                           options.SerializerSettings.ContractResolver =
-                              new CamelCasePropertyNamesContractResolver());
+                .AddRazorOptions(options =>
+                {
+                    options.ViewLocationFormats.Add("/{0}.cshtml");
+                })
+                .AddNewtonsoftJson(options =>
+                       options.SerializerSettings.ContractResolver =
+                          new CamelCasePropertyNamesContractResolver());
 
             services.AddControllers()
             .AddNewtonsoftJson(options =>

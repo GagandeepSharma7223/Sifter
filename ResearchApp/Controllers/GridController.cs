@@ -10,6 +10,7 @@ using ResearchApp.Extension;
 using ResearchApp.ViewModel;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
@@ -251,6 +252,11 @@ namespace ResearchApp.Controllers
             return PartialView(view, formViewModel);
         }
 
+        public async Task<IActionResult> GetCommonSearchForm()
+        {
+            return PartialView("~/Views/Home/_PartialCommonSearchForm.cshtml");
+        }
+
         public async Task<IActionResult> GetSearchForm(string type)
         {
             var controls = await _workRepo.GetTreeColumnsForTable(type);
@@ -398,7 +404,15 @@ namespace ResearchApp.Controllers
             try
             {
                 if (request.PageSize == 0) request.PageSize = 1000;
-                var dbResult = _authorRepo.PopulateSearchResult(searchParams.ToDataTable(), request);
+                DataTable dbResult = new DataTable();
+                if (request.IsGlobalSearch)
+                {
+                    dbResult = _authorRepo.PopulateSearchResult(request);
+                }
+                else
+                {
+                    dbResult = _authorRepo.PopulateSearchResult(searchParams.ToDataTable(), request);
+                }
                 var response = new AdvanceSearchResult
                 {
                     SearlizeResult = JsonConvert.SerializeObject(dbResult.ToDynamic())
@@ -406,7 +420,45 @@ namespace ResearchApp.Controllers
                 if (request.Total == 0)
                 {
                     request.CountOnly = true;
-                    var dbCountResult = _authorRepo.PopulateSearchResult(searchParams.ToDataTable(), request);
+                    var dbCountResult = new DataTable();
+                    if (request.IsGlobalSearch)
+                    {
+                        dbCountResult = _authorRepo.PopulateSearchResult(request);
+                    }
+                    else
+                    {
+                        dbCountResult = _authorRepo.PopulateSearchResult(searchParams.ToDataTable(), request);
+                    }
+                    if (dbCountResult.Rows.Count > 0)
+                    {
+                        response.Total = (int)dbCountResult.Rows[0][0];
+                    }
+                }
+                response.Columns = _authorRepo.GetMetaColumns(request.TableName);
+                response.TableName = request.TableName;
+                return PartialView("~/Views/Home/_PartialSearchResult.cshtml", response);
+            }
+            catch (Exception e)
+            {
+            }
+            return Json(new { IsError = true });
+        }
+
+        [AcceptVerbs("Post")]
+        public IActionResult GlobalSerachResult(AdvanceSearchRequest request)
+        {
+            try
+            {
+                if (request.PageSize == 0) request.PageSize = 1000;
+                var dbResult = _authorRepo.PopulateSearchResult(request);
+                var response = new AdvanceSearchResult
+                {
+                    SearlizeResult = JsonConvert.SerializeObject(dbResult.ToDynamic())
+                };
+                if (request.Total == 0)
+                {
+                    request.CountOnly = true;
+                    var dbCountResult = _authorRepo.PopulateSearchResult(request);
                     if (dbCountResult.Rows.Count > 0)
                     {
                         response.Total = (int)dbCountResult.Rows[0][0];
@@ -436,6 +488,44 @@ namespace ResearchApp.Controllers
                 response.Total = (int)dbCountResult.Rows[0][0];
             }
             return Json(response);
+        }
+
+        public IActionResult AdminSearchForm(AdvanceSearchRequest request)
+        {
+            try
+            {
+                if (request.PageSize == 0) request.PageSize = 1000;
+                if (string.IsNullOrEmpty(request.TableName))
+                {
+                    request.TableName = "Work";
+                }
+                if(string.IsNullOrEmpty(request.SortField) && request.TableName == "Author")
+                {
+                    request.SortField = "DisplayName";
+                }
+                var dbResult = _authorRepo.PopulateSearchResult(new List<SearchParams>().ToDataTable(), request);
+                var response = new AdvanceSearchResult
+                {
+                    SearlizeResult = JsonConvert.SerializeObject(dbResult.ToDynamic()),
+                };
+                if (request.Total == 0)
+                {
+                    request.CountOnly = true;
+                    var dbCountResult = _authorRepo.PopulateSearchResult(new List<SearchParams>().ToDataTable(), request);
+                    if (dbCountResult.Rows.Count > 0)
+                    {
+                        response.Total = (int)dbCountResult.Rows[0][0];
+                    }
+                }
+                response.Columns = _workRepo.GetMetaColumns(request.TableName);
+                response.TableName = request.TableName;
+                return PartialView("~/Views/Home/_PartialLoadAdminGrid.cshtml", response);
+            }
+            catch (Exception e)
+            {
+                return Json(new { e.Message });
+            }
+            //return Json(new { IsError = true });
         }
 
         public async Task<IActionResult> List([DataSourceRequest]DataSourceRequest request, GridTypes type)
@@ -695,40 +785,6 @@ namespace ResearchApp.Controllers
         {
             string result = _workRepo.GetFKDisplayColumn(tableName, displayName);
             return Json(result);
-        }
-
-        public IActionResult AdminSearchForm(AdvanceSearchRequest request)
-        {
-            try
-            {
-                if (request.PageSize == 0) request.PageSize = 1000;
-                if (string.IsNullOrEmpty(request.TableName))
-                {
-                    request.TableName = "Work";
-                }
-                var dbResult = _authorRepo.PopulateSearchResult(new List<SearchParams>().ToDataTable(), request);
-                var response = new AdvanceSearchResult
-                {
-                    SearlizeResult = JsonConvert.SerializeObject(dbResult.ToDynamic()),
-                };
-                if (request.Total == 0)
-                {
-                    request.CountOnly = true;
-                    var dbCountResult = _authorRepo.PopulateSearchResult(new List<SearchParams>().ToDataTable(), request);
-                    if (dbCountResult.Rows.Count > 0)
-                    {
-                        response.Total = (int)dbCountResult.Rows[0][0];
-                    }
-                }
-                response.Columns = _workRepo.GetMetaColumns(request.TableName);
-                response.TableName = request.TableName;
-                return PartialView("~/Views/Home/_PartialLoadAdminGrid.cshtml", response);
-            }
-            catch (Exception e)
-            {
-                return Json(new { e.Message });
-            }
-            //return Json(new { IsError = true });
         }
 
         public JsonResult GetAdminSearchResult(List<SearchParams> searchParams, AdvanceSearchRequest request)
