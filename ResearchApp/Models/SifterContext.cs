@@ -47,6 +47,8 @@ namespace ResearchApp.Models
         public virtual DbSet<MetaTable> MetaTable { get; set; }
         public virtual DbSet<Member> Member { get; set; }
         public virtual DbSet<MemberLogin> MemberLogin { get; set; }
+        public virtual DbSet<SavedSearch> SavedSearch { get; set; }
+        public virtual DbSet<SavedSearchParam> SavedSearchParam { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -818,6 +820,74 @@ namespace ResearchApp.Models
 
                 entity.Property(e => e.MemberId).HasColumnName("MemberID");
             });
+
+            modelBuilder.Entity<SavedSearch>(entity =>
+            {
+                entity.HasIndex(e => e.MemberId)
+                    .HasName("I1");
+
+                entity.HasIndex(e => e.Name)
+                    .HasName("I2");
+
+                entity.Property(e => e.SavedSearchId)
+                    .HasColumnName("SavedSearchID")
+                    .HasDefaultValueSql("(NEXT VALUE FOR [SavedSearchSeq])");
+
+                entity.Property(e => e.MemberId).HasColumnName("MemberID");
+
+                entity.Property(e => e.Name)
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.SaveTime)
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("(getdate())");
+
+                entity.Property(e => e.SearchString)
+                    .HasMaxLength(200)
+                    .IsUnicode(false);
+            });
+
+            modelBuilder.Entity<SavedSearchParam>(entity =>
+            {
+                entity.HasIndex(e => e.SavedSearchId)
+                    .HasName("I1");
+
+                entity.Property(e => e.SavedSearchParamId)
+                    .HasColumnName("SavedSearchParamID")
+                    .HasDefaultValueSql("(NEXT VALUE FOR [SavedSearchParamSeq])");
+
+                entity.Property(e => e.AndOr)
+                    .HasMaxLength(10)
+                    .IsUnicode(false)
+                    .HasDefaultValueSql("('and')");
+
+                entity.Property(e => e.ColumnName)
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.ColumnType)
+                    .HasMaxLength(20)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.ComparisonType)
+                    .HasMaxLength(20)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.SavedSearchId).HasColumnName("SavedSearchID");
+
+                entity.Property(e => e.TableName)
+                    .HasMaxLength(100)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.TextValue)
+                    .HasMaxLength(200)
+                    .HasDefaultValueSql("('')");
+            });
+
+            modelBuilder.HasSequence<int>("SavedSearchParamSeq").StartsAt(1000001);
+
+            modelBuilder.HasSequence<int>("SavedSearchSeq").StartsAt(100001);
 
             modelBuilder.HasSequence<int>("MemberLoginSeq").StartsAt(1000001);
 

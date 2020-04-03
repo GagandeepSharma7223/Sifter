@@ -11,6 +11,8 @@ using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
 
 namespace GridAndMenuCoreApp
 {
@@ -35,11 +37,28 @@ namespace GridAndMenuCoreApp
                 options.Cookie.IsEssential = true;
             });
 
+            // [Asma Khalid]: Authorization settings.  
+            services.AddAuthentication(options =>
+            {
+                options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            }).AddCookie(options =>
+            {
+                options.LoginPath = new PathString("/Home/Search");
+                options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+            });
+
             // Add framework services.
             services.AddMvc()
                 .AddRazorOptions(options =>
                 {
                     options.ViewLocationFormats.Add("/{0}.cshtml");
+                })
+                .AddRazorPagesOptions(options =>
+                {
+                    options.Conventions.AuthorizeFolder("/");
+                    options.Conventions.AllowAnonymousToPage("/");
                 })
                 .AddNewtonsoftJson(options =>
                        options.SerializerSettings.ContractResolver =
@@ -95,7 +114,7 @@ namespace GridAndMenuCoreApp
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapRazorPages();
-                endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
+                endpoints.MapControllerRoute("default", "{controller=Home}/{action=BrowseAll}/{id?}");
             });
         }
     }

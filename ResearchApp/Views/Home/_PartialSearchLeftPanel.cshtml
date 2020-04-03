@@ -1,36 +1,10 @@
 ﻿<div class="pane-content">
-    <div class="col-md-12">
+    <div class="col-md-10">
         <blockquote class="blockquote">
             <p class="mb-0">The Sifter</p>
             <footer class="blockquote-footer"><cite title="Source Title">Food History Database</cite></footer>
         </blockquote>
-        <div class="k-content">
-            <div class="row mb-2 menu-item-container">
-                <div class="col-6 mb-2">
-                    <a role="button" class="k-button admin-link navigation-btn btn-block page1" href="#" onclick="redirectPage('home', 'page1')">Table Admin</a>
-                </div>
-                @*<div class="col-6 mb-2">
-                        <a role="button" class="k-button navigation-btn btn-block page2" href="#" onclick="redirectPage('search', 'page2')">Basic Search</a>
-                    </div>
-                    <div class="col-6 mb-2">
-                        <a role="button" class="k-button navigation-btn btn-block page3" href="#" onclick="redirectPage('search', 'page3')">Advanced Search</a>
-                    </div>*@
-                <div class="col-6">
-                    <a role="button" class="k-button navigation-btn btn-block page4" href="#" onclick="redirectPage('browseAll', 'page4')">Browse & Search</a>
-                </div>
-            </div>
-            @*<div class="row mt-5">
-            </div>
-            <div class="row mt-5">
-                <div class="col-6 mt-2">
-                    <button type="button" onclick="getSearchResults()" class="k-button btn-block k-primary">Search Now</button>
-                </div>
-                <div class="col-6 mt-2">
-                    <button type="button" onclick="clearSearchForm()" class="btn-block k-button">Start Over</button>
-                </div>
-            </div>*@
-        </div>
-
+        @await Html.PartialAsync("../Shared/_PartialLogin")
     </div>
 </div>
 
@@ -41,5 +15,8 @@
             $('.navigation-btn').removeClass('k-primary');
             $('.' + selectedPage).addClass('k-primary');
         }
+        toggleLoginForm();
     });
+
+    $("#form-login").kendoValidator();
 </script>

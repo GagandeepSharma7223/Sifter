@@ -56,6 +56,7 @@ namespace ResearchApp.Data
                 using (var dataReader = cmd.ExecuteReader())
                 {
                     var indices = Enumerable.Range(0, dataReader.FieldCount).ToList();
+
                     foreach (IDataRecord record in dataReader as IEnumerable)
                         if (fieldType == "object")
                         {
@@ -64,6 +65,10 @@ namespace ResearchApp.Data
                                 Id = (int)record[0],
                                 Option = record[1].ToString()
                             };
+                        }
+                        else if (fieldType == "list")
+                        {
+                            yield return Enumerable.Range(0, dataReader.FieldCount).ToDictionary(dataReader.GetName, dataReader.GetValue);
                         }
                         else
                         {

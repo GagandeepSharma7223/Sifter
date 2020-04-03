@@ -20,5 +20,7 @@ namespace ResearchApp.Models
         public string FkjoinCol { get; set; }
         public string FkdisplayCol { get; set; }
         public int? PixelWidth { get; set; }
+        public bool BasicField { get; set; }
+        public bool GeneralSearch { get; set; }
     }
 }

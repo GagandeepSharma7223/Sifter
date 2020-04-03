@@ -120,28 +120,6 @@ function error_handler(e) {
     }
 }
 
-//function login(e) {
-//    $('#loginForm').find('.k-tooltip').remove();
-//    var validator = $("#loginForm").data("kendoValidator");
-//    if (validator.validate()) {
-//        $.post("/Home/Login", { password: $('#Password').val() }, function (success) {
-//            var dialog = $("#dialog").data("kendoDialog");
-//            if (success) {
-//                isLoggedIn = true;
-//                $('#Password').val('');
-//                toggleEditable();
-//                $('.startEditable').addClass("d-none");
-//                $('.stopEditable').removeClass("d-none");
-//                dialog.close();
-//            }
-//            else {
-//                showMessage(dialog.element, 'Password', 'Invalid Password.');
-//            }
-//        });
-//    }
-//}
-
-//$(document).on("click", '#login-btn', function (e) {
 $(document).on("submit", '#form-login', function (e) {
     e.preventDefault();
     loginUser();
@@ -155,6 +133,17 @@ var cat = {
 };
 
 $(document).on("click", '#logout-btn', function (e) {
+    logOffFunc();
+    $.post("/Grid/LogOff", {}, function (response) {
+        location.href = '/';
+    });
+});
+
+$(document).on("click", '#forgot-password-btn', function (e) {
+    forgotPassword();
+});
+
+function logOffFunc() {
     localStorage.removeItem("user-detail");
     userObj = null;
     toggleLoginForm();
@@ -163,13 +152,8 @@ $(document).on("click", '#logout-btn', function (e) {
         toggleEditable();
         $('.stopEditable').addClass("d-none");
         $('.startEditable').removeClass("d-none");
-        e.preventDefault();
     }
-});
-
-$(document).on("click", '#forgot-password-btn', function (e) {
-    forgotPassword();
-});
+}
 
 function toggleLoginForm() {
     if (userObj) {
@@ -357,7 +341,6 @@ function gridDataBoundConfig() {
 }
 
 function onDataBound(e) {
-    console.log("event data bound");
     grid = $("#grid").data("kendoGrid");
     if (gridSelectionIndex) {
         if (grid.dataSource.data().length - 1 > gridSelectionIndex)
@@ -370,10 +353,11 @@ function onDataBound(e) {
     if (isFormWrap) {
         formSwitchEvents();
     }
+    if (userObj)
+        $('.loggedin-user').text(userObj.Name);
 }
 
 function adminGridOnDataBound(e) {
-    console.log("event data bound");
     if (gridSelectionIndex) {
         if (grid.dataSource.data().length - 1 > gridSelectionIndex)
             gridSelectionIndex++;
@@ -468,7 +452,6 @@ function triggerFormView() {
     isFormWrap = true;
     formViewSelectedItem = grid.dataItem(grid.select());
     selectedItemIndex = grid.dataSource.data().indexOf(formViewSelectedItem);
-    //$("#myModal").kendoSplitter();
     gridFooterEle = $('.k-pager-wrap').clone(true);
     getFormView();
 }
@@ -504,7 +487,7 @@ function onClose() {
 }
 
 function onOpen(e) {
-    $('#dialog input').focus();
+    $('.dialog input').focus();
 }
 
 $(document).on("click", '.startEditable', function (e) {
@@ -833,11 +816,12 @@ function clearFilter() {
     toggleFilterbutton();
 }
 
-function initColumnMenuFilter(e) {
+function initColumnMenuFilter(e, isAdminFilter = false) {
     var menu = e.container.find(".k-menu").data("kendoMenu");
     var grid = e.sender;
     var field = e.field;
-    var treeTable = getSelectTable();
+    var gridName = grid.element.attr('id').split('-')[2];
+    var treeTable = isAdminFilter ? getSelectTable() : gridName;
     var helpTextElement = e.container.children(":first").children(":last");
     var filterOneValue, filterLogicValue = 'or', filterTwoValue, inputFilterOne,
         inputFilterTwo, ddFilterOne, ddFilterTwo, fieldType = 'string', fkDisplayColumn, columnFilterOptions = { listViewPageSize: 500 };
@@ -893,30 +877,84 @@ function initColumnMenuFilter(e) {
                 elementToInsertAfter.addClass('d-none');  //hide text above search box
                 var advancedOption = $(container).clone();
                 var element, ele;
-
+                var gridRowTemplateDD = "<div class='list-Item'>#:Option#</div>";
+                var gridRowTemplate = "<div class='list-Item'>#:data#</div>";
+                if (isAdminFilter) {
+                    gridRowTemplateDD = "<div class='list-Item'><input type='checkbox' value='#:Id#'/>#:Option#</div>";
+                    gridRowTemplate = "<div class='list-Item'><input type='checkbox' value='#:data#'/>#:data#</div>";
+                }
                 switch (fieldType) {
                     case 'object':
                         ele = $("<div class='k-textbox k-space-right'><input type='text' id='filter-search-" + field + "' placeholder='Search'><span class='k-icon k-i-zoom'></span></div>").insertAfter(elementToInsertAfter);
                         element = $("<div id='list-view-" + field + "' class='checkbox-ontainer kendo-grid-filter'></div>").insertAfter(ele).kendoGrid({
                             dataSource: dataSourceListView,
                             height: 210,
+                            resizable: true,
+                            selectable: !isAdminFilter ? "multiple" : false,
                             scrollable: {
                                 virtual: true
                             },
                             columns: [
+                                { field: 'Id', hidden: true },
                                 {
-                                    field: '', template: "<div class='list-Item'><input type='checkbox' value='#:Id#'/>#:Option#</div>"
+                                    field: '', template: gridRowTemplateDD
                                 }
-                            ]
+                            ],
+                            dataBound: function (e) {
+                                var filter = dataSource.filter() || { logic: "and", filters: [] };
+                                var field = e.sender.element.attr('id').split('-')[2] + 'ID';
+                                var existingFilters = Array.prototype.concat(...filter.filters.map(x => x.filters));
+                                var list = e.sender.dataSource.data();
+                                existingFilters.forEach(function (item, index) {
+                                    // Check existing checkboxes
+                                    var selectedItem = list.find(x => x.Id === item.value);
+                                    if (selectedItem && item.field === field) {
+                                        var selectedIndex = list.indexOf(selectedItem);
+                                        e.sender.tbody.find(`tr:eq(${selectedIndex}) td:eq(0) input`).prop('checked', true);
+                                    }
+                                });
+                                $(e.sender.element).find('.k-grid-content').height(198);
+                            }
                         });
                         break;
                     case 'boolean':
                         ele = $("<div class='k-textbox k-space-right'><input disabled=disabled id='filter-search-" + field + "' placeholder='Search'><span class='k-icon k-i-zoom'></span></div>").insertAfter(elementToInsertAfter);
-                        element = $(`<div id='list-view-${field}' class='checkbox-ontainer'>
+                        if (isAdminFilter) {
+                            gridTemplateBool = `<div id='list-view-${field}' class='checkbox-ontainer'>
                                             <div class='list-Item'><input type='checkbox' value='true' class='filter-chk'/>True</div>
                                             <div class='list-Item'><input type='checkbox' value='false' class='filter-chk'/>False</div>
                                             <div class='list-Item'><input type='checkbox' value='null' class='filter-chk'/>Null</div>
-                                        </div>`).insertAfter(ele);
+                                        </div>`;
+                            element = $(gridTemplateBool).insertAfter(ele);
+                        }
+                        else {
+                            element = $("<div id='list-view-" + field + "' class='checkbox-ontainer kendo-grid-filter'></div>").insertAfter(ele).kendoGrid({
+                                dataSource: ["true", "false", "null"],
+                                height: 210,
+                                resizable: true,
+                                selectable: !isAdminFilter ? "multiple" : false,
+                                columns: [
+                                    {
+                                        field: '', template: gridRowTemplate
+                                    }
+                                ],
+                                dataBound: function (e) {
+                                    var filter = dataSource.filter() || { logic: "and", filters: [] };
+                                    var existingFilters = Array.prototype.concat(...filter.filters.map(x => x.filters));
+                                    var list = e.sender.dataSource.data();
+                                    var field = e.sender.element.attr('id').split('-')[2];
+                                    existingFilters.forEach(function (item, index) {
+                                        // Check existing checkboxes
+                                        var selectedItem = list.find(x => x === item.value);
+                                        if (selectedItem && item.field === field) {
+                                            var selectedIndex = list.indexOf(selectedItem);
+                                            e.sender.tbody.find(`tr:eq(${selectedIndex}) td:eq(0) input`).prop('checked', true);
+                                        }
+                                    });
+                                    $(e.sender.element).find('.k-grid-content').height(198);
+                                }
+                            });
+                        }
                         break;
                     default:
                         ele = $("<div class='k-textbox k-space-right'><input type='text' id='filter-search-" + field + "' placeholder='Search'><span class='k-icon k-i-zoom'></span></div>").insertAfter(elementToInsertAfter);
@@ -924,267 +962,287 @@ function initColumnMenuFilter(e) {
                             dataSource: dataSourceListView,
                             height: 210,
                             resizable: true,
+                            selectable: !isAdminFilter ? "multiple" : false,
                             scrollable: {
                                 virtual: true
                             },
                             columns: [
                                 {
-                                    field: '', template: "<div class='list-Item'><input type='checkbox' value='#:data#'/>#:data#</div>"
+                                    field: '', template: gridRowTemplate
                                 }
-                            ]
+                            ],
+                            dataBound: function (e) {
+                                var filter = dataSource.filter() || { logic: "and", filters: [] };
+                                var existingFilters = Array.prototype.concat(...filter.filters.map(x => x.filters));
+                                var list = e.sender.dataSource.data();
+                                var field = e.sender.element.attr('id').split('-')[2];
+                                existingFilters.forEach(function (item, index) {
+                                    // Check existing checkboxes
+                                    var selectedItem = list.find(x => x === item.value);
+                                    if (selectedItem && item.field === field) {
+                                        var selectedIndex = list.indexOf(selectedItem);
+                                        e.sender.tbody.find(`tr:eq(${selectedIndex}) td:eq(0) input`).prop('checked', true);
+                                    }
+                                });
+                                $(e.sender.element).find('.k-grid-content').height(198);
+                            }
                         });
                         break;
                 }
-                //$("#list-view-" + field).resizable({
-                //    alsoResize: filterContainer
-                //});
-                var advancedMenu = $("<ul id='advanced-menu-" + field + "'></ul>").insertAfter($("#list-view-" + field)).kendoMenu({
-                    orientation: 'vertical'
-                }).data("kendoMenu");
+                var filterGrid = element.data('kendoGrid');
 
-                $(advancedOption).find("[data-role='numerictextbox']").remove();
-                advancedMenu.append([
-                    {
-                        text: "Advanced",
-                        encoded: false,
-                        content: "<div class='p-1'>" + advancedOption.html() + "</div>"
+                if (isAdminFilter) {
+                    var advancedMenu = $("<ul id='advanced-menu-" + field + "'></ul>").insertAfter($("#list-view-" + field)).kendoMenu({
+                        orientation: 'vertical'
+                    }).data("kendoMenu");
+
+                    $(advancedOption).find("[data-role='numerictextbox']").remove();
+                    advancedMenu.append([
+                        {
+                            text: "Advanced",
+                            encoded: false,
+                            content: "<div class='p-1'>" + advancedOption.html() + "</div>"
+                        }
+                    ]);
+
+                    if (fieldType === 'boolean') {
+                        var item = advancedMenu.element.eq(0).children("li").eq(0);
+                        advancedMenu.enable(item, false);
                     }
-                ]);
 
-                if (fieldType === 'boolean') {
-                    var item = advancedMenu.element.eq(0).children("li").eq(0);
-                    advancedMenu.enable(item, false);
-                }
-
-                if (fieldType !== 'boolean') {
-                    // Bind advance search options
-                    advancedMenu.bind("open", function (e) {
-                        if (!inputFilterOne && !inputFilterTwo) {
-                            var advancedOptionFrm = $('#advanced-menu-' + field).find('.k-filter-menu-container');
-                            if (fieldType === 'object') {
-                                var inputFirst = advancedOptionFrm.find("input:eq(0)");
-                                var inputSecond = advancedOptionFrm.find("input:eq(1)");
-                                inputFirst.removeClass('k-textbox').removeAttr("data-bind");
-                                inputSecond.removeClass('k-textbox').removeAttr("data-bind");
-                                var fkTableDetail = gridColumns.find(x => x.DisplayName === field);
-                                ddFilterOne = $(inputFirst).kendoDropDownList({
-                                    dataSource: {
-                                        type: "aspnetmvc-ajax",
-                                        transport: {
-                                            read: `/Grid/GetDropdownOptions?treeTable=${fkTableDetail.Fktable}&optionCol=${fkTableDetail.FkdisplayCol}`
-                                        },
-                                        schema: {
-                                            model: {
-                                                fields: {
-                                                    Id: { type: "number" },
-                                                    Option: { type: "string" }
+                    if (fieldType !== 'boolean') {
+                        // Bind advance search options
+                        advancedMenu.bind("open", function (e) {
+                            if (!inputFilterOne && !inputFilterTwo) {
+                                var advancedOptionFrm = $('#advanced-menu-' + field).find('.k-filter-menu-container');
+                                if (fieldType === 'object') {
+                                    var inputFirst = advancedOptionFrm.find("input:eq(0)");
+                                    var inputSecond = advancedOptionFrm.find("input:eq(1)");
+                                    inputFirst.removeClass('k-textbox').removeAttr("data-bind");
+                                    inputSecond.removeClass('k-textbox').removeAttr("data-bind");
+                                    var fkTableDetail = gridColumns.find(x => x.DisplayName === field);
+                                    ddFilterOne = $(inputFirst).kendoDropDownList({
+                                        dataSource: {
+                                            type: "aspnetmvc-ajax",
+                                            transport: {
+                                                read: `/Grid/GetDropdownOptions?treeTable=${fkTableDetail.Fktable}&optionCol=${fkTableDetail.FkdisplayCol}`
+                                            },
+                                            schema: {
+                                                model: {
+                                                    fields: {
+                                                        Id: { type: "number" },
+                                                        Option: { type: "string" }
+                                                    }
+                                                },
+                                                data: function (response) {
+                                                    return response.Data;
+                                                },
+                                                total: function (response) {
+                                                    return response.Total;
                                                 }
                                             },
-                                            data: function (response) {
-                                                return response.Data;
-                                            },
-                                            total: function (response) {
-                                                return response.Total;
+                                            pageSize: 80,
+                                            serverPaging: true,
+                                            serverFiltering: true
+                                        },
+                                        dataTextField: "Option",
+                                        dataValueField: "Id",
+                                        filter: "contains",
+                                        virtual: {
+                                            itemHeight: 26,
+                                            valueMapper: function (options) {
+                                                $.ajax({
+                                                    url: "/Grid/Dropdown_ValueMapper",
+                                                    data: convertValues(options.value, field),
+                                                    success: function (data) {
+                                                        options.success(data);
+                                                    }
+                                                });
                                             }
                                         },
-                                        pageSize: 80,
-                                        serverPaging: true,
-                                        serverFiltering: true
-                                    },
-                                    dataTextField: "Option",
-                                    dataValueField: "Id",
-                                    filter: "contains",
-                                    virtual: {
-                                        itemHeight: 26,
-                                        valueMapper: function (options) {
-                                            $.ajax({
-                                                url: "/Grid/Dropdown_ValueMapper",
-                                                data: convertValues(options.value, field),
-                                                success: function (data) {
-                                                    options.success(data);
-                                                }
-                                            });
-                                        }
-                                    },
-                                    change: function (e) {
-                                        inputFilterOne = this.value();
-                                    },
-                                    height: 135
-                                }).data("kendoDropDownList");
-
-                                ddFilterOne.setOptions({ optionLabel: "Select" });
-                                ddFilterOne.refresh();
-                                ddFilterOne.select(0);
-
-                                ddFilterTwo = $(inputSecond).kendoDropDownList({
-                                    dataSource: {
-                                        type: "aspnetmvc-ajax",
-                                        transport: {
-                                            read: `/Grid/GetDropdownOptions?treeTable=${fkTableDetail.Fktable}&optionCol=${fkTableDetail.FkdisplayCol}`
+                                        change: function (e) {
+                                            inputFilterOne = this.value();
                                         },
-                                        schema: {
-                                            model: {
-                                                fields: {
-                                                    Id: { type: "number" },
-                                                    Option: { type: "string" }
+                                        height: 135
+                                    }).data("kendoDropDownList");
+
+                                    ddFilterOne.setOptions({ optionLabel: "Select" });
+                                    ddFilterOne.refresh();
+                                    ddFilterOne.select(0);
+
+                                    ddFilterTwo = $(inputSecond).kendoDropDownList({
+                                        dataSource: {
+                                            type: "aspnetmvc-ajax",
+                                            transport: {
+                                                read: `/Grid/GetDropdownOptions?treeTable=${fkTableDetail.Fktable}&optionCol=${fkTableDetail.FkdisplayCol}`
+                                            },
+                                            schema: {
+                                                model: {
+                                                    fields: {
+                                                        Id: { type: "number" },
+                                                        Option: { type: "string" }
+                                                    }
+                                                },
+                                                data: function (response) {
+                                                    return response.Data;
+                                                },
+                                                total: function (response) {
+                                                    return response.Total;
                                                 }
                                             },
-                                            data: function (response) {
-                                                return response.Data;
-                                            },
-                                            total: function (response) {
-                                                return response.Total;
+                                            pageSize: 80,
+                                            serverPaging: true,
+                                            serverFiltering: true
+                                        },
+                                        dataTextField: "Option",
+                                        dataValueField: "Id",
+                                        filter: "contains",
+                                        virtual: {
+                                            itemHeight: 26,
+                                            valueMapper: function (options) {
+                                                $.ajax({
+                                                    url: "/Grid/Dropdown_ValueMapper",
+                                                    data: convertValues(options.value, field),
+                                                    success: function (data) {
+                                                        options.success(data);
+                                                    }
+                                                });
                                             }
                                         },
-                                        pageSize: 80,
-                                        serverPaging: true,
-                                        serverFiltering: true
-                                    },
-                                    dataTextField: "Option",
-                                    dataValueField: "Id",
-                                    filter: "contains",
-                                    virtual: {
-                                        itemHeight: 26,
-                                        valueMapper: function (options) {
-                                            $.ajax({
-                                                url: "/Grid/Dropdown_ValueMapper",
-                                                data: convertValues(options.value, field),
-                                                success: function (data) {
-                                                    options.success(data);
-                                                }
-                                            });
+                                        change: function (e) {
+                                            inputFilterTwo = this.value();
+                                        },
+                                        height: 135
+                                    }).data("kendoDropDownList");
+
+                                    ddFilterTwo.setOptions({ optionLabel: "Select" });
+                                    ddFilterTwo.refresh();
+                                    ddFilterTwo.select(0);
+                                    // operation and logic dropdowns
+                                    var firstValueDropDown = advancedOptionFrm.find("select:eq(0)");
+                                    var logicDropDown = advancedOptionFrm.find("select:eq(1)");
+                                    var secondValueDropDown = advancedOptionFrm.find("select:eq(2)");
+                                    logicDropDown.kendoDropDownList();
+
+                                    // operation dropdowns
+                                    var data = [
+                                        { text: "Is equal to", value: "eq" },
+                                        { text: "Is not equal to", value: "neq" },
+                                        { text: "Is null", value: "isnull" },
+                                        { text: "Is not null", value: "isnotnull" },
+                                        { text: "Less than or equal to", value: "lte" },
+                                        { text: "Greater than or equal to", value: "gte" }
+                                    ];
+                                    $(firstValueDropDown).kendoDropDownList({
+                                        dataTextField: "text",
+                                        dataValueField: "value",
+                                        dataSource: data,
+                                        index: 0,
+                                        change: function (e) {
+                                            filterOneValue = this.value();
                                         }
-                                    },
-                                    change: function (e) {
-                                        inputFilterTwo = this.value();
-                                    },
-                                    height: 135
-                                }).data("kendoDropDownList");
-
-                                ddFilterTwo.setOptions({ optionLabel: "Select" });
-                                ddFilterTwo.refresh();
-                                ddFilterTwo.select(0);
-                                // operation and logic dropdowns
-                                var firstValueDropDown = advancedOptionFrm.find("select:eq(0)");
-                                var logicDropDown = advancedOptionFrm.find("select:eq(1)");
-                                var secondValueDropDown = advancedOptionFrm.find("select:eq(2)");
-                                logicDropDown.kendoDropDownList();
-
-                                // operation dropdowns
-                                var data = [
-                                    { text: "Is equal to", value: "eq" },
-                                    { text: "Is not equal to", value: "neq" },
-                                    { text: "Is null", value: "isnull" },
-                                    { text: "Is not null", value: "isnotnull" },
-                                    { text: "Less than or equal to", value: "lte" },
-                                    { text: "Greater than or equal to", value: "gte" }
-                                ];
-                                $(firstValueDropDown).kendoDropDownList({
-                                    dataTextField: "text",
-                                    dataValueField: "value",
-                                    dataSource: data,
-                                    index: 0,
-                                    change: function (e) {
-                                        filterOneValue = this.value();
-                                    }
-                                });
-                                $(secondValueDropDown).kendoDropDownList({
-                                    dataTextField: "text",
-                                    dataValueField: "value",
-                                    dataSource: data,
-                                    index: 0,
-                                    change: function (e) {
-                                        filterTwoValue = this.value();
-                                    }
-                                });
-
-                                filterOneValue = firstValueDropDown.val();
-                                filterTwoValue = secondValueDropDown.val();
-                                filterLogicValue = logicDropDown.val();
-
-                                $(logicDropDown).change(function (e) {
-                                    filterLogicValue = this.value;
-                                });
-                            }
-                            else {
-                                var filterOne = advancedOptionFrm.find('select:eq(0)');
-                                var filterLogic = advancedOptionFrm.find('select:eq(1)');
-                                var filterTwo = advancedOptionFrm.find('select:eq(2)');
-                                filterOne.kendoDropDownList();
-                                filterLogic.kendoDropDownList();
-                                filterTwo.kendoDropDownList();
-                                filterOneValue = filterOne.val();
-                                filterTwoValue = filterTwo.val();
-                                filterLogicValue = filterLogic.val();
-                                if (fieldType === 'number') {
-                                    advancedOptionFrm.children('.k-numerictextbox').remove();
-
-                                    $("<input />").insertAfter(advancedOptionFrm.children("span:first")).kendoNumericTextBox({
-                                        spinners: false,
-                                        decimals: 0,
-                                        format: "#"
                                     });
-                                    $("<input />").insertAfter(advancedOptionFrm.children("span:last")).kendoNumericTextBox({
-                                        spinners: false,
-                                        decimals: 0,
-                                        format: "#"
+                                    $(secondValueDropDown).kendoDropDownList({
+                                        dataTextField: "text",
+                                        dataValueField: "value",
+                                        dataSource: data,
+                                        index: 0,
+                                        change: function (e) {
+                                            filterTwoValue = this.value();
+                                        }
+                                    });
+
+                                    filterOneValue = firstValueDropDown.val();
+                                    filterTwoValue = secondValueDropDown.val();
+                                    filterLogicValue = logicDropDown.val();
+
+                                    $(logicDropDown).change(function (e) {
+                                        filterLogicValue = this.value;
                                     });
                                 }
                                 else {
-                                    advancedOptionFrm.children('.k-textbox').remove();
-                                    $("<textarea class='k-textbox'></textarea>").insertAfter(advancedOptionFrm.children("span:first"));
-                                    $("<textarea class='k-textbox'></textarea>").insertAfter(advancedOptionFrm.children("span:last"));
-                                }
-                                var inputFilters = advancedOptionFrm.find('input[style*="display: none"]');
-                                if (inputFilters.length === 0) {
-                                    inputFilters = advancedOptionFrm.find('input:not([style*="display: none"])');
-                                }
-                                if (inputFilters.length) {
-                                    $(inputFilters[0]).on('keyup mouseup change', function (e) {
-                                        inputFilterOne = this.value;
+                                    var filterOne = advancedOptionFrm.find('select:eq(0)');
+                                    var filterLogic = advancedOptionFrm.find('select:eq(1)');
+                                    var filterTwo = advancedOptionFrm.find('select:eq(2)');
+                                    filterOne.kendoDropDownList();
+                                    filterLogic.kendoDropDownList();
+                                    filterTwo.kendoDropDownList();
+                                    filterOneValue = filterOne.val();
+                                    filterTwoValue = filterTwo.val();
+                                    filterLogicValue = filterLogic.val();
+                                    if (fieldType === 'number') {
+                                        advancedOptionFrm.children('.k-numerictextbox').remove();
+
+                                        $("<input />").insertAfter(advancedOptionFrm.children("span:first")).kendoNumericTextBox({
+                                            spinners: false,
+                                            decimals: 0,
+                                            format: "#"
+                                        });
+                                        $("<input />").insertAfter(advancedOptionFrm.children("span:last")).kendoNumericTextBox({
+                                            spinners: false,
+                                            decimals: 0,
+                                            format: "#"
+                                        });
+                                    }
+                                    else {
+                                        advancedOptionFrm.children('.k-textbox').remove();
+                                        $("<textarea class='k-textbox'></textarea>").insertAfter(advancedOptionFrm.children("span:first"));
+                                        $("<textarea class='k-textbox'></textarea>").insertAfter(advancedOptionFrm.children("span:last"));
+                                    }
+                                    var inputFilters = advancedOptionFrm.find('input[style*="display: none"]');
+                                    if (inputFilters.length === 0) {
+                                        inputFilters = advancedOptionFrm.find('input:not([style*="display: none"])');
+                                    }
+                                    if (inputFilters.length) {
+                                        $(inputFilters[0]).on('keyup mouseup change', function (e) {
+                                            inputFilterOne = this.value;
+                                        });
+
+                                        $(inputFilters[1]).on('keyup mouseup change', function (e) {
+                                            inputFilterTwo = this.value;
+                                        });
+                                    }
+
+                                    var textareaFilters = advancedOptionFrm.find('textarea');
+
+                                    if (textareaFilters.length) {
+                                        $(textareaFilters[0]).on('keyup mouseup change', function (e) {
+                                            inputFilterOne = this.value;
+                                        });
+
+                                        $(textareaFilters[1]).on('keyup mouseup change', function (e) {
+                                            inputFilterTwo = this.value;
+                                        });
+                                    }
+
+                                    $(filterOne).change(function (e) {
+                                        filterOneValue = this.value;
                                     });
 
-                                    $(inputFilters[1]).on('keyup mouseup change', function (e) {
-                                        inputFilterTwo = this.value;
+                                    $(filterTwo).change(function (e) {
+                                        filterTwoValue = this.value;
+                                    });
+
+                                    $(filterLogic).change(function (e) {
+                                        filterLogicValue = this.value;
                                     });
                                 }
-
-                                var textareaFilters = advancedOptionFrm.find('textarea');
-
-                                if (textareaFilters.length) {
-                                    $(textareaFilters[0]).on('keyup mouseup change', function (e) {
-                                        inputFilterOne = this.value;
-                                    });
-
-                                    $(textareaFilters[1]).on('keyup mouseup change', function (e) {
-                                        inputFilterTwo = this.value;
-                                    });
-                                }
-
-                                $(filterOne).change(function (e) {
-                                    filterOneValue = this.value;
-                                });
-
-                                $(filterTwo).change(function (e) {
-                                    filterTwoValue = this.value;
-                                });
-
-                                $(filterLogic).change(function (e) {
-                                    filterLogicValue = this.value;
-                                });
                             }
-                        }
-                        setTimeout(function () {
-                            $('#advanced-menu-' + field).find('input:first').focus();
-                        }, 100);
-                    });
+                            setTimeout(function () {
+                                $('#advanced-menu-' + field).find('input:first').focus();
+                            }, 100);
+                        });
+                    }
+
+                    // remove elements after advanced menu
+                    $(container).find("ul").nextAll('span').remove();
+                    $(container).find("ul").nextAll('input').remove();
                 }
-
-                // remove elements after advanced menu
-                $(container).find("ul").nextAll('span').remove();
-                $(container).find("ul").nextAll('input').remove();
+                else {
+                    $(container).find("#list-view-" + field).nextAll('span').remove();
+                    $(container).find("#list-view-" + field).nextAll('input').remove();
+                }
                 $(container).find("#list-view-" + field).nextAll('label').remove();
-
                 // Filter Submit click Callback
                 container.find("[type='submit']").click(function (e) {
                     e.preventDefault();
@@ -1192,60 +1250,115 @@ function initColumnMenuFilter(e) {
                     if (element) {
                         var filter = dataSource.filter() || { logic: "and", filters: [] };
                         var fieldFilters = [];
-                        if (fieldType !== 'boolean') {
-                            fieldFilters = $.map(element.find(":checkbox:checked"), function (input, index) {
-                                return {
-                                    field: fieldType === 'object' ? field + 'ID' : field,
-                                    operator: 'in list',
-                                    value: parseValue(fieldType, input.value),
-                                    tableName: treeTable,
-                                    columnType: fieldType,
-                                    andOr: 'or'
-                                };
-                            });
-                            // Get Field Filters
-                            if (inputFilterOne || chkNullableFilter(filterOneValue)) {
-                                fieldFilters.push({
-                                    field: fieldType === 'object' ? field + 'ID' : field,
-                                    operator: filterOneValue,
-                                    value: parseValue(fieldType, inputFilterOne),
-                                    tableName: treeTable,
-                                    columnType: fieldType,
-                                    andOr: filterLogicValue
-                                });
+                        if (isAdminFilter) {
+                            if (fieldType !== 'boolean') {
+                                if (isAdminFilter) {
+                                    fieldFilters = $.map(element.find(":checkbox:checked"), function (input, index) {
+                                        return {
+                                            field: fieldType === 'object' ? field + 'ID' : field,
+                                            operator: 'in list',
+                                            value: parseValue(fieldType, input.value),
+                                            tableName: treeTable,
+                                            columnType: fieldType,
+                                            andOr: 'or'
+                                        };
+                                    });
+                                }
+                                // Get Field Filters
+                                if (inputFilterOne || chkNullableFilter(filterOneValue)) {
+                                    fieldFilters.push({
+                                        field: fieldType === 'object' ? field + 'ID' : field,
+                                        operator: filterOneValue,
+                                        value: parseValue(fieldType, inputFilterOne),
+                                        tableName: treeTable,
+                                        columnType: fieldType,
+                                        andOr: filterLogicValue
+                                    });
+                                }
+                                if (inputFilterTwo) {
+                                    fieldFilters.push({
+                                        field: fieldType === 'object' ? field + 'ID' : field,
+                                        operator: filterTwoValue,
+                                        value: parseValue(fieldType, inputFilterTwo),
+                                        tableName: treeTable,
+                                        columnType: fieldType,
+                                        andOr: filterLogicValue
+                                    });
+                                }
                             }
-                            if (inputFilterTwo) {
-                                fieldFilters.push({
-                                    field: fieldType === 'object' ? field + 'ID' : field,
-                                    operator: filterTwoValue,
-                                    value: parseValue(fieldType, inputFilterTwo),
-                                    tableName: treeTable,
-                                    columnType: fieldType,
-                                    andOr: filterLogicValue
+                            else {
+                                fieldFilters = $.map(element.find(":checkbox:checked"), function (input, index) {
+                                    return {
+                                        field: field,
+                                        operator: 'in list',
+                                        value: parseValue(fieldType, input.value),
+                                        tableName: treeTable,
+                                        columnType: fieldType,
+                                        andOr: 'or'
+                                    };
                                 });
                             }
                         }
                         else {
-                            fieldFilters = $.map(element.find(":checkbox:checked"), function (input, index) {
-                                return {
+                            var selectedItems = filterGrid.select();
+                            selectedItems.each(function () {
+                                var value = filterGrid.dataItem(this);
+                                fieldFilters.push({
                                     field: field,
                                     operator: 'in list',
-                                    value: parseValue(fieldType, input.value),
+                                    value: parseValue(fieldType, value),
                                     tableName: treeTable,
                                     columnType: fieldType,
                                     andOr: 'or'
-                                };
+                                });
                             });
+                            //if (fieldType !== 'boolean') {
+                            //    selectedItems.each(function () {
+                            //        var value = filterGrid.dataItem(this);
+                            //        fieldFilters.push({
+                            //            field: field,
+                            //            operator: 'in list',
+                            //            value: parseValue(fieldType, value),
+                            //            tableName: treeTable,
+                            //            columnType: fieldType,
+                            //            andOr: 'or'
+                            //        });
+                            //    });
+                            //}
+                            //else {
+
+                            //}
                         }
 
                         if (fieldFilters.length) {
                             removeFiltersForField(filter, field);
+                            //filter.filters = [];  //change
+                            var existingFilters = Array.prototype.concat(...filter.filters.map(x => x.filters));
+                            if (existingFilters && existingFilters.length) {
+                                //filter.filters.filters = filter.filters.filters.filter(x => x.field !== fieldFilters[0].field);
+                                var otherColumnfilters = existingFilters.filter(x => fieldFilters.some(y => y.field !== x.field));
+                                if (otherColumnfilters.length) {
+                                    //filter.filters = ; 
+                                    var indexToRemove = null;
+                                    filter.filters.forEach(function (value, index) {
+                                        if (value.filters[0].field === fieldFilters[0].field) {
+                                            indexToRemove = index;
+                                            return false;
+                                        }
+                                    });
+                                    if (indexToRemove !== null) {
+                                        filter.filters.splice(indexToRemove, 1);
+                                    }
+                                }
+                                else {
+                                    filter.filters = [];
+                                }
+                            }
                             filter.filters.push({
                                 logic: filterLogicValue,
                                 filters: fieldFilters
                             });
 
-                            var gridType = getSelectTable(); //grid.element.attr('id').split('-')[2];
                             var columnFilters = Array.prototype.concat(...filter.filters.map(x => x.filters));
                             var sortArr = grid.dataSource.sort();
                             var sortField = '', sortDir = 'asc';
@@ -1253,8 +1366,13 @@ function initColumnMenuFilter(e) {
                                 sortField = sortArr[0].field;
                                 sortDir = sortArr[0].dir;
                             }
-                            var params = { dataSource: grid.dataSource, sortField: sortField, sortDir: sortDir, columnFilters: columnFilters };
-                            populateSearch(gridType, false, params);
+                            var params = {
+                                dataSource: grid.dataSource,
+                                sortField: sortField,
+                                sortDir: sortDir,
+                                columnFilters: columnFilters
+                            };
+                            populateSearch(treeTable, false, params);
                             dataSource.filter(filter);
                         }
                         var popup = $(helpTextElement.children(":last").children(":first")).data("kendoPopup");
@@ -1276,34 +1394,43 @@ function initColumnMenuFilter(e) {
                             item.select(0);
                         }
                     });
-                    var gridType = getSelectTable(); // grid.element.attr('id').split('-')[2];
+                    //var gridType = getSelectTable(); // grid.element.attr('id').split('-')[2];
                     var params = { dataSource: grid.dataSource };
-                    populateSearch(gridType, false, params);
+                    populateSearch(treeTable, false, params);
                     var filter = { logic: "and", filters: [] };
                     dataSource.filter(filter);
                     var gridView = $('#list-view-' + field).data('kendoGrid');
-                    gridView.dataSource.filter(filter);
+                    if (gridView) {
+                        gridView.dataSource.filter(filter);
+                    }
+                    if (filterGrid) {
+                        filterGrid.clearSelection();
+                    }
                     var popup = $(helpTextElement.children(":last").children(":first")).data("kendoPopup");
                     popup.close();
-                    menu.wrapper.parent().hide()
+                    menu.wrapper.parent().hide();
                 });
                 // Filter search text event
                 $('#filter-search-' + field).on('keyup', function (e) {
-                    if (fieldType === 'object') {
-                        var gridView = $('#list-view-' + field).data('kendoGrid');
-                        gridView.dataSource.filter({ field: "Option", operator: "contains", value: this.value });
+                    if (e.which <= 90 && e.which >= 48) {
+                        if (fieldType === 'object') {
+                            var gridView = $('#list-view-' + field).data('kendoGrid');
+                            gridView.dataSource.filter({ field: "Option", operator: "contains", value: this.value });
+                        }
+                        else {
+                            gridView = $('#list-view-' + field).data('kendoGrid');
+                            gridView.dataSource.filter({ field: field, operator: "contains", value: this.value });
+                        }
+                        toggleFilterbutton();
                     }
-                    else {
-                        gridView = $('#list-view-' + field).data('kendoGrid');
-                        gridView.dataSource.filter({ field: field, operator: "contains", value: this.value });
-                    }
-                    toggleFilterbutton();
                 });
 
                 var resizableAdvanceSearchEle = $('#advanced-menu-' + field).children(":first").children(":last");
                 $(resizableAdvanceSearchEle).resizable();
             }
-
+            else {
+                parentEle.find('#list-view-' + field).find('.k-grid-content').height(198);
+            }
             setTimeout(function () {
                 $('#filter-search-' + field).focus();
             }, 600);
@@ -1510,11 +1637,12 @@ $(document).on("click", '#save-form-btn', function (e) {
         var arr = [];
         arr.push(data);
         var treeTable = getSelectTable();
-        var idField = treeTable + "ID";
+        var idField = $("#edit-form").find('input[id-col]').attr('name'); //treeTable + "ID";
         if (!data[idField]) {  //Add
             $.post('/Grid/Add', { tableName: treeTable, models: JSON.stringify(arr), columns: gridColumns })
                 .done(function (response) {
                     var id = response.Data[0][idField];
+
                     // If add form comes from adding new option to dropdown
                     if (isAddNewItemDD) {
                         // Show up admin grid where add new item get triggered
@@ -1528,6 +1656,7 @@ $(document).on("click", '#save-form-btn', function (e) {
                     }
                     else {
                         data[idField] = id;
+                        data["RowNum"] = grid.dataSource.total() + 1;
                         grid.dataSource.add(data);
                         formViewSelectedItem = grid.dataSource.data().find(x => x[idField] === data[idField]);
                         selectedItemIndex = grid.dataSource.data().indexOf(formViewSelectedItem);
@@ -1698,7 +1827,7 @@ function addNewRecord() {
         this.value = '';
     });
     $(formName + ' input:checkbox').removeAttr('checked');
-    $("#form-primary-key").hide();
+    $(".form-primary-key").hide();
 }
 
 function toggleFormView() {
@@ -1913,6 +2042,21 @@ function getSearchParams(tableName, isView, config = {}) {
 
 function getSearchResults(config) {
     showLoading();
+    var filterArr = getSearchFilterArr().filterArr;
+    searchParams = { type: selectedSearchOption, filter: filterArr };
+    var tabStrip = $("#search-tab-strip").data("kendoTabStrip");
+    tabStrip.options.contentUrls[0].data = getSearchParams('vAuthor', true, config);  //Need to make them dynamic
+    tabStrip.options.contentUrls[1].data = getSearchParams('vWork', true, config);
+    tabStrip.options.contentUrls[2].data = getSearchParams('vElement', true, config);
+    tabStrip.select(0);
+    setTimeout(function () {
+        tabStrip.reload("li:eq(0)");
+        tabStrip.reload("li:eq(1)");
+        tabStrip.reload("li:eq(2)");
+    }, 500);
+}
+
+function getSearchFilterArr() {
     var filters = [];
     var searchForms = $('form');
     $.each(searchForms, function (index, value) {
@@ -1922,7 +2066,7 @@ function getSearchResults(config) {
             var member = propArr[2];
             var tableName = propArr[0];
             if (name.indexOf("Filter") >= 0) {
-                var operator = value;  // Operator Value
+                var operator = value; // Operator Value
                 switch (operator) {
                     case 'in list':
                         var memberValue = data[`${tableName}.${member}ID.hdn`];
@@ -1951,7 +2095,7 @@ function getSearchResults(config) {
                 if (member && value) {
                     filters.push({
                         'field': member,
-                        'operator': "",
+                        'operator': "gte",
                         'value': value,
                         'tableName': tableName,
                         'columnType': 'number'
@@ -1962,8 +2106,8 @@ function getSearchResults(config) {
                 if (member && value) {
                     filters.push({
                         'field': member,
-                        'operator': "",
-                        'number2': value,
+                        'operator': "lte",
+                        'value': value,
                         'tableName': tableName,
                         'columnType': 'number'
                     });
@@ -1980,24 +2124,11 @@ function getSearchResults(config) {
             columnName: item.field,
             columnType: item.columnType,
             comparisonType: item.operator,
-            textValue: item.value
+            textValue: item.value,
+            andOr: 'and'
         });
     });
-    searchParams = { type: selectedSearchOption, filter: filterArr };
-    var tabStrip = $("#search-tab-strip").data("kendoTabStrip");
-    //tabStrip.options.contentUrls[3].data = getSearchParams('vAuthor', true, { isAdvanceSearch: true });  //Need to make them dynamic
-    //tabStrip.options.contentUrls[4].data = getSearchParams('vWork', true, { isAdvanceSearch: true });
-    //tabStrip.options.contentUrls[5].data = getSearchParams('vElement', true, { isAdvanceSearch: true });
-    tabStrip.options.contentUrls[0].data = getSearchParams('vAuthor', true, config);  //Need to make them dynamic
-    tabStrip.options.contentUrls[1].data = getSearchParams('vWork', true, config);
-    tabStrip.options.contentUrls[2].data = getSearchParams('vElement', true, config);
-    tabStrip.select(0);
-    tabStrip.reload("li:eq(0)");
-    tabStrip.reload("li:eq(1)");
-    tabStrip.reload("li:eq(2)");
-    //tabStrip.select(3);
-    //tabStrip.reload("li:eq(4)");
-    //tabStrip.reload("li:eq(5)");
+    return { filterArr, params };
 }
 
 function noRecordFound(ele) {
@@ -2028,6 +2159,8 @@ function generateGrid(response, container) {
                     if (operation.data.endLoading && gridElement) {
                         endKendoLoading(gridElement);
                         hideLoading();
+                        resizeSearchGrid();
+                        resizeTabStrip();
                         //operation.success(data);
                     }
                 }
@@ -2037,9 +2170,10 @@ function generateGrid(response, container) {
             serverFiltering: true,
             serverPaging: true,
             schema: {
-                data: function (response) {
-                    return response;
-                },
+                model: model,
+                //data: function (response) {
+                //    return response;
+                //},
                 total: function (e) {
                     return searchGridOptions.Total;
                 }
@@ -2054,12 +2188,13 @@ function generateGrid(response, container) {
             }
         }
     );
-    dataSource.options.schema.model = model;
+
     var columns = generateColumns(response.Columns);
     var gridOptions = {
         dataSource: dataSource,
         columns: columns,
         sortable: true,
+        filterable: true,
         reorderable: true,
         resizable: true,
         pageable: {
@@ -2069,36 +2204,81 @@ function generateGrid(response, container) {
             }
         },
         page: function (e) {
-            var gridType = getSelectTable(); // e.sender.element.attr('id').split('-')[2];
+            var gridType = e.sender.element.attr('id').split('-')[2];
             var sortFieldArr = e.sender.dataSource.sort();
             var sortField = '', sortDir = 'asc';
+            var searchText = $('#SearchQuery').val();
             searchGridOptions.Total = e.sender.dataSource.total();
             if (sortFieldArr && sortFieldArr.length) {
                 sortField = sortFieldArr[0].field;
                 sortDir = sortFieldArr[0].dir;
             }
 
-            var params = { dataSource: e.sender.dataSource, page: e.page - 1, sortField, sortDir };
+            var filter = e.sender.dataSource.filter(), columnFilters;
+            if (filter) {
+                columnFilters = Array.prototype.concat(...filter.filters.map(x => x.filters));
+            }
+            var params = {
+                dataSource: e.sender.dataSource, page: e.page - 1, sortField, sortDir, columnFilters, isAdvanceSearch: true,
+                isGlobalSearch: searchText ? true : false,
+                searchText: $('#SearchQuery').val()
+            };
             populateSearch(gridType, true, params);
         },
         sort: function (e) {
             searchGridOptions.Total = e.sender.dataSource.total();
             var gridType = e.sender.element.attr('id').split('-')[2];
-            var params = { dataSource: e.sender.dataSource, page: e.sender.pager.page() - 1, sortField: e.sort.field, sortDir: e.sort.dir };
+            var filter = e.sender.dataSource.filter(), columnFilters;
+            if (filter) {
+                columnFilters = Array.prototype.concat(...filter.filters.map(x => x.filters));
+            }
+            var searchText = $('#SearchQuery').val();
+            var params = {
+                dataSource: e.sender.dataSource,
+                page: e.sender.pager.page() - 1,
+                sortField: e.sort.field,
+                sortDir: e.sort.dir,
+                isGlobalSearch: searchText ? true : false,
+                searchText: searchText,
+                columnFilters
+            };
+
             populateSearch(gridType, true, params);
-            e.sender.dataSource.sort({ field: e.sort.field, dir: e.sort.dir });
+            e.sender.dataSource.sort({
+                field: e.sort.field, dir: e.sort.dir
+            });
         },
         columnMenu: true,
+        selectable: true,
         dataBound: function (e) {
             grid = e.sender;
             $(e.sender.element).find('.k-grid-content').height($('.k-tabstrip-wrapper').height() - 125);
             $(e.sender.element).find('td').addClass('text-nowrap');
-        }
+            if (userObj)
+                $('.loggedin-user').text(userObj.Name);
+        },
+        columnMenuInit: columnMenuInit
     };
+    //setTimeout(function () {
     var searchResultGrid = $(container).kendoCustomGrid(gridOptions)
         .addClass("custom-dynamic-grid").data("kendoCustomGrid");
     searchResultGrid.dataSource.read({ data: response.Result, endLoading: true });
+    searchResultGrid.thead.kendoTooltip({
+        filter: ".k-header",
+        content: function (e) {
+            var target = e.target; // element for which the tooltip is shown
+            if (!target.find('.k-link').text()) {
+                tooltip.hide();
+            }
+            return $(target).text();
+        }
+    });
     resizeSearchGrid();
+    resizeTabStrip();
+    resizeSearchSplitter();
+    searchForm.ajaxRequest = false;
+    hideLoading();
+    //});
 }
 
 function generateAdminGrid(response, container) {
@@ -2283,6 +2463,7 @@ function generateAdminGrid(response, container) {
         },
         sort: function (e) {
             var gridType = getSelectTable(); //e.sender.element.attr('id').split('-')[2];
+            var columnName = e.sender.columns.find(x => x.field === e.sort.field).columnName;
             var filter = e.sender.dataSource.filter(), columnFilters;
             if (filter) {
                 columnFilters = Array.prototype.concat(...filter.filters.map(x => x.filters));
@@ -2290,12 +2471,12 @@ function generateAdminGrid(response, container) {
             var params = {
                 dataSource: e.sender.dataSource,
                 page: e.sender.pager.page() - 1,
-                sortField: e.sort.field,
+                sortField: columnName,
                 sortDir: e.sort.dir,
                 columnFilters
             };
             populateSearch(gridType, false, params);
-            e.sender.dataSource.sort({ field: e.sort.field, dir: e.sort.dir });
+            e.sender.dataSource.sort({ field: columnName, dir: e.sort.dir });
         },
         columnMenu: true,
         editable: true,
@@ -2316,7 +2497,9 @@ function generateAdminGrid(response, container) {
                 showMultiModeConfirmation();
             }
         },
-        columnMenuInit: columnMenuInit,
+        columnMenuInit: function (e) {
+            initColumnMenuFilter.call(this, e, true);
+        },
         saveChanges: function (e) {
             e.preventDefault();
 
@@ -2349,6 +2532,16 @@ function generateAdminGrid(response, container) {
         .data("kendoCustomGrid");
     grid.dataSource.read({ data: response.Result, endLoading: true });
     grid.thead.find("[data-index=0]>.k-header-column-menu").remove();
+    grid.thead.kendoTooltip({
+        filter: ".k-header",
+        content: function (e) {
+            var target = e.target; // element for which the tooltip is shown
+            if (!target.find('.k-link').text()) {
+                tooltip.hide();
+            }
+            return $(target).text();
+        }
+    });
     adminGridOnDataBound();
     toggleLoginForm();
     grid.table.on('keydown', function (e) {
@@ -2544,8 +2737,8 @@ function endKendoLoading(target) {
     kendo.ui.progress(target, false);
 }
 
-function populateSearch(gridType, isView, { dataSource, page, sortField = '', sortDir = 'asc', columnFilters }) {
-    $.post("/Grid/AdvanceSearchResult", getSearchParams(gridType, isView, { page, sortField, sortDir, columnFilters }), function (response) {
+function populateSearch(gridType, isView, { dataSource, page, sortField = '', sortDir = 'asc', columnFilters, isGlobalSearch, isAdvanceSearch, searchText }) {
+    $.post("/Grid/AdvanceSearchResult", getSearchParams(gridType, isView, { page, sortField, sortDir, columnFilters, isGlobalSearch, isAdvanceSearch, searchText }), function (response) {
         if (response) {
             var gridData = JSON.parse(response.SearlizeResult);
             searchGridOptions.Total = response.Total;
@@ -2567,6 +2760,7 @@ function generateColumns(columnsDef) {
 
 function generateAdminGridColumns(columnsDef) {
     var columns = columnsDef.map(function (item, index) {
+        item.DisplayName = item.DisplayName.replace('#', '##');
         var isLastColumn = columnsDef.length - 1 === index,
             column = {
                 headerTemplate: kendo.template(`# if (${item.IsRequired}) 
@@ -2574,6 +2768,7 @@ function generateAdminGridColumns(columnsDef) {
                                                 else { # ${item.DisplayName ? item.DisplayName : item.ColumnName} # } #`),
                 isUnique: item.IsUnique,
                 isEditable: item.IsEditable,
+                columnName: item.ColumnName
             };
         if (item.Fktable) {
             column = $.extend({}, column, {
@@ -2724,29 +2919,9 @@ function generateModel(response) {
                     type: "boolean"
                 };
             }
-            //else if (propType === "string") {
-            //    var parsedDate = kendo.parseDate(sampleDataItem[property]);
-            //    if (parsedDate) {
-            //        fields[property] = {
-            //            type: "date",
-            //            validation: {
-            //                required: true
-            //            }
-            //        };
-            //        isDateField[property] = true;
-            //    } else {
-            //        fields[property] = {
-            //            validation: {
-            //                required: true
-            //            }
-            //        };
-            //    }
-            //}
             else {
                 fields[property] = {
-                    validation: {
-                        required: true
-                    }
+                    type: "string"
                 };
             }
         }
@@ -2895,35 +3070,6 @@ function resizeSearchSplitter() {
     }
 }
 
-function clearSearchForm() {
-    $("form").each(function (index, form) {
-        $(form).trigger("reset");
-        $(form).find('input[type=hidden]').val("");
-        setTimeout(function () {
-            $(form).find("input[data-role='dropdownlist']").each(function () {
-                var item = $(this).data("kendoDropDownList");
-                if (item) {
-                    item.select(0);
-                }
-            });
-            $(form).find("select[data-role='multiselect']").each(function () {
-                var multiSelect = $(this).data("kendoMultiSelect");
-                if (multiSelect) {
-                    multiSelect.value([]);
-                }
-            });
-        }, 50);
-    });
-    var tabStrip = $("#search-tab-strip").data("kendoTabStrip");
-    tabStrip.options.contentUrls[3].data = getSearchParams('VAuthor', true);  //Need to make them dynamic
-    tabStrip.options.contentUrls[4].data = getSearchParams('VWork', true);
-    tabStrip.options.contentUrls[5].data = getSearchParams('VUnit', true);
-    tabStrip.select(0);
-    tabStrip.reload("li:eq(3)"); //Need to make them dynamic
-    tabStrip.reload("li:eq(4)");
-    tabStrip.reload("li:eq(5)");
-}
-
 function onSearchDropdownChange(e, elementToShow) {
     var elementId = '#' + elementToShow.replace('.', '_');
     if (e.sender.value() !== 'in list') {
@@ -2950,13 +3096,13 @@ function redirectPage(page, ele) {
     localStorage.setItem('menuItem', ele);
     switch (page) {
         case 'home':
-            location.replace('/');
+            location.replace('/Home/Admin');
             break;
         case 'search':
             location.replace('/Home/Search');
             break;
         case 'browseAll':
-            location.replace('/Home/BrowseAll');
+            location.replace('/');
             break;
         default:
             location.replace('/');
@@ -2982,7 +3128,8 @@ function genderDropDownEditor(container, options) {
     var data = [
         { text: "", value: "" },
         { text: "Male", value: "Male" },
-        { text: "Female", value: "Female" }
+        { text: "Female", value: "Female" },
+        { text: "Other", value: "Other" }
     ];
     $(`<select name="${options.field}" data-bind="value: ${options.field}"></select>`)
         .appendTo(container)
@@ -3123,17 +3270,98 @@ function onFormDropdownSelect(e) {
     }).appendTo('#edit-form');
 }
 
-$(document).on("click", '.searchJumpTo', function (e) {
-    //clearSearchForm();
-    $('.search-block-body').addClass('d-none');
-    var blockToShow = $(this).attr('display-block');
-    $('#' + blockToShow).removeClass('d-none');
+$(document).on("click", '#save-search-search-btn', function (e) {
+    var searchString = $('#SearchQuery').val();
+    if (searchString || getSearchFilterArr().params.length) {
+        var dialog = $("#saveSearchDialog").data("kendoDialog");
+        dialog.open();
+    }
 });
 
-$(document).on("click", '#common-search-btn', function (e) {
-    getSearchResults({ isAdvanceSearch: true });
+function saveSearch() {
+    $('#saveSearchForm').find('.k-tooltip').remove();
+    var validator = $("#saveSearchForm").data("kendoValidator");
+    var searchString = $('#SearchQuery').val();
+    var dialog = $("#saveSearchDialog").data("kendoDialog");
+    if (validator.validate()) {
+        displayLoading(dialog.element);
+        $.post("/Grid/SaveSearch", {
+            Name: $('#SearchName').val(),
+            MemberID: userObj.MemberId,
+            SearchString: searchString,
+            SearchParams: !searchString ? getSearchFilterArr().params : []
+        }, function (success) {
+            endLoading(dialog.element);
+            if (success) {
+                var dropdownlist = $("#SavedSearchDD").data("kendoDropDownList");
+                dropdownlist.dataSource.read();
+                dropdownlist.refresh();
+                $('#SearchName').val('');
+                dialog.close();
+            }
+        });
+    }
+}
+
+function onSavedSearchSelection(e) {
+    if (e.dataItem.SearchString) {
+        $('#SearchQuery').val(e.dataItem.SearchString);
+    }
+    else {
+        $.get("/Grid/GetSavedSearchParams", { id: e.dataItem.SavedSearchId }, function (params) {
+            console.log(params);
+            params.forEach(function (item, index) {
+                var form = $('#' + item.TableName);
+                switch (item.ColumnType) {
+                    case 'number':
+                        var startEle = form.find(`#${item.TableName}_Start_${item.ColumnName}`);
+                        var endEle = form.find(`#${item.TableName}_End_${item.ColumnName}`);
+                        if (startEle)
+                            startEle.value(item.TextValue);
+                        break;
+                    default:
+                        var element = form.find(`#${item.TableName}_${item.ColumnName}`);
+                        var filter = form.find(`#${item.TableName}_Filter_${item.ColumnName}`);
+                        if (element.length) {
+                            element.val(item.TextValue);
+                            var dropdownList = $(filter).data("kendoDropDownList");
+                            if (dropdownList)
+                                dropdownList.value(item.ComparisonType);
+                        }
+                        break;
+                }
+            });
+        });
+    }
+}
+
+$(document).on("change", '#SearchName', function (e) {
+    var value = this.value;
+    if (value) {
+        $.get('/Grid/ValidateSearchName', { name: value }, function (isDuplicate) {
+            if (isDuplicate) {
+                console.log(isDuplicate);
+            }
+        });
+    }
 });
-$(document).on("click", '#text-common-search-btn', function (e) {
+
+var searchForm = {
+    ajaxRequest: false
+};
+
+$(document).on("submit", '#form-common-search', function (e) {
+    e.preventDefault();
+    populateSearchResult();
+});
+
+$(document).on("submit", '#form-field-search', function (e) {
+    e.preventDefault();
+    populateSearchResult();
+});
+
+function populateSearchResult() {
+    searchForm.ajaxRequest = true;
     if ($('#SearchQuery').val()) {
         getSearchResults({
             isAdvanceSearch: true,
@@ -3141,11 +3369,48 @@ $(document).on("click", '#text-common-search-btn', function (e) {
             searchText: $('#SearchQuery').val()
         });
     }
-});
-//function onFormDropdownDataBound(e, value) {
-//    //console.log(e.sender.element.attr('id') + '::' + e.sender.value() + '  original value ::' + value);
-//    setTimeout(function () {
-//        //e.sender.text(value);
-//    });
+    else {
+        getSearchResults({ isAdvanceSearch: true });
+    }
+    //clearSearchFormControls();
+}
 
-//}
+function clearSearchForm() {
+    clearSearchFormControls();
+    var tabStrip = $("#search-tab-strip").data("kendoTabStrip");
+    tabStrip.options.contentUrls[0].data = getSearchParams('vAuthor', true);
+    tabStrip.options.contentUrls[1].data = getSearchParams('vWork', true);
+    tabStrip.options.contentUrls[2].data = getSearchParams('vElement', true);
+    tabStrip.reload("li:eq(0)");
+    tabStrip.reload("li:eq(1)");
+    setTimeout(function () {
+        tabStrip.reload("li:eq(2)");
+    }, 500);
+
+}
+
+function clearSearchFormControls() {
+    $("form").each(function (index, form) {
+        $(form).trigger("reset");
+        $(form).find('input[type=hidden]').val("");
+        setTimeout(function () {
+            $(form).find("input[data-role='dropdownlist']").each(function () {
+                var item = $(this).data("kendoDropDownList");
+                if (item) {
+                    item.select(0);
+                }
+            });
+            $(form).find("select[data-role='multiselect']").each(function () {
+                var multiSelect = $(this).data("kendoMultiSelect");
+                if (multiSelect) {
+                    multiSelect.value([]);
+                }
+            });
+        }, 50);
+    });
+}
+
+$(document).on("click", '#clear-search-btn', function (e) {
+    e.preventDefault();
+    clearSearchForm();
+});

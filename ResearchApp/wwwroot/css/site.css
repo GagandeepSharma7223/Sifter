@@ -465,3 +465,28 @@ table .k-tooltip {
     -moz-box-sizing: border-box;
     box-sizing: border-box;
 }
+
+.font-13{
+    font-size: 13px;
+}
+
+.k-pager-wrap.k-pager-sm .k-pager-info {
+    display: inline !important;
+}
+
+.k-tooltip-content{
+    font-size: 12px;
+}
+
+.k-header > .k-header-column-menu {
+    padding: 0.5em 0.2em .4em 0 !important;
+}
+
+.k-grid-header th.k-with-icon .k-link {
+    margin-right: 0px !important;
+    padding-right: 0 !important;
+}
+
+.k-tabstrip .k-content.k-state-active {
+    overflow-x: hidden;
+}

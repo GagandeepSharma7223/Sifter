@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using ResearchApp.Data;
 using System.Threading.Tasks;
@@ -16,6 +17,8 @@ namespace ResearchApp.Controllers
             _authorRepo = authorRepo;
         }
 
+        [Authorize]
+        [Route("Home/Admin")]
         public IActionResult Index()
         {
             return View();
@@ -23,6 +26,8 @@ namespace ResearchApp.Controllers
 
         public IActionResult Search()
         {
+            ViewBag.Search = "BrowseAll";
+            ViewBag.LogOut = "True";
             return View();
         }
 

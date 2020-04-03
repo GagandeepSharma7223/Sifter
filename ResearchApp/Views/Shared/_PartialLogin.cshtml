@@ -1,0 +1,28 @@
+﻿<form id="form-login">
+    <div class="form-group">
+        <input type="text" id="Username" name="Username" class="k-textbox" placeholder="Username" required validationMessage="Enter {0}">
+    </div>
+    <div class="form-group">
+        <input type="password" id="login-password" name="Password" class="k-textbox" placeholder="Password" required validationMessage="Enter {0}">
+        <button type="button" id="forgot-password-btn" class="btn btn-link float-right">Forgot Password</button>
+    </div>
+    <div class="form-group">
+        <button type="submit" id="login-btn" class="k-button btn-block k-primary btn-primary col-7">Login</button>
+    </div>
+</form>
+<div id="logout-block" class="row">
+    <label class="col-form-label col-12 loggedin-user"></label>
+    <div class="col-6 mb-2">
+        <button type="button" id="logout-btn" class="k-button btn-block k-primary btn-primary">Logout</button>
+    </div>
+</div>
+<div class="k-content menu-item-container">
+    <div class="row mb-2 mt-3">
+        <div class="col-6 mb-2">
+            <a role="button" class="k-button admin-link navigation-btn btn-block page1" href="#" onclick="redirectPage('home', 'page1')">Table Admin</a>
+        </div>
+        <div class="col-6">
+            <a role="button" class="k-button navigation-btn btn-block page4" href="#" onclick="redirectPage('browseAll', 'page4')">Browse & Search</a>
+        </div>
+    </div>
+</div>

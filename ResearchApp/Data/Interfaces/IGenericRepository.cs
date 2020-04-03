@@ -35,5 +35,11 @@ namespace ResearchApp.Data
         Task<MemberViewModel> LoginUser(LoginViewModel model);
         Task SendMail(EmailViewModel model);
         Task<MemberViewModel> GetMemberDetailFromUserName(string userName);
+        Task SaveSearch(CreateSearchViewModel model);
+        Task<List<SearchParams>> GetSavedSearchParams(int id);
+        Task<List<SavedSearchViewModel>> GetSavedSearch();
+        Task<bool> ValidateSearchName(string name);
+        List<dynamic> Get(string tableName, List<TreeColumnViewModel> columns, int id);
+        List<string> GetBasicSearchMetaColumns();
     }
 }

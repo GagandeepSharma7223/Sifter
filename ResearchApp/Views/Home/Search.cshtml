@@ -6,6 +6,7 @@
     <div class="row d-flex justify-content-start">
         <div class="col-md-12">
             <input type="hidden" id="searchParam" name="searchParam" value="@ViewBag.Search" />
+            <input type="hidden" id="logout-value" value="@ViewBag.LogOut" />
             @(Html.Kendo().Splitter()
                   .Name("vertical")
                   .Orientation(SplitterOrientation.Vertical)
@@ -40,6 +41,12 @@
 
 <script>
     $(function () {
-        showLoading();
+        if ($('#logout-value').val()) {
+            localStorage.setItem('menuItem', 'page4');
+            logOffFunc();
+        }
+        else {
+            showLoading();
+        }
     });
 </script>

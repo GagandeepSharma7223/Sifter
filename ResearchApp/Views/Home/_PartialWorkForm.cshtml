@@ -6,10 +6,10 @@
             <div class="col-md-11 mt-3">
                 @foreach (var item in Model.TableColumns.Where(x => x.Display == true))
                 {
-                    if (!item.IDColumn)
+                    if (!item.IDColumn && item.IsEditable)
                     {
                         <div class="row form-group">
-                            <label class="col-md-1 col-form-label">@(item.Type == "dropdown" ? item.DisplayName : item.ColumnName) <strong class="text-danger">@(item.IsRequired ? "*" : "")</strong></label>
+                            <label class="col-md-1 col-form-label">@item.DisplayName <strong class="text-danger">@(item.IsRequired ? "*" : "")</strong></label>
                             <div class="col-md-5 dirty-marker k-dirty-cell">
                                 <span class=""></span>
                                 @switch (item.Type)
@@ -34,6 +34,10 @@
                                                        new TextDropdownOptions{
                                                            Id = "Female",
                                                            Option = "Female"
+                                                       },
+                                                       new TextDropdownOptions{
+                                                           Id = "Other",
+                                                           Option = "Other"
                                                        }
                                                    })
                                             )
@@ -143,9 +147,16 @@
                     }
                     else if (Model.SelectedItem != null && Model.SelectedItem[item.ColumnName] != null)
                     {
-                        @(Html.Hidden(item.ColumnName, (int)(Model.SelectedItem[item.ColumnName])))
-                        <div class="row form-group" id="form-primary-key">
-                            <label class="col-md-1 col-form-label">@item.ColumnName</label>
+                        if (item.IDColumn)
+                        {
+                            @(Html.Hidden(item.ColumnName, (int)(Model.SelectedItem[item.ColumnName]), new { @id_col = item.ColumnName }))
+                        }
+                        else
+                        {
+                            <input type="hidden" id="@item.ColumnName" name="@item.ColumnName" value="@(Model.SelectedItem[item.ColumnName] == null ? string.Empty :  Model.SelectedItem[item.ColumnName])" />
+                        }
+                        <div class="row form-group form-primary-key">
+                            <label class="col-md-1 col-form-label">@item.DisplayName</label>
                             <div>
                                 <label class="col-form-label">@Model.SelectedItem[item.ColumnName]</label>
                             </div>

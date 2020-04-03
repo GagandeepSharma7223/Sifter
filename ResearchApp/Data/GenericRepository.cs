@@ -82,6 +82,14 @@ namespace ResearchApp.Data
             _cache.Remove(GetClientCacheKey(tableName, CacheTypes.DropdownOptions));
             return _dbContext.ExecuteScalarFromSql(query, model);
         }
+        public List<dynamic> Get(string tableName, List<TreeColumnViewModel> columns, int id)
+        {
+            var columnList = columns.Where(x => x.ColumnName != "RowNum").Select(x => x.ColumnName);
+            string idColumn = columns.Where(x => x.IDColumn).Select(x => x.ColumnName).FirstOrDefault();
+            string columnNames = string.Join(", ", columnList);
+            string query = $"SELECT {columnNames} from {tableName} WHERE {idColumn} = @a";
+            return _dbContext.DynamicListFromSql(query, new Dictionary<string, object> { { "a", id } }, "list").ToList();
+        }
 
         public (bool, string) ValidateUniqueColumns(Dictionary<string, object> model,
             string tableName, List<TreeColumnViewModel> columns, bool updateQuery = false)
@@ -130,7 +138,7 @@ namespace ResearchApp.Data
             var primaryKey = model.Where(x => x.Key == columns.Where(x => x.IDColumn)
                 .Select(x => x.ColumnName).FirstOrDefault())
                     .Select(x => x.Value).FirstOrDefault();
-            var keysToRemove = model.Keys.Where(x => !columnsToUpdate.Contains(x)).ToList();
+            var keysToRemove = model.Keys.Where(x => !columnsToUpdate.Contains(x) && x != "UserName").ToList();
             keysToRemove.ForEach(x => model.Remove(x));
             string updateValues = string.Join(", ", model.Where(x => x.Key != tableName + "ID")
                 .Select(x => GetQueryValue(columns, x)));
@@ -142,7 +150,14 @@ namespace ResearchApp.Data
         private object GetQueryValue(List<TreeColumnViewModel> columns, KeyValuePair<string, object> model)
         {
             var columnDetail = columns.Find(x => x.ColumnName == model.Key);
-            if (model.Value == null || model.Value?.ToString() == string.Empty) return $"{model.Key} = null";
+            if (model.Value == null || model.Value?.ToString() == string.Empty)
+            {
+                return $"{model.Key} = null";
+            }
+            if (columnDetail == null)
+            {
+                return $"{model.Key} ='{model.Value.ToString().Replace("'", "''")}'";
+            }
             switch (columnDetail.ColType)
             {
                 case "int":
@@ -336,6 +351,8 @@ namespace ResearchApp.Data
                     IsRequired = x.IsRequired ?? false,
                     IsUnique = x.IsUnique ?? false,
                     PixelWidth = x.PixelWidth ?? 120,
+                    BasicField = x.BasicField,
+                    GeneralSearch = x.GeneralSearch,
                     Type = !string.IsNullOrEmpty(x.Fktable) ? "dropdown" : x.ColType
                 }).ToListAsync();
         }
@@ -508,6 +525,13 @@ namespace ResearchApp.Data
                 }).ToList();
         }
 
+        public List<string> GetBasicSearchMetaColumns()
+        {
+            return _dbContext.MetaColumn.Where(x => (x.TableName == "vAuthor" || x.TableName == "vWork" || x.TableName == "vElement")
+                                                && x.IsDisplayed == true && x.BasicField)
+                .OrderBy(x => x.ColSeq).Select(x => x.ColumnName).ToList();
+        }
+
         public string GetFKDisplayColumn(string tableName, string displayName)
         {
             return _dbContext.DynamicListFromSql($"SELECT FKDisplayCol  FROM MetaColumn WHERE TableName=@a and  DisplayName = @b",
@@ -576,6 +600,70 @@ namespace ResearchApp.Data
                     UserName = x.UserName,
                     Password = x.Password
                 }).FirstOrDefaultAsync();
+        }
+
+        public async Task SaveSearch(CreateSearchViewModel model)
+        {
+            var savedSearch = new SavedSearch
+            {
+                Name = model.Name,
+                MemberId = model.MemberID,
+                SearchString = model.SearchString
+            };
+            await _dbContext.SavedSearch.AddAsync(savedSearch);
+            await _dbContext.SaveChangesAsync();
+
+            if (model.SearchParams.Count == 0)
+            {
+                var dataTable = PopulateSearchResult(new AdvanceSearchRequest
+                {
+                    TableName = "vAuthor",
+                    SearchText = model.SearchString,
+                    GetParamTable = true
+                });
+                model.SearchParams.Add(dataTable.ToList<SearchParams>().FirstOrDefault());
+            }
+            var savedSearchParam = model.SearchParams.Select(x => new SavedSearchParam
+            {
+                SavedSearchId = savedSearch.SavedSearchId,
+                AndOr = x.AndOr,
+                ColumnName = x.ColumnName,
+                ColumnType = x.ColumnType,
+                ComparisonType = x.ComparisonType,
+                TableName = x.TableName,
+                TextValue = x.TextValue
+            }).ToArray();
+            _dbContext.SavedSearchParam.AddRange(savedSearchParam);
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<List<SearchParams>> GetSavedSearchParams(int id)
+        {
+            return await _dbContext.SavedSearchParam.Where(x => x.SavedSearchId == id).Select(x => new SearchParams
+            {
+                AndOr = x.AndOr,
+                ColumnName = x.ColumnName,
+                ColumnType = x.ColumnType,
+                ComparisonType = x.ComparisonType,
+                TableName = x.TableName,
+                TextValue = x.TextValue
+            }).ToListAsync();
+        }
+
+        public async Task<List<SavedSearchViewModel>> GetSavedSearch()
+        {
+            return await _dbContext.SavedSearch.OrderBy(x => x.Name).Select(x => new SavedSearchViewModel
+            {
+                MemberId = x.MemberId,
+                Name = x.Name,
+                SavedSearchId = x.SavedSearchId,
+                SearchString = x.SearchString
+            }).ToListAsync();
+        }
+
+        public async Task<bool> ValidateSearchName(string name)
+        {
+            return await _dbContext.SavedSearch.AnyAsync(x => x.Name.ToLower() == name.ToLower().Trim());
         }
     }
 }

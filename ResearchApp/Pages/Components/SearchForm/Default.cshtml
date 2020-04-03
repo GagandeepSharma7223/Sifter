@@ -1,8 +1,8 @@
 ﻿@using ResearchApp.ViewModel
 @using Kendo.Mvc
 @model FormViewModel
-<form>
-    <div class="col-11 mt-3">
+<form id="@(Model.FormName)">
+    <div class="col-11 mt-3 @Model.FormName">
         @foreach (var item in Model.TableColumns.Where(x => x.Display == true))
         {
             if (!item.IDColumn)
@@ -35,6 +35,10 @@
                                               new TextDropdownOptions{
                                                   Id = "Female",
                                                   Option = "Female"
+                                              },
+                                              new TextDropdownOptions{
+                                                  Id = "Other",
+                                                  Option = "Other"
                                               }
                                           })
                                     )

@@ -1,5 +1,8 @@
-﻿using Kendo.Mvc.Extensions;
+﻿// Namespace Declaration
+using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
@@ -13,8 +16,9 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 using System.Threading.Tasks;
-
+// End
 namespace ResearchApp.Controllers
 {
     public class GridController : Controller
@@ -254,7 +258,8 @@ namespace ResearchApp.Controllers
 
         public async Task<IActionResult> GetCommonSearchForm()
         {
-            return PartialView("~/Views/Home/_PartialCommonSearchForm.cshtml");
+            var basicColumns = _workRepo.GetBasicSearchMetaColumns();
+            return PartialView("~/Views/Home/_PartialCommonSearchForm.cshtml", basicColumns);
         }
 
         public async Task<IActionResult> GetSearchForm(string type)
@@ -434,7 +439,7 @@ namespace ResearchApp.Controllers
                         response.Total = (int)dbCountResult.Rows[0][0];
                     }
                 }
-                response.Columns = _authorRepo.GetMetaColumns(request.TableName);
+                response.Columns = _workRepo.GetMetaColumns(request.TableName);
                 response.TableName = request.TableName;
                 return PartialView("~/Views/Home/_PartialSearchResult.cshtml", response);
             }
@@ -442,6 +447,44 @@ namespace ResearchApp.Controllers
             {
             }
             return Json(new { IsError = true });
+        }
+
+        public IActionResult AdminSearchForm(AdvanceSearchRequest request)
+        {
+            try
+            {
+                if (request.PageSize == 0) request.PageSize = 1000;
+                if (string.IsNullOrEmpty(request.TableName))
+                {
+                    request.TableName = "Work";
+                }
+                if (string.IsNullOrEmpty(request.SortField) && request.TableName == "Author")
+                {
+                    request.SortField = "DisplayName";
+                }
+                var dbResult = _authorRepo.PopulateSearchResult(new List<SearchParams>().ToDataTable(), request);
+                var response = new AdvanceSearchResult
+                {
+                    SearlizeResult = JsonConvert.SerializeObject(dbResult.ToDynamic()),
+                };
+                if (request.Total == 0)
+                {
+                    request.CountOnly = true;
+                    var dbCountResult = _authorRepo.PopulateSearchResult(new List<SearchParams>().ToDataTable(), request);
+                    if (dbCountResult.Rows.Count > 0)
+                    {
+                        response.Total = (int)dbCountResult.Rows[0][0];
+                    }
+                }
+                response.Columns = _workRepo.GetMetaColumns(request.TableName);
+                response.TableName = request.TableName;
+                return PartialView("~/Views/Home/_PartialLoadAdminGrid.cshtml", response);
+            }
+            catch (Exception e)
+            {
+                return Json(new { e.Message });
+            }
+            //return Json(new { IsError = true });
         }
 
         [AcceptVerbs("Post")]
@@ -476,9 +519,22 @@ namespace ResearchApp.Controllers
 
         public JsonResult AdvanceSearchResult(List<SearchParams> searchParams, AdvanceSearchRequest request)
         {
-            var dbResult = _authorRepo.PopulateSearchResult(searchParams.ToDataTable(), request);
+            DataTable dbResult = new DataTable();
+            if (request.IsGlobalSearch)
+            {
+                dbResult = _authorRepo.PopulateSearchResult(request);
+            }
+            else
+                dbResult = _authorRepo.PopulateSearchResult(searchParams.ToDataTable(), request);
+
             request.CountOnly = true;
-            var dbCountResult = _authorRepo.PopulateSearchResult(searchParams.ToDataTable(), request);
+            DataTable dbCountResult = new DataTable();
+            if (request.IsGlobalSearch)
+            {
+                dbCountResult = _authorRepo.PopulateSearchResult(request);
+            }
+            else
+                dbCountResult = _authorRepo.PopulateSearchResult(searchParams.ToDataTable(), request);
             var response = new AdvanceSearchResult
             {
                 SearlizeResult = JsonConvert.SerializeObject(dbResult.ToDynamic())
@@ -488,44 +544,6 @@ namespace ResearchApp.Controllers
                 response.Total = (int)dbCountResult.Rows[0][0];
             }
             return Json(response);
-        }
-
-        public IActionResult AdminSearchForm(AdvanceSearchRequest request)
-        {
-            try
-            {
-                if (request.PageSize == 0) request.PageSize = 1000;
-                if (string.IsNullOrEmpty(request.TableName))
-                {
-                    request.TableName = "Work";
-                }
-                if(string.IsNullOrEmpty(request.SortField) && request.TableName == "Author")
-                {
-                    request.SortField = "DisplayName";
-                }
-                var dbResult = _authorRepo.PopulateSearchResult(new List<SearchParams>().ToDataTable(), request);
-                var response = new AdvanceSearchResult
-                {
-                    SearlizeResult = JsonConvert.SerializeObject(dbResult.ToDynamic()),
-                };
-                if (request.Total == 0)
-                {
-                    request.CountOnly = true;
-                    var dbCountResult = _authorRepo.PopulateSearchResult(new List<SearchParams>().ToDataTable(), request);
-                    if (dbCountResult.Rows.Count > 0)
-                    {
-                        response.Total = (int)dbCountResult.Rows[0][0];
-                    }
-                }
-                response.Columns = _workRepo.GetMetaColumns(request.TableName);
-                response.TableName = request.TableName;
-                return PartialView("~/Views/Home/_PartialLoadAdminGrid.cshtml", response);
-            }
-            catch (Exception e)
-            {
-                return Json(new { e.Message });
-            }
-            //return Json(new { IsError = true });
         }
 
         public async Task<IActionResult> List([DataSourceRequest]DataSourceRequest request, GridTypes type)
@@ -722,6 +740,10 @@ namespace ResearchApp.Controllers
                 new TextDropdownOptions{
                     Id = "Female",
                     Option = "Female"
+                },
+                new TextDropdownOptions{
+                    Id = "Other",
+                    Option = "Other"
                 }
             };
         }
@@ -792,6 +814,7 @@ namespace ResearchApp.Controllers
             var dbResult = _authorRepo.PopulateSearchResult(searchParams.ToDataTable(), request);
             return Json(JsonConvert.SerializeObject(dbResult.ToDynamic()));
         }
+
         #endregion
 
         #region Category
@@ -1109,7 +1132,12 @@ namespace ResearchApp.Controllers
         }
         #endregion
 
-
+        [AcceptVerbs("Post")]
+        public async Task<IActionResult> SaveSearch(CreateSearchViewModel model)
+        {
+            await _workRepo.SaveSearch(model);
+            return Json(true);
+        }
 
         [AcceptVerbs("Post")]
         public IActionResult Add([DataSourceRequest] DataSourceRequest request, string models, string tableName, List<TreeColumnViewModel> columns)
@@ -1123,8 +1151,16 @@ namespace ResearchApp.Controllers
                     ModelState.AddModelError(duplicateColumn, $"Please enter a unique value for the {duplicateColumn} column.");
                     return Json(list.ToDataSourceResult(request, ModelState));
                 }
+                item.Add("UserName", User.Identity.Name);
                 int id = _workRepo.Create(new Dictionary<string, object>(item), tableName, columns);
-                item[tableName + "ID"] = id;
+                var recordDetail = _workRepo.Get(tableName, columns, id);
+                foreach (Dictionary<string, object> updatedItem in recordDetail)
+                {
+                    foreach (var key in updatedItem.Keys)
+                    {
+                        item[key] = updatedItem[key];
+                    }
+                }
             }
             return Json(list.ToDataSourceResult(request));
         }
@@ -1143,6 +1179,7 @@ namespace ResearchApp.Controllers
                     ModelState.AddModelError(duplicateColumn, $"Please enter a unique value for the {duplicateColumn} column.");
                     return Json(list.ToDataSourceResult(request, ModelState));
                 }
+                item.Add("UserName", User.Identity.Name);
                 await _workRepo.Update(item, tableName, columns);
             }
             return Json(list.ToDataSourceResult(request));
@@ -1164,6 +1201,21 @@ namespace ResearchApp.Controllers
         }
 
         [AcceptVerbs("Post")]
+        public async Task<IActionResult> LogOff()
+        {
+            try
+            {
+                var authenticationManager = Request.HttpContext;
+                await authenticationManager.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message });
+            }
+            return Json(true);
+        }
+
+        [AcceptVerbs("Post")]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
             try
@@ -1172,6 +1224,11 @@ namespace ResearchApp.Controllers
                 {
                     model.IPAddress = Request.HttpContext.Connection.RemoteIpAddress.ToString();
                     var result = await _workRepo.LoginUser(model);
+                    if (result != null)
+                    {
+                        // Login In.  
+                        await SignInUser(result.Name, true);
+                    }
                     return Json(result);
                 }
             }
@@ -1207,6 +1264,48 @@ namespace ResearchApp.Controllers
             }
             return Json(false);
         }
-    }
 
+        [AcceptVerbs("Post")]
+        public async Task<IActionResult> GetSavedSearchOptions([DataSourceRequest] DataSourceRequest request)
+        {
+            var options = await _workRepo.GetSavedSearch();
+            return Json(options.ToDataSourceResult(request));
+        }
+
+        public async Task<IActionResult> GetSavedSearchParams(int id)
+        {
+            var searchParams = await _workRepo.GetSavedSearchParams(id);
+            return Json(searchParams);
+        }
+
+        public async Task<IActionResult> ValidateSearchName(string name)
+        {
+            var result = await _workRepo.ValidateSearchName(name);
+            return Json(result);
+        }
+
+        private async Task SignInUser(string username, bool isPersistent)
+        {
+            // Initialization.  
+            var claims = new List<Claim>();
+
+            try
+            {
+                // Setting  
+                claims.Add(new Claim(ClaimTypes.Name, username));
+                var claimIdenties = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                var claimPrincipal = new ClaimsPrincipal(claimIdenties);
+                var authenticationManager = Request.HttpContext;
+
+                // Sign In.  
+                await authenticationManager.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimPrincipal, new AuthenticationProperties() { IsPersistent = isPersistent });
+            }
+            catch (Exception ex)
+            {
+                // Info  
+                throw ex;
+            }
+        }
+
+    }
 }

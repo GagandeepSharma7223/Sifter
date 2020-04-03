@@ -26,5 +26,7 @@ namespace ResearchApp.ViewModel
         public bool IsUnique { get; set; }
         public string ColType { get; set; }
         public int? PixelWidth { get; set; }
+        public bool BasicField { get; set; }
+        public bool GeneralSearch { get; set; }
     }
 }

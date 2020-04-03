@@ -6,9 +6,6 @@
                 <li>Authors</li>
                 <li>Works</li>
                 <li>Elements</li>
-                <li>Author Results</li>
-                <li>Work Results</li>
-                <li>Element Results</li>
                 <li>Search</li>
             </ul>
         </div>
@@ -20,21 +17,6 @@
         var tabStrip = $("#search-tab-strip").kendoTabStrip({
             animation: { open: { effects: "fadeIn" } },
             contentUrls: [
-                {
-                    url: "/Grid/GetSearchForm",
-                    cache: true,
-                    data: { type: '@GridTypes.VAuthor' }
-                },
-                {
-                    url: "/Grid/GetSearchForm",
-                    cache: true,
-                    data: { type: '@GridTypes.VWork' }
-                },
-                {
-                    url: "/Grid/GetSearchForm",
-                    cache: true,
-                    data: { type: 'vElement' }
-                },
                 {
                     url: "/Grid/SearchForm",
                     cache: false,
@@ -57,29 +39,23 @@
                     url: "/Grid/GetCommonSearchForm",
                     cache: false,
                     type: "Post",
-                    //data: getSearchParams('vElement', true)
                 }
-            ]
+            ],
+            select: function (e) {
+                showLoading();
+            },
+            activate: function (e) {
+                if (!searchForm.ajaxRequest) {
+                    hideLoading();
+                }
+            }
         }).data('kendoTabStrip');
-
-        hideLoading();
         resizeTabStrip();
         resizeSearchSplitter();
-        var searchParam = $('#searchParam').val();
-        if (searchParam === 'BrowseAll') {
-            tabStrip.remove(tabStrip.tabGroup.children().eq(0));
-            tabStrip.remove(tabStrip.tabGroup.children().eq(0));
-            tabStrip.remove(tabStrip.tabGroup.children().eq(0));
-            $(tabStrip.items()[0]).children()[0].innerText = "Authors";
-            $(tabStrip.items()[1]).children()[0].innerText = "Works";
-            $(tabStrip.items()[2]).children()[0].innerText = "Elements";
+        setTimeout(function () {
             tabStrip.reload("li:eq(1)");
             tabStrip.reload("li:eq(2)");
-            tabStrip.select(0);
-        }
-        else {
-            tabStrip.select(0);
-        }
-
+        }, 500);
+        tabStrip.select(0);
     });
 </script>
